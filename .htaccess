@@ -1,0 +1,25 @@
+Options -Indexes
+Options -MultiViews
+
+<FilesMatch "^(config\.php|bootstrap\.php)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "^\.">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+RewriteEngine On
+
+# Block direct access to api/bootstrap.php
+RewriteRule ^api/bootstrap\.php$ - [F,L]
+
+# Allow direct file/directory access
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route everything else to index.html (SPA-style fallback)
+RewriteRule ^$ index.html [L]

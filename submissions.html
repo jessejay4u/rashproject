@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submissions — Health Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Health<span>+</span></div>
+      <div class="brand-sub">Information Management</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="submissions.html" class="nav-link"><span class="nav-icon">📋</span> Submissions</a>
+      <a href="forms.html"       class="nav-link"><span class="nav-icon">📝</span> Forms</a>
+      <div class="nav-section manager-only">Management</div>
+      <a href="hospitals.html"   class="nav-link manager-only"><span class="nav-icon">🏥</span> Hospitals</a>
+      <a href="users.html"       class="nav-link admin-only"><span class="nav-icon">👥</span> Users</a>
+      <a href="reports.html"     class="nav-link manager-only"><span class="nav-icon">📈</span> Reports</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar" id="sidebar-avatar">U</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
+          <div class="sidebar-user-role" id="sidebar-user-role"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="header">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <h1 class="header-title">Submissions</h1>
+      <div class="header-actions">
+        <div class="header-user-info">
+          <div class="header-user-name" id="user-name">Loading…</div>
+          <div class="header-user-role" id="user-role"></div>
+        </div>
+        <div class="avatar" id="user-avatar">U</div>
+        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- List view -->
+      <div id="list-view">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">Submissions</h2>
+            <p class="page-sub">Track and manage all data submissions</p>
+          </div>
+          <button class="btn btn-primary" id="new-btn" onclick="showNewForm()">+ New Submission</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="filters">
+              <select id="filter-status" onchange="loadList(1)">
+                <option value="">All Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="submitted">Submitted</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <select id="filter-form" onchange="loadList(1)">
+                <option value="">All Forms</option>
+              </select>
+              <input type="date" id="filter-from" onchange="loadList(1)" placeholder="From date">
+              <input type="date" id="filter-to"   onchange="loadList(1)" placeholder="To date">
+              <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Form</th>
+                  <th>Hospital</th>
+                  <th class="hide-mobile">Submitted By</th>
+                  <th>Status</th>
+                  <th class="hide-mobile">Period</th>
+                  <th class="hide-mobile">Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="list-body">
+                <tr><td colspan="7" class="text-center text-muted" style="padding:32px">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="list-pagination" class="pagination"></div>
+        </div>
+      </div>
+
+      <!-- Detail view -->
+      <div id="detail-view" style="display:none">
+        <div class="page-header">
+          <div>
+            <button class="btn btn-ghost btn-sm" onclick="backToList()">← Back</button>
+            <h2 class="page-title" id="detail-title" style="margin-top:8px">Submission Detail</h2>
+          </div>
+          <div id="review-actions" style="display:none;gap:8px" class="d-flex gap-8">
+            <button class="btn btn-success" onclick="reviewSubmission('approved')">✓ Approve</button>
+            <button class="btn btn-danger"  onclick="reviewSubmission('rejected')">✗ Reject</button>
+          </div>
+        </div>
+        <div id="detail-content"></div>
+      </div>
+
+      <!-- New submission view -->
+      <div id="new-view" style="display:none">
+        <div class="page-header">
+          <div>
+            <button class="btn btn-ghost btn-sm" onclick="backToList()">← Back</button>
+            <h2 class="page-title" style="margin-top:8px">New Submission</h2>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Form <span class="req">*</span></label>
+                <select id="new-form-id" onchange="loadFormFields()">
+                  <option value="">— Select Form —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Hospital <span class="req">*</span></label>
+                <select id="new-hospital-id">
+                  <option value="">— Select Hospital —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Period Start</label>
+                <input type="date" id="new-period-start">
+              </div>
+              <div class="form-group">
+                <label>Period End</label>
+                <input type="date" id="new-period-end">
+              </div>
+            </div>
+            <div id="form-fields-container"></div>
+            <div style="margin-top:16px;display:flex;gap:8px">
+              <button class="btn btn-primary" id="submit-btn" onclick="submitForm('submitted')">Submit</button>
+              <button class="btn btn-ghost"   onclick="submitForm('draft')">Save as Draft</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Review modal -->
+<div class="modal-overlay" id="review-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="review-modal-title">Review Submission</h3>
+      <button class="modal-close" onclick="closeModal('review-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Review Notes (optional)</label>
+        <textarea id="review-notes" rows="4" placeholder="Add notes or feedback…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('review-modal')">Cancel</button>
+      <button class="btn btn-primary" id="review-confirm-btn" onclick="confirmReview()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+let currentPage = 1;
+let currentSubId = null;
+let pendingReviewStatus = null;
+let currentUser2 = null;
+
+(async () => {
+  currentUser2 = await requireAuth();
+
+  // Check if opening detail directly
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('id')) {
+    loadDetail(params.get('id'));
+    return;
+  }
+
+  // Load form options for filter
+  API.get('api/forms.php').then(r => {
+    const sel = document.getElementById('filter-form');
+    (r.data || []).forEach(f => {
+      sel.innerHTML += `<option value="${esc(f.id)}">${esc(f.name)}</option>`;
+    });
+  }).catch(() => {});
+
+  // Populate hospital/form for new submission
+  loadNewFormOptions();
+
+  loadList(1);
+})();
+
+async function loadList(page) {
+  currentPage = page;
+  const status = document.getElementById('filter-status').value;
+  const formId = document.getElementById('filter-form').value;
+  const from   = document.getElementById('filter-from').value;
+  const to     = document.getElementById('filter-to').value;
+
+  let url = `api/submissions.php?page=${page}`;
+  if (status) url += `&status=${encodeURIComponent(status)}`;
+  if (formId) url += `&form_id=${encodeURIComponent(formId)}`;
+  if (from)   url += `&from=${encodeURIComponent(from)}`;
+  if (to)     url += `&to=${encodeURIComponent(to)}`;
+
+  const tbody = document.getElementById('list-body');
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px">Loading…</td></tr>';
+
+  try {
+    const res = await API.get(url);
+    const rows = res.data || [];
+
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><h3>No submissions found</h3><p>Adjust your filters or create a new submission.</p></div></td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td><strong>${esc(r.form)}</strong></td>
+          <td>${esc(r.hospital)}</td>
+          <td class="hide-mobile text-muted text-sm">${esc(r.submitted_by)}</td>
+          <td>${badge(r.status)}</td>
+          <td class="hide-mobile text-muted text-sm">${r.period_start ? esc(r.period_start) + ' → ' + esc(r.period_end) : '—'}</td>
+          <td class="hide-mobile text-muted text-sm nowrap">${fmtDateTime(r.submitted_at || r.created_at)}</td>
+          <td class="td-actions"><button class="btn btn-outline btn-xs" onclick="loadDetail('${esc(r.id)}')">View</button></td>
+        </tr>
+      `).join('');
+    }
+
+    renderPagination('list-pagination', res.page, res.pages, res.total, res.per_page, loadList);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:32px">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function loadDetail(id) {
+  currentSubId = id;
+  document.getElementById('list-view').style.display = 'none';
+  document.getElementById('new-view').style.display  = 'none';
+  document.getElementById('detail-view').style.display = '';
+  document.getElementById('detail-content').innerHTML = '<div class="text-center text-muted" style="padding:40px">Loading…</div>';
+
+  try {
+    const res = await API.get(`api/submissions.php?id=${encodeURIComponent(id)}`);
+    const s   = res.data;
+    document.getElementById('detail-title').textContent = s.form_name;
+
+    const canReview = currentUser2 && ['super_admin','regional_admin','hospital_admin'].includes(currentUser2.role) && s.status === 'submitted';
+    document.getElementById('review-actions').style.display = canReview ? 'flex' : 'none';
+
+    document.getElementById('detail-content').innerHTML = `
+      <div class="two-col">
+        <div class="card mb-0">
+          <div class="card-header"><h3 class="card-title">Submission Info</h3></div>
+          <div class="card-body">
+            <div class="detail-list">
+              <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${badge(s.status)}</span></div>
+              <div class="detail-row"><span class="detail-label">Form</span><span class="detail-value">${esc(s.form_name)}</span></div>
+              <div class="detail-row"><span class="detail-label">Hospital</span><span class="detail-value">${esc(s.hospital_name)}</span></div>
+              <div class="detail-row"><span class="detail-label">Submitted By</span><span class="detail-value">${esc(s.submitted_by_name)}</span></div>
+              <div class="detail-row"><span class="detail-label">Submitted At</span><span class="detail-value">${fmtDateTime(s.submitted_at)}</span></div>
+              <div class="detail-row"><span class="detail-label">Period</span><span class="detail-value">${s.period_start ? esc(s.period_start) + ' → ' + esc(s.period_end) : '—'}</span></div>
+              ${s.reviewed_by ? `
+                <div class="detail-row"><span class="detail-label">Reviewed By</span><span class="detail-value">${esc(s.reviewer_name)}</span></div>
+                <div class="detail-row"><span class="detail-label">Reviewed At</span><span class="detail-value">${fmtDateTime(s.reviewed_at)}</span></div>
+                ${s.review_notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${esc(s.review_notes)}</span></div>` : ''}
+              ` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="card mb-0">
+          <div class="card-header"><h3 class="card-title">Field Values</h3></div>
+          <div class="card-body">
+            ${(s.values || []).length === 0 ? '<p class="text-muted text-sm">No field values recorded.</p>' :
+              '<div class="detail-list">' + s.values.map(v => `
+                <div class="detail-row">
+                  <span class="detail-label">${esc(v.label)}</span>
+                  <span class="detail-value">${esc(v.value_text || v.value_number || v.value_date || (v.value_boolean !== null ? (v.value_boolean ? 'Yes' : 'No') : '') || '—')}</span>
+                </div>`).join('') + '</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    document.getElementById('detail-content').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error loading submission</h3><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+function backToList() {
+  document.getElementById('list-view').style.display   = '';
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('new-view').style.display    = 'none';
+  history.replaceState(null, '', 'submissions.html');
+}
+
+function reviewSubmission(status) {
+  pendingReviewStatus = status;
+  document.getElementById('review-modal-title').textContent = status === 'approved' ? 'Approve Submission' : 'Reject Submission';
+  document.getElementById('review-confirm-btn').className = 'btn ' + (status === 'approved' ? 'btn-success' : 'btn-danger');
+  document.getElementById('review-notes').value = '';
+  openModal('review-modal');
+}
+
+async function confirmReview() {
+  const btn = document.getElementById('review-confirm-btn');
+  setLoading(btn, true);
+  try {
+    await API.post(`api/submissions.php?id=${encodeURIComponent(currentSubId)}&action=review`, {
+      status: pendingReviewStatus,
+      notes:  document.getElementById('review-notes').value,
+    });
+    toast('Submission ' + pendingReviewStatus, 'success');
+    closeModal('review-modal');
+    loadDetail(currentSubId);
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading(btn, false);
+}
+
+async function loadNewFormOptions() {
+  try {
+    const [formsRes, hospsRes] = await Promise.all([
+      API.get('api/forms.php?status=published'),
+      API.get('api/hospitals.php'),
+    ]);
+    const fSel = document.getElementById('new-form-id');
+    const hSel = document.getElementById('new-hospital-id');
+    (formsRes.data || []).forEach(f => fSel.innerHTML += `<option value="${esc(f.id)}">${esc(f.name)}</option>`);
+    // Hospitals: pre-select user's hospital
+    (hospsRes.data || []).forEach(h => {
+      const sel = currentUser2 && h.id === currentUser2.hospital_id ? ' selected' : '';
+      hSel.innerHTML += `<option value="${esc(h.id)}"${sel}>${esc(h.name)}</option>`;
+    });
+  } catch {}
+}
+
+async function loadFormFields() {
+  const formId = document.getElementById('new-form-id').value;
+  const container = document.getElementById('form-fields-container');
+  container.innerHTML = '';
+  if (!formId) return;
+
+  try {
+    const res = await API.get(`api/forms.php?id=${encodeURIComponent(formId)}`);
+    const sections = res.data.sections || [];
+    sections.forEach(section => {
+      if (section.fields && section.fields.length > 0) {
+        container.innerHTML += `<h4 style="margin:20px 0 12px;font-size:.9rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.05em">${esc(section.title)}</h4>`;
+        container.innerHTML += '<div class="form-grid">' + section.fields.map(f => `
+          <div class="form-group${f.field_type === 'textarea' || f.field_type === 'text_area' ? ' span-2' : ''}">
+            <label>${esc(f.label)}${f.is_required ? '<span class="req">*</span>' : ''}</label>
+            ${renderField(f)}
+            ${f.help_text ? `<div class="form-help">${esc(f.help_text)}</div>` : ''}
+          </div>
+        `).join('') + '</div>';
+      }
+    });
+  } catch (e) {
+    toast('Failed to load form fields: ' + e.message, 'error');
+  }
+}
+
+function renderField(f) {
+  const id  = `field_${esc(f.id)}`;
+  const req = f.is_required ? 'required' : '';
+  switch (f.field_type) {
+    case 'number': return `<input type="number" id="${id}" ${req} placeholder="${esc(f.placeholder||'')}">`;
+    case 'date':   return `<input type="date" id="${id}" ${req}>`;
+    case 'select': {
+      const opts = (f.options || []).map(o => `<option value="${esc(typeof o === 'object' ? o.value : o)}">${esc(typeof o === 'object' ? o.label : o)}</option>`).join('');
+      return `<select id="${id}" ${req}><option value="">— Select —</option>${opts}</select>`;
+    }
+    case 'textarea':
+    case 'text_area': return `<textarea id="${id}" ${req} rows="3" placeholder="${esc(f.placeholder||'')}"></textarea>`;
+    case 'checkbox': return `<label style="display:flex;align-items:center;gap:8px;font-weight:normal"><input type="checkbox" id="${id}"> ${esc(f.label)}</label>`;
+    default: return `<input type="text" id="${id}" ${req} placeholder="${esc(f.placeholder||'')}">`;
+  }
+}
+
+function showNewForm() {
+  document.getElementById('list-view').style.display = 'none';
+  document.getElementById('new-view').style.display  = '';
+}
+
+async function submitForm(status) {
+  const formId     = document.getElementById('new-form-id').value;
+  const hospitalId = document.getElementById('new-hospital-id').value;
+  if (!formId || !hospitalId) { toast('Please select a form and hospital', 'error'); return; }
+
+  // Collect field values
+  const values = {};
+  document.querySelectorAll('[id^="field_"]').forEach(el => {
+    const fieldId = el.id.replace('field_', '');
+    values[fieldId] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+
+  const btn = document.getElementById('submit-btn');
+  setLoading(btn, true);
+  try {
+    await API.post('api/submissions.php', {
+      form_id:      formId,
+      hospital_id:  hospitalId,
+      period_start: document.getElementById('new-period-start').value || null,
+      period_end:   document.getElementById('new-period-end').value   || null,
+      status,
+      values,
+    });
+    toast('Submission saved!', 'success');
+    backToList();
+    loadList(1);
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading(btn, false);
+}
+
+function clearFilters() {
+  ['filter-status','filter-form','filter-from','filter-to'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  loadList(1);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports — Health Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><div class="brand-logo">Health<span>+</span></div><div class="brand-sub">Information Management</div></div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="submissions.html" class="nav-link"><span class="nav-icon">📋</span> Submissions</a>
+      <a href="forms.html"       class="nav-link"><span class="nav-icon">📝</span> Forms</a>
+      <div class="nav-section manager-only">Management</div>
+      <a href="hospitals.html"   class="nav-link manager-only"><span class="nav-icon">🏥</span> Hospitals</a>
+      <a href="users.html"       class="nav-link admin-only"><span class="nav-icon">👥</span> Users</a>
+      <a href="reports.html"     class="nav-link manager-only"><span class="nav-icon">📈</span> Reports</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar" id="sidebar-avatar">U</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
+          <div class="sidebar-user-role" id="sidebar-user-role"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="header">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <h1 class="header-title">Reports</h1>
+      <div class="header-actions">
+        <div class="header-user-info">
+          <div class="header-user-name" id="user-name">Loading…</div>
+          <div class="header-user-role" id="user-role"></div>
+        </div>
+        <div class="avatar" id="user-avatar">U</div>
+        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">Reports & Analytics</h2>
+          <p class="page-sub">Export data and view submission analytics</p>
+        </div>
+      </div>
+
+      <!-- Export Card -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header"><h3 class="card-title">Export Submissions (CSV)</h3></div>
+        <div class="card-body">
+          <div class="form-grid" style="align-items:end">
+            <div class="form-group">
+              <label>Form</label>
+              <select id="exp-form">
+                <option value="">All Forms</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="exp-status">
+                <option value="">All Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="submitted">Submitted</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date From</label>
+              <input type="date" id="exp-from">
+            </div>
+            <div class="form-group">
+              <label>Date To</label>
+              <input type="date" id="exp-to">
+            </div>
+            <div class="form-group">
+              <label>Hospital</label>
+              <select id="exp-hospital">
+                <option value="">All Hospitals</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary w-full" onclick="exportCSV()" id="export-btn">
+                ⬇ Download CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Stats -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Submissions by Status</h3></div>
+          <div class="card-body" style="height:260px;position:relative">
+            <canvas id="status-chart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Submissions by Form</h3></div>
+          <div class="card-body" style="height:260px;position:relative">
+            <canvas id="form-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trend -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Submission Trend (Last 30 Days)</h3>
+        </div>
+        <div class="card-body" style="height:240px;position:relative">
+          <canvas id="trend-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Top Hospitals Table -->
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">Submissions by Hospital</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Hospital</th>
+                <th>Region</th>
+                <th>Total Submissions</th>
+                <th>Approved</th>
+                <th>Pending</th>
+              </tr>
+            </thead>
+            <tbody id="hospital-table">
+              <tr><td colspan="6" class="text-center text-muted" style="padding:32px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+let dashData;
+
+(async () => {
+  await requireAuth();
+  await loadDropdowns();
+  await loadCharts();
+})();
+
+async function loadDropdowns() {
+  try {
+    const [formsRes, hospitalsRes] = await Promise.all([
+      API.get('api/forms.php?status=published&per_page=100'),
+      API.get('api/hospitals.php?per_page=200'),
+    ]);
+    const formOpts = (formsRes.data || []).map(f => `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join('');
+    document.getElementById('exp-form').innerHTML = '<option value="">All Forms</option>' + formOpts;
+
+    const hospOpts = (hospitalsRes.data || []).map(h => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('');
+    document.getElementById('exp-hospital').innerHTML = '<option value="">All Hospitals</option>' + hospOpts;
+  } catch {}
+}
+
+async function loadCharts() {
+  try {
+    const res = await API.get('api/dashboard.php');
+    dashData = res.data;
+
+    // Status doughnut
+    const byStatus = dashData.byStatus || [];
+    const statusColors = { draft:'#94a3b8', submitted:'#3b82f6', approved:'#22c55e', rejected:'#ef4444' };
+    new Chart(document.getElementById('status-chart'), {
+      type: 'doughnut',
+      data: {
+        labels: byStatus.map(r => r.status),
+        datasets: [{ data: byStatus.map(r => parseInt(r.count)), backgroundColor: byStatus.map(r => statusColors[r.status] || '#94a3b8'), borderWidth: 2 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+    });
+
+    // Form bar chart
+    const byForm = dashData.byForm || [];
+    new Chart(document.getElementById('form-chart'), {
+      type: 'bar',
+      data: {
+        labels: byForm.map(r => r.form_name || 'Unknown'),
+        datasets: [{ label: 'Submissions', data: byForm.map(r => parseInt(r.count)), backgroundColor: '#2563eb', borderRadius: 4 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+    });
+
+    // Trend bar chart
+    const trendData = dashData.trend || [];
+    new Chart(document.getElementById('trend-chart'), {
+      type: 'bar',
+      data: {
+        labels: trendData.map(r => r.day ? r.day.slice(5) : ''),
+        datasets: [{ label: 'Submissions', data: trendData.map(r => parseInt(r.count) || 0), backgroundColor: '#2563eb', borderRadius: 4 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+    });
+
+    // Hospital table
+    const byHosp = dashData.byHospital || [];
+    const tbody  = document.getElementById('hospital-table');
+    if (byHosp.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:24px">No data</td></tr>';
+    } else {
+      tbody.innerHTML = byHosp.map((r, i) => `
+        <tr>
+          <td class="text-muted text-sm">${i + 1}</td>
+          <td><strong>${esc(r.hospital_name || '—')}</strong></td>
+          <td class="text-muted text-sm">${esc(r.region_name || '—')}</td>
+          <td><strong>${r.total}</strong></td>
+          <td><span class="badge badge-approved">${r.approved || 0}</span></td>
+          <td><span class="badge badge-submitted">${r.pending || 0}</span></td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    toast('Failed to load report data: ' + e.message, 'error');
+  }
+}
+
+function exportCSV() {
+  const form     = document.getElementById('exp-form').value;
+  const status   = document.getElementById('exp-status').value;
+  const from     = document.getElementById('exp-from').value;
+  const to       = document.getElementById('exp-to').value;
+  const hospital = document.getElementById('exp-hospital').value;
+
+  let url = 'api/reports.php?export=csv';
+  if (form)     url += `&form_id=${encodeURIComponent(form)}`;
+  if (status)   url += `&status=${encodeURIComponent(status)}`;
+  if (from)     url += `&date_from=${encodeURIComponent(from)}`;
+  if (to)       url += `&date_to=${encodeURIComponent(to)}`;
+  if (hospital) url += `&hospital_id=${encodeURIComponent(hospital)}`;
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `submissions_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+</body>
+</html>

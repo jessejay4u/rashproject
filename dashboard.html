@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Health Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Health<span>+</span></div>
+      <div class="brand-sub">Information Management</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="submissions.html" class="nav-link"><span class="nav-icon">📋</span> Submissions</a>
+      <a href="forms.html"       class="nav-link"><span class="nav-icon">📝</span> Forms</a>
+      <div class="nav-section manager-only">Management</div>
+      <a href="hospitals.html"   class="nav-link manager-only"><span class="nav-icon">🏥</span> Hospitals</a>
+      <a href="users.html"       class="nav-link admin-only"><span class="nav-icon">👥</span> Users</a>
+      <a href="reports.html"     class="nav-link manager-only"><span class="nav-icon">📈</span> Reports</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar" id="sidebar-avatar">U</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
+          <div class="sidebar-user-role" id="sidebar-user-role"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="header">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <h1 class="header-title">Dashboard</h1>
+      <div class="header-actions">
+        <div class="header-user-info">
+          <div class="header-user-name" id="user-name">Loading…</div>
+          <div class="header-user-role" id="user-role"></div>
+        </div>
+        <div class="avatar" id="user-avatar">U</div>
+        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">Overview</h2>
+          <p class="page-sub" id="date-display"></p>
+        </div>
+        <a href="submissions.html" class="btn btn-primary">+ New Submission</a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card blue" style="grid-column:1/-1;justify-content:center;padding:24px;"><span style="color:var(--text-m)">Loading stats…</span></div>
+      </div>
+
+      <!-- Charts + Recent -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Submissions (Last 30 Days)</h3></div>
+          <div class="card-body" style="height:240px;position:relative">
+            <canvas id="trend-chart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">By Status</h3></div>
+          <div class="card-body" style="height:240px;position:relative">
+            <canvas id="status-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent submissions -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Recent Submissions</h3>
+          <a href="submissions.html" class="btn btn-ghost btn-sm">View All →</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Form</th>
+                <th>Hospital</th>
+                <th class="hide-mobile">Submitted By</th>
+                <th>Status</th>
+                <th class="hide-mobile">Date</th>
+              </tr>
+            </thead>
+            <tbody id="recent-body">
+              <tr><td colspan="5" class="text-center text-muted" style="padding:32px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+document.getElementById('date-display').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+(async () => {
+  await requireAuth();
+
+  let data;
+  try {
+    const res = await API.get('api/dashboard.php');
+    data = res.data;
+  } catch (e) {
+    toast('Failed to load dashboard: ' + e.message, 'error');
+    return;
+  }
+
+  const s = data.stats;
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card blue">
+      <div class="stat-icon">📋</div>
+      <div class="stat-info">
+        <div class="stat-value">${s.total_submissions}</div>
+        <div class="stat-label">Total Submissions</div>
+      </div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-info">
+        <div class="stat-value">${s.pending_review}</div>
+        <div class="stat-label">Pending Review</div>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <div class="stat-value">${s.approved}</div>
+        <div class="stat-label">Approved</div>
+      </div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon">❌</div>
+      <div class="stat-info">
+        <div class="stat-value">${s.rejected}</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon">🏥</div>
+      <div class="stat-info">
+        <div class="stat-value">${s.total_hospitals}</div>
+        <div class="stat-label">Hospitals</div>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">📝</div>
+      <div class="stat-info">
+        <div class="stat-value">${s.total_forms}</div>
+        <div class="stat-label">Published Forms</div>
+      </div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-icon">👥</div>
+      <div class="stat-info">
+        <div class="stat-value">${s.total_users}</div>
+        <div class="stat-label">Active Users</div>
+      </div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon">📅</div>
+      <div class="stat-info">
+        <div class="stat-value">${s.this_month}</div>
+        <div class="stat-label">This Month</div>
+      </div>
+    </div>
+  `;
+
+  // Trend chart
+  const trendData = data.trend || [];
+  const labels    = trendData.map(r => r.day ? r.day.slice(5) : '');
+  const counts    = trendData.map(r => parseInt(r.count) || 0);
+  new Chart(document.getElementById('trend-chart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Submissions', data: counts, backgroundColor: '#2563eb', borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+  });
+
+  // Status doughnut chart
+  const byStatus = data.byStatus || [];
+  const statusColors = { draft:'#94a3b8', submitted:'#3b82f6', approved:'#22c55e', rejected:'#ef4444' };
+  new Chart(document.getElementById('status-chart'), {
+    type: 'doughnut',
+    data: {
+      labels: byStatus.map(r => r.status),
+      datasets: [{ data: byStatus.map(r => parseInt(r.count)), backgroundColor: byStatus.map(r => statusColors[r.status] || '#94a3b8'), borderWidth: 2 }],
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+  });
+
+  // Recent table
+  const tbody = document.getElementById('recent-body');
+  if (!data.recent || data.recent.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:32px">No submissions yet</td></tr>';
+  } else {
+    tbody.innerHTML = data.recent.map(r => `
+      <tr>
+        <td><a href="submissions.html?id=${esc(r.id)}">${esc(r.form)}</a></td>
+        <td>${esc(r.hospital)}</td>
+        <td class="hide-mobile">${esc(r.submitted_by)}</td>
+        <td>${badge(r.status)}</td>
+        <td class="hide-mobile text-muted text-sm">${fmtDateTime(r.submitted_at)}</td>
+      </tr>
+    `).join('');
+  }
+})();
+</script>
+</body>
+</html>
