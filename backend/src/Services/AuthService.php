@@ -299,7 +299,7 @@ class AuthService
         // Also update DB counter for the user
         Database::connection()->prepare(
             'UPDATE users SET failed_login_attempts = failed_login_attempts + 1,
-             locked_until = CASE WHEN failed_login_attempts + 1 >= :max THEN NOW() + INTERVAL \'30 minutes\' ELSE NULL END,
+             locked_until = CASE WHEN failed_login_attempts + 1 >= :max THEN NOW() + INTERVAL 30 MINUTE ELSE NULL END,
              updated_at = NOW() WHERE email = :email'
         )->execute(['max' => (int) ($_ENV['MAX_LOGIN_ATTEMPTS'] ?? 5), 'email' => $email]);
     }

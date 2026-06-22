@@ -52,7 +52,7 @@ class DashboardController
             'missing_reports'     => $this->getMissingReports($db, $filter),
         ];
 
-        $redis->setex($cacheKey, 300, $data); // 5-minute cache
+        $redis->setex($cacheKey, 300, $data);
         Response::success($data);
     }
 
@@ -74,7 +74,7 @@ class DashboardController
             JOIN indicators i ON i.id = iv.indicator_id
             LEFT JOIN hospitals h ON h.id = iv.hospital_id
             WHERE iv.period_start >= :start AND iv.period_end <= :end
-            AND i.is_active = TRUE
+            AND i.is_active = 1
             " . ($filter['hospital_id'] ? "AND iv.hospital_id = :hospital_id" : "") . "
             ORDER BY i.category, i.name
         ");
@@ -101,9 +101,9 @@ class DashboardController
                    MAX(s.submitted_at) AS last_submission
             FROM hospitals h
             JOIN regions r ON r.id = h.region_id
-            LEFT JOIN submissions s ON s.hospital_id = h.id AND s.submitted_at >= NOW() - INTERVAL '30 days'
-            WHERE h.is_active = TRUE AND h.latitude IS NOT NULL AND h.longitude IS NOT NULL
-            GROUP BY h.id, r.name
+            LEFT JOIN submissions s ON s.hospital_id = h.id AND s.submitted_at >= NOW() - INTERVAL 30 DAY
+            WHERE h.is_active = 1 AND h.latitude IS NOT NULL AND h.longitude IS NOT NULL
+            GROUP BY h.id, h.name, h.latitude, h.longitude, h.type, h.level, r.name
             ORDER BY submission_count DESC
         ");
         $stmt->execute();
@@ -129,10 +129,16 @@ class DashboardController
             default => 'day',
         };
 
+        $truncExpr = match ($trunc) {
+            'hour'  => "DATE_FORMAT(s.submitted_at, '%Y-%m-%d %H:00:00')",
+            'month' => "DATE_FORMAT(s.submitted_at, '%Y-%m-01')",
+            default => "DATE(s.submitted_at)",
+        };
+
         [$start, $end] = $this->getPeriodDates($period);
 
         $sql = "
-            SELECT DATE_TRUNC(:trunc, s.submitted_at) AS period,
+            SELECT $truncExpr AS period,
                    COUNT(*) AS count,
                    COUNT(DISTINCT s.hospital_id) AS active_hospitals,
                    AVG(s.duration_seconds) AS avg_duration
@@ -141,7 +147,7 @@ class DashboardController
             WHERE s.submitted_at BETWEEN :start AND :end
             AND s.status != 'draft'
         ";
-        $params = ['trunc' => $trunc, 'start' => $start, 'end' => $end];
+        $params = ['start' => $start, 'end' => $end];
 
         if ($filter['hospital_id']) {
             $sql .= " AND s.hospital_id = :hospital_id";
@@ -165,7 +171,7 @@ class DashboardController
 
     private function countSubmissions(PDO $db, array $filter, string $type): int
     {
-        $conditions = ['s.status != \'draft\''];
+        $conditions = ["s.status != 'draft'"];
         $params     = [];
 
         if ($filter['hospital_id']) {
@@ -177,9 +183,9 @@ class DashboardController
         }
 
         $conditions[] = match ($type) {
-            'today'          => "DATE(s.submitted_at) = CURRENT_DATE",
-            'week'           => "s.submitted_at >= NOW() - INTERVAL '7 days'",
-            'month'          => "s.submitted_at >= NOW() - INTERVAL '30 days'",
+            'today'          => "DATE(s.submitted_at) = CURDATE()",
+            'week'           => "s.submitted_at >= NOW() - INTERVAL 7 DAY",
+            'month'          => "s.submitted_at >= NOW() - INTERVAL 30 DAY",
             'pending_review' => "s.status = 'submitted'",
             'approved'       => "s.status = 'approved'",
             'rejected'       => "s.status = 'rejected'",
@@ -206,7 +212,7 @@ class DashboardController
 
     private function countActiveHospitals(PDO $db, array $filter): int
     {
-        $conditions = ["s.submitted_at >= NOW() - INTERVAL '30 days'"];
+        $conditions = ["s.submitted_at >= NOW() - INTERVAL 30 DAY"];
         $params     = [];
         if ($filter['region_id']) {
             $conditions[] = 'h.region_id = :rid';
@@ -230,8 +236,8 @@ class DashboardController
         $stmt = $db->prepare("
             SELECT f.name, COUNT(s.id) AS submission_count
             FROM submissions s JOIN forms f ON f.id = s.form_id
-            WHERE s.submitted_at >= NOW() - INTERVAL '30 days'
-            GROUP BY f.name ORDER BY submission_count DESC LIMIT 5
+            WHERE s.submitted_at >= NOW() - INTERVAL 30 DAY
+            GROUP BY f.id, f.name ORDER BY submission_count DESC LIMIT 5
         ");
         $stmt->execute();
         return $stmt->fetchAll();
@@ -240,16 +246,9 @@ class DashboardController
     private function getSubmissionsByDay(PDO $db, array $filter, int $days): array
     {
         $stmt = $db->prepare("
-            SELECT DATE(submitted_at) AS date, COUNT(*) AS count
-            FROM submissions
-            WHERE submitted_at >= NOW() - INTERVAL ':days days' AND status != 'draft'
-            GROUP BY date ORDER BY date
-        ");
-        // Parameterize the interval safely
-        $stmt = $db->prepare("
             SELECT DATE(submitted_at) AS day, COUNT(*) AS count
             FROM submissions
-            WHERE submitted_at >= CURRENT_DATE - $days AND status != 'draft'
+            WHERE submitted_at >= DATE_SUB(CURDATE(), INTERVAL $days DAY) AND status != 'draft'
             GROUP BY day ORDER BY day
         ");
         $stmt->execute();
@@ -261,8 +260,8 @@ class DashboardController
         $stmt = $db->prepare("
             SELECT f.name, f.category, COUNT(s.id) AS count
             FROM submissions s JOIN forms f ON f.id = s.form_id
-            WHERE s.submitted_at >= NOW() - INTERVAL '30 days'
-            GROUP BY f.name, f.category ORDER BY count DESC LIMIT 10
+            WHERE s.submitted_at >= NOW() - INTERVAL 30 DAY
+            GROUP BY f.id, f.name, f.category ORDER BY count DESC LIMIT 10
         ");
         $stmt->execute();
         return $stmt->fetchAll();
@@ -280,12 +279,12 @@ class DashboardController
         $stmt = $db->prepare("
             SELECT h.name, r.name AS region, COUNT(s.id) AS submissions,
                    MAX(s.submitted_at) AS last_submission,
-                   ROUND(COUNT(s.id)::numeric / GREATEST(EXTRACT(DAY FROM NOW() - h.created_at), 1), 2) AS avg_per_day
+                   ROUND(COUNT(s.id) / GREATEST(DATEDIFF(NOW(), h.created_at), 1), 2) AS avg_per_day
             FROM hospitals h
             JOIN regions r ON r.id = h.region_id
-            LEFT JOIN submissions s ON s.hospital_id = h.id AND s.submitted_at >= NOW() - INTERVAL '30 days'
+            LEFT JOIN submissions s ON s.hospital_id = h.id AND s.submitted_at >= NOW() - INTERVAL 30 DAY
             $where
-            GROUP BY h.name, r.name, h.created_at
+            GROUP BY h.id, h.name, r.name, h.created_at
             ORDER BY submissions DESC LIMIT 20
         ");
         $stmt->execute($params);
@@ -294,16 +293,16 @@ class DashboardController
 
     private function getMissingReports(PDO $db, array $filter): array
     {
-        // Hospitals that haven't submitted in the last 7 days
         $stmt = $db->prepare("
             SELECT h.name, h.code, r.name AS region, MAX(s.submitted_at) AS last_submission
             FROM hospitals h
             JOIN regions r ON r.id = h.region_id
             LEFT JOIN submissions s ON s.hospital_id = h.id
-            WHERE h.is_active = TRUE
-            GROUP BY h.name, h.code, r.name
-            HAVING MAX(s.submitted_at) < NOW() - INTERVAL '7 days' OR MAX(s.submitted_at) IS NULL
-            ORDER BY last_submission ASC NULLS FIRST LIMIT 20
+            WHERE h.is_active = 1
+            GROUP BY h.id, h.name, h.code, r.name
+            HAVING MAX(s.submitted_at) < NOW() - INTERVAL 7 DAY OR MAX(s.submitted_at) IS NULL
+            ORDER BY last_submission IS NULL DESC, last_submission ASC
+            LIMIT 20
         ");
         $stmt->execute();
         return $stmt->fetchAll();

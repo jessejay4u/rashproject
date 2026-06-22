@@ -41,7 +41,7 @@ class FormController
             $params['category'] = $_GET['category'];
         }
         if (!empty($_GET['search'])) {
-            $conditions[] = "(name ILIKE :search OR description ILIKE :search)";
+            $conditions[] = "(name LIKE :search OR description LIKE :search)";
             $params['search'] = '%' . $_GET['search'] . '%';
         }
 
@@ -166,7 +166,7 @@ class FormController
                 'code'     => strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '_', $body['code'])),
                 'desc'     => $body['description'] ?? null,
                 'cat'      => $body['category'] ?? null,
-                'recurring'=> !empty($body['is_recurring']) ? 'true' : 'false',
+                'recurring'=> !empty($body['is_recurring']) ? 1 : 0,
                 'rectype'  => $body['recurrence_type'] ?? null,
                 'settings' => json_encode($body['settings'] ?? []),
             ]);
@@ -182,7 +182,7 @@ class FormController
                     'title'     => $section['title'],
                     'desc'      => $section['description'] ?? null,
                     'order'     => $sIndex,
-                    'repeatable'=> !empty($section['is_repeatable']) ? 'true' : 'false',
+                    'repeatable'=> !empty($section['is_repeatable']) ? 1 : 0,
                 ]);
 
                 foreach ($section['fields'] ?? [] as $fIndex => $field) {
@@ -196,7 +196,7 @@ class FormController
                         'name'       => strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $field['name'])),
                         'label'      => $field['label'],
                         'type'       => $field['field_type'],
-                        'required'   => !empty($field['is_required']) ? 'true' : 'false',
+                        'required'   => !empty($field['is_required']) ? 1 : 0,
                         'order'      => $fIndex,
                         'placeholder'=> $field['placeholder'] ?? null,
                         'help'       => $field['help_text'] ?? null,

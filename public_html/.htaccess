@@ -1,0 +1,13 @@
+Options -Indexes
+RewriteEngine On
+
+# Route /api/* requests to the backend
+RewriteRule ^api/(.*)$ backend/public/index.php [QSA,L]
+
+# Serve existing files directly (JS, CSS, images, etc.)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# For everything else, serve the SPA entry point
+RewriteCond %{REQUEST_URI} !^/backend/
+RewriteRule ^ index.html [QSA,L]

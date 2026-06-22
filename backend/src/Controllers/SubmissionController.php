@@ -146,7 +146,7 @@ class SubmissionController
                     'text'       => is_string($value) ? $value : null,
                     'number'     => is_numeric($value) ? $value : null,
                     'date'       => ($field['field_type'] === 'date') ? $value : null,
-                    'boolean'    => is_bool($value) ? ($value ? 'true' : 'false') : null,
+                    'boolean'    => is_bool($value) ? ($value ? 1 : 0) : null,
                     'json'       => is_array($value) ? json_encode($value) : null,
                 ]);
             }

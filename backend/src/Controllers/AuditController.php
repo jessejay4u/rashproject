@@ -33,7 +33,7 @@ class AuditController
             $params['user_id'] = $_GET['user_id'];
         }
         if (!empty($_GET['action'])) {
-            $conditions[] = 'al.action ILIKE :action';
+            $conditions[] = 'al.action LIKE :action';
             $params['action'] = '%' . $_GET['action'] . '%';
         }
         if (!empty($_GET['entity_type'])) {

@@ -40,7 +40,7 @@ class HospitalController
         }
 
         if (!empty($_GET['search'])) {
-            $conditions[] = "(h.name ILIKE :search OR h.code ILIKE :search)";
+            $conditions[] = "(h.name LIKE :search OR h.code LIKE :search)";
             $params['search'] = '%' . $_GET['search'] . '%';
         }
 
@@ -60,7 +60,7 @@ class HospitalController
 
         $stmt = $db->prepare("
             SELECT h.*, r.name AS region_name,
-                   (SELECT COUNT(*) FROM submissions s WHERE s.hospital_id = h.id AND s.submitted_at >= NOW() - INTERVAL '30 days') AS monthly_submissions,
+                   (SELECT COUNT(*) FROM submissions s WHERE s.hospital_id = h.id AND s.submitted_at >= NOW() - INTERVAL 30 DAY) AS monthly_submissions,
                    (SELECT MAX(submitted_at) FROM submissions s WHERE s.hospital_id = h.id) AS last_submission
             FROM hospitals h
             JOIN regions r ON r.id = h.region_id
@@ -98,12 +98,6 @@ class HospitalController
 
         $db  = Database::connection();
         $id  = $this->generateUuid();
-
-        // Build location GEOGRAPHY if coordinates provided
-        $locationSql = '';
-        if (!empty($body['latitude']) && !empty($body['longitude'])) {
-            $locationSql = ', location = ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)';
-        }
 
         $db->prepare("
             INSERT INTO hospitals (id, region_id, name, code, type, level, address, phone, email, latitude, longitude, capacity_beds, metadata)

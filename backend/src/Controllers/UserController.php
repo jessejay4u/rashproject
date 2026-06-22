@@ -49,7 +49,7 @@ class UserController
             $params['role'] = $_GET['role'];
         }
         if (!empty($_GET['search'])) {
-            $conditions[] = "(u.name ILIKE :search OR u.email ILIKE :search)";
+            $conditions[] = "(u.name LIKE :search OR u.email LIKE :search)";
             $params['search'] = '%' . $_GET['search'] . '%';
         }
 

@@ -28,12 +28,12 @@ class ReportController
             SELECT r.*, u.name AS created_by_name
             FROM reports r
             JOIN users u ON u.id = r.created_by
-            WHERE r.created_by = :uid OR :is_admin = TRUE
+            WHERE r.created_by = :uid OR :is_admin = 1
             ORDER BY r.created_at DESC LIMIT 50
         ");
         $stmt->execute([
             'uid'      => $user['id'],
-            'is_admin' => in_array($user['role_name'], ['super_admin', 'regional_admin'], true) ? 'TRUE' : 'FALSE',
+            'is_admin' => in_array($user['role_name'], ['super_admin', 'regional_admin'], true) ? 1 : 0,
         ]);
 
         Response::success($stmt->fetchAll());
@@ -60,7 +60,7 @@ class ReportController
 
         $db->prepare("
             INSERT INTO reports (id, created_by, name, type, parameters, status, file_format, expires_at)
-            VALUES (:id, :uid, :name, :type, :params, 'pending', :format, NOW() + INTERVAL '24 hours')
+            VALUES (:id, :uid, :name, :type, :params, 'pending', :format, NOW() + INTERVAL 24 HOUR)
         ")->execute([
             'id'     => $id,
             'uid'    => $user['id'],
@@ -84,11 +84,11 @@ class ReportController
         $this->auth->requirePermission($user, 'reports.export');
 
         $db   = Database::connection();
-        $stmt = $db->prepare("SELECT * FROM reports WHERE id = :id AND (created_by = :uid OR :is_admin = TRUE)");
+        $stmt = $db->prepare("SELECT * FROM reports WHERE id = :id AND (created_by = :uid OR :is_admin = 1)");
         $stmt->execute([
             'id'       => $id,
             'uid'      => $user['id'],
-            'is_admin' => in_array($user['role_name'], ['super_admin', 'regional_admin'], true) ? 'TRUE' : 'FALSE',
+            'is_admin' => in_array($user['role_name'], ['super_admin', 'regional_admin'], true) ? 1 : 0,
         ]);
         $report = $stmt->fetch();
 
