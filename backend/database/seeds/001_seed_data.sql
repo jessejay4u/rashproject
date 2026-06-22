@@ -110,7 +110,7 @@ INSERT INTO users (id, role_id, name, email, password_hash, is_active, mfa_enabl
         '00000000-0000-0000-0000-000000000001',
         'System Administrator',
         'admin@healthplatform.org',
-        '$argon2id$v=19$m=65536,t=4,p=1$PLACEHOLDER_CHANGE_ON_FIRST_LOGIN',
+        '$argon2id$v=19$m=65536,t=4,p=1$Nmo4UGg1cFhFQjlGdG5Rbw$Y+NS6wRIEIRMnydK7glUotQ6BhYfg5f9yY/J6K7sPs8',
         TRUE,
         FALSE,
         NOW()
