@@ -1,25 +1,19 @@
 Options -Indexes
 Options -MultiViews
 
-<FilesMatch "^(config\.php|bootstrap\.php)$">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
-
-<FilesMatch "^\.">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
-
+# Block all direct access to the backend folder
 RewriteEngine On
+RewriteRule ^backend/ - [F,L]
 
-# Block direct access to api/bootstrap.php
-RewriteRule ^api/bootstrap\.php$ - [F,L]
+# Route /api/* requests internally to backend/api/
+# Callers use api/login.php etc.; .htaccess maps them transparently.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^api/(.+)$ backend/api/$1 [QSA,L]
 
-# Allow direct file/directory access
+# Serve real files and directories as-is
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Route everything else to index.html (SPA-style fallback)
-RewriteRule ^$ index.html [L]
+# Root → login page
+RewriteRule ^$ frontend/index.html [L]

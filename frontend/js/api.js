@@ -1,4 +1,13 @@
-/* global fetch, localStorage */
+/* global fetch */
+
+// Detect project root so API calls work whether the app is at the domain root
+// (example.com/frontend/page.html) or in a subdirectory (localhost/myapp/frontend/page.html).
+const _apiRoot = (function () {
+    const p = window.location.pathname;
+    const i = p.indexOf('/frontend/');
+    return i >= 0 ? p.slice(0, i) : '';
+}());
+
 const API = {
     async request(method, url, data) {
         const opts = {
@@ -10,13 +19,12 @@ const API = {
 
         let res;
         try {
-            res = await fetch(url, opts);
+            res = await fetch(_apiRoot + '/' + url, opts);
         } catch (e) {
             throw new Error('Network error — check your connection');
         }
 
         if (res.status === 401) {
-            // Not logged in — redirect to login
             if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
                 window.location.href = 'index.html';
             }
