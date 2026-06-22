@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="page-title" content="Submissions">
+    <title>Submissions — Health Platform</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                    <rect width="48" height="48" rx="10" fill="#2e86c1"/>
+                    <path d="M24 10v28M10 24h28" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                </svg>
+                <span>HealthPlatform</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer" id="sidebar-user"></div>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title" id="page-title">Submissions</h1>
+            <div class="topbar-actions">
+                <a href="/pages/submit.html" class="btn btn-primary btn-sm">+ New Submission</a>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="card">
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <input type="search" id="search" placeholder="Search…" style="min-width:200px;">
+                    <select id="filter-status">
+                        <option value="">All statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <select id="filter-form">
+                        <option value="">All forms</option>
+                    </select>
+                    <input type="date" id="filter-from" title="From date">
+                    <input type="date" id="filter-to"   title="To date">
+                    <button class="btn btn-outline btn-sm" id="btn-export">&#8595; Export CSV</button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Form</th>
+                                <th>Hospital</th>
+                                <th>Submitted By</th>
+                                <th>Period</th>
+                                <th>Status</th>
+                                <th>Submitted At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="submissions-table">
+                            <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="pagination-container"></div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay hidden" id="review-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Review Submission</span>
+            <button class="modal-close" id="review-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Decision</label>
+                <select id="review-status">
+                    <option value="approved">Approve</option>
+                    <option value="rejected">Reject</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes (optional)</label>
+                <textarea id="review-notes" rows="4" placeholder="Add notes for the data entry team…"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" id="review-cancel">Cancel</button>
+            <button class="btn btn-primary" id="review-submit">Submit Review</button>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/app.js"></script>
+<script>
+(async function () {
+    let currentPage     = 1;
+    let reviewingId     = null;
+
+    async function load(page = 1) {
+        currentPage = page;
+        const params = {
+            page,
+            per_page: 20,
+            status:   document.getElementById('filter-status').value,
+            form_id:  document.getElementById('filter-form').value,
+            from:     document.getElementById('filter-from').value,
+            to:       document.getElementById('filter-to').value,
+        };
+
+        const tbody = document.getElementById('submissions-table');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:24px;"><div class="spinner" style="margin:auto;"></div></td></tr>';
+
+        try {
+            const res = await API.get('/submissions', params);
+            renderTable(res.data);
+            App.renderPagination(document.getElementById('pagination-container'), res.meta, load);
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger" style="padding:24px;">${App.escHtml(err.message)}</td></tr>`;
+        }
+    }
+
+    function renderTable(rows) {
+        const tbody = document.getElementById('submissions-table');
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px;">No submissions found.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map(s => `
+            <tr>
+                <td><span style="font-weight:500;">${App.escHtml(s.form_name)}</span></td>
+                <td>${App.escHtml(s.hospital_name)}</td>
+                <td>${App.escHtml(s.submitted_by_name)}</td>
+                <td class="text-muted">${s.period_start ? App.formatDate(s.period_start) + ' – ' + App.formatDate(s.period_end) : '—'}</td>
+                <td>${App.statusBadge(s.status)}</td>
+                <td class="text-muted">${App.formatDateTime(s.submitted_at)}</td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <a href="/pages/submission-detail.html?id=${s.id}" class="btn btn-ghost btn-sm">View</a>
+                        ${s.status === 'submitted' ? `<button class="btn btn-outline btn-sm review-btn" data-id="${s.id}">Review</button>` : ''}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        tbody.querySelectorAll('.review-btn').forEach(btn => {
+            btn.addEventListener('click', () => openReview(btn.dataset.id));
+        });
+    }
+
+    function openReview(id) {
+        reviewingId = id;
+        document.getElementById('review-modal').classList.remove('hidden');
+        document.getElementById('review-notes').value = '';
+    }
+
+    function closeReview() {
+        reviewingId = null;
+        document.getElementById('review-modal').classList.add('hidden');
+    }
+
+    document.getElementById('review-modal-close').addEventListener('click', closeReview);
+    document.getElementById('review-cancel').addEventListener('click', closeReview);
+
+    document.getElementById('review-submit').addEventListener('click', async function () {
+        if (!reviewingId) return;
+        const status = document.getElementById('review-status').value;
+        const notes  = document.getElementById('review-notes').value;
+        this.disabled = true;
+        try {
+            await API.post(`/submissions/${reviewingId}/review`, { status, notes });
+            App.toast('Submission ' + status, 'success');
+            closeReview();
+            load(currentPage);
+        } catch (err) {
+            App.toast('Review failed: ' + err.message, 'error');
+        } finally {
+            this.disabled = false;
+        }
+    });
+
+    // Load form options
+    async function loadForms() {
+        try {
+            const res  = await API.get('/forms', { status: 'published', per_page: 100 });
+            const sel  = document.getElementById('filter-form');
+            res.data.forEach(f => {
+                const opt   = document.createElement('option');
+                opt.value   = f.id;
+                opt.textContent = f.name;
+                sel.appendChild(opt);
+            });
+        } catch (_) {}
+    }
+
+    // Filters
+    let searchTimer;
+    ['filter-status', 'filter-form', 'filter-from', 'filter-to'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', () => load(1));
+    });
+    document.getElementById('search')?.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => load(1), 400);
+    });
+
+    // Export
+    document.getElementById('btn-export')?.addEventListener('click', () => {
+        const params = new URLSearchParams({
+            status:  document.getElementById('filter-status').value,
+            form_id: document.getElementById('filter-form').value,
+            from:    document.getElementById('filter-from').value,
+            to:      document.getElementById('filter-to').value,
+            format:  'csv',
+        });
+        window.location.href = `/api/reports/export?${params}&_token=${API.getToken()}`;
+    });
+
+    loadForms();
+    load();
+})();
+</script>
+</body>
+</html>

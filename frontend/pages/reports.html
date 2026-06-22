@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="page-title" content="Reports">
+    <title>Reports — Health Platform</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-logo"><svg width="32" height="32" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="10" fill="#2e86c1"/><path d="M24 10v28M10 24h28" stroke="white" stroke-width="5" stroke-linecap="round"/></svg><span>HealthPlatform</span></div></div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer" id="sidebar-user"></div>
+    </aside>
+    <div class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title" id="page-title">Reports</h1>
+            <div class="topbar-actions">
+                <button class="btn btn-primary btn-sm" id="btn-generate">Generate Report</button>
+                <a href="/api/reports/export?format=csv" class="btn btn-outline btn-sm">&#8595; Export Submissions CSV</a>
+            </div>
+        </header>
+        <main class="page-content">
+            <!-- Quick Export -->
+            <div class="card mb-6">
+                <div class="card-header"><span class="card-title">Quick Export</span></div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Form</label>
+                            <select id="export-form"><option value="">All forms</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>From Date</label>
+                            <input type="date" id="export-from">
+                        </div>
+                        <div class="form-group">
+                            <label>To Date</label>
+                            <input type="date" id="export-to">
+                        </div>
+                        <div class="form-group">
+                            <label>Format</label>
+                            <select id="export-format">
+                                <option value="csv">CSV</option>
+                                <option value="xlsx">Excel (XLSX)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" id="btn-quick-export">&#8595; Download Export</button>
+                </div>
+            </div>
+
+            <!-- Report history -->
+            <div class="card">
+                <div class="card-header"><span class="card-title">Report History</span></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Format</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="reports-table">
+                            <tr><td colspan="6" class="text-center text-muted" style="padding:32px;">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Generate Modal -->
+<div class="modal-overlay hidden" id="generate-modal">
+    <div class="modal">
+        <div class="modal-header"><span class="modal-title">Generate Report</span><button class="modal-close" id="gen-close">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Report Name</label><input type="text" id="gen-name" placeholder="e.g. Monthly Summary - June 2025"></div>
+                <div class="form-group"><label>Type</label><select id="gen-type"><option value="summary">Summary</option><option value="detailed">Detailed</option><option value="comparison">Comparison</option><option value="trend">Trend</option></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Format</label><select id="gen-format"><option value="pdf">PDF</option><option value="xlsx">Excel</option><option value="csv">CSV</option></select></div>
+                <div class="form-group"><label>Period</label><select id="gen-period"><option value="month">Last 30 days</option><option value="quarter">Last Quarter</option><option value="year">Last Year</option></select></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" id="gen-cancel">Cancel</button>
+            <button class="btn btn-primary" id="gen-submit">Generate</button>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/app.js"></script>
+<script>
+(async function () {
+    async function loadReports() {
+        try {
+            const res   = await API.get('/reports');
+            const tbody = document.getElementById('reports-table');
+            if (!res.data.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:32px;">No reports yet. Generate one above.</td></tr>'; return; }
+            tbody.innerHTML = res.data.map(r => `
+                <tr>
+                    <td>${App.escHtml(r.name)}</td>
+                    <td><span class="badge badge-info">${App.escHtml(r.type)}</span></td>
+                    <td>${App.escHtml(r.file_format?.toUpperCase() || '—')}</td>
+                    <td>${App.statusBadge(r.status)}</td>
+                    <td class="text-muted">${App.formatDateTime(r.created_at)}</td>
+                    <td>${r.status === 'ready' ? `<a href="/api/reports/${r.id}/download?_token=${API.getToken()}" class="btn btn-success btn-sm">&#8595; Download</a>` : '—'}</td>
+                </tr>`).join('');
+        } catch (err) { document.getElementById('reports-table').innerHTML = `<tr><td colspan="6" class="text-center text-danger" style="padding:24px;">${App.escHtml(err.message)}</td></tr>`; }
+    }
+
+    document.getElementById('btn-generate').addEventListener('click', () => document.getElementById('generate-modal').classList.remove('hidden'));
+    document.getElementById('gen-close').addEventListener('click',  () => document.getElementById('generate-modal').classList.add('hidden'));
+    document.getElementById('gen-cancel').addEventListener('click', () => document.getElementById('generate-modal').classList.add('hidden'));
+
+    document.getElementById('gen-submit').addEventListener('click', async function () {
+        this.disabled = true;
+        try {
+            await API.post('/reports', {
+                name:   document.getElementById('gen-name').value || 'Report ' + new Date().toLocaleDateString(),
+                type:   document.getElementById('gen-type').value,
+                format: document.getElementById('gen-format').value,
+                parameters: { period: document.getElementById('gen-period').value },
+            });
+            App.toast('Report generation started', 'success');
+            document.getElementById('generate-modal').classList.add('hidden');
+            setTimeout(loadReports, 3000);
+        } catch (err) { App.toast('Failed: ' + err.message, 'error'); }
+        finally { this.disabled = false; }
+    });
+
+    document.getElementById('btn-quick-export').addEventListener('click', function () {
+        const params = new URLSearchParams({
+            form_id: document.getElementById('export-form').value,
+            from:    document.getElementById('export-from').value,
+            to:      document.getElementById('export-to').value,
+            format:  document.getElementById('export-format').value,
+        });
+        window.location.href = `/api/reports/export?${params}`;
+    });
+
+    // Load forms
+    try {
+        const res = await API.get('/forms', { status: 'published', per_page: 100 });
+        const sel = document.getElementById('export-form');
+        res.data.forEach(f => { const o = document.createElement('option'); o.value = f.id; o.textContent = f.name; sel.appendChild(o); });
+    } catch (_) {}
+
+    loadReports();
+    setInterval(loadReports, 30000); // auto-refresh every 30s
+})();
+</script>
+</body>
+</html>

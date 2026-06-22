@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="page-title" content="Submit Data">
+    <title>Submit Data — Health Platform</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                    <rect width="48" height="48" rx="10" fill="#2e86c1"/>
+                    <path d="M24 10v28M10 24h28" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                </svg>
+                <span>HealthPlatform</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer" id="sidebar-user"></div>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title" id="page-title">Submit Data</h1>
+            <div class="topbar-actions">
+                <span id="offline-indicator" class="badge badge-warning hidden">Offline — will sync when connected</span>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="card" style="max-width:800px;margin:auto;">
+                <div class="card-header">
+                    <span class="card-title" id="form-title">Select a Form</span>
+                    <div id="autosave-status" class="text-muted" style="font-size:var(--text-xs);"></div>
+                </div>
+                <div class="card-body">
+                    <!-- Form selector (if no form_id in URL) -->
+                    <div id="form-selector" class="form-group">
+                        <label>Select Form *</label>
+                        <select id="form-select">
+                            <option value="">Choose a form to fill…</option>
+                        </select>
+                    </div>
+
+                    <!-- Hospital selector -->
+                    <div class="form-group" id="hospital-selector-group">
+                        <label>Hospital *</label>
+                        <select id="hospital-select">
+                            <option value="">Select hospital…</option>
+                        </select>
+                    </div>
+
+                    <!-- Period -->
+                    <div class="form-row" id="period-group">
+                        <div class="form-group">
+                            <label>Period Start</label>
+                            <input type="date" id="period-start">
+                        </div>
+                        <div class="form-group">
+                            <label>Period End</label>
+                            <input type="date" id="period-end">
+                        </div>
+                    </div>
+
+                    <div id="form-fields-container">
+                        <!-- Dynamic form fields rendered here -->
+                    </div>
+
+                    <!-- GPS capture -->
+                    <div class="form-group" id="gps-group" style="display:none;">
+                        <label>Location Captured</label>
+                        <div id="gps-display" class="text-muted">Not captured yet.</div>
+                        <button type="button" class="btn btn-outline btn-sm mt-2" id="btn-capture-gps">
+                            &#x1F4CD; Capture GPS Location
+                        </button>
+                    </div>
+
+                    <div id="form-errors" class="alert alert-error hidden"></div>
+
+                    <div style="display:flex;gap:12px;margin-top:24px;">
+                        <button class="btn btn-ghost" id="btn-save-draft">Save as Draft</button>
+                        <button class="btn btn-primary" id="btn-submit" style="flex:1;" disabled>
+                            Submit Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/app.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    const params       = new URLSearchParams(window.location.search);
+    const preloadFormId = params.get('form_id');
+    const user          = JSON.parse(localStorage.getItem('user') || '{}');
+
+    let currentForm  = null;
+    let capturedGPS  = null;
+    let autosaveTimer;
+    let startTime    = Date.now();
+
+    // ── Init ───────────────────────────────────────────────
+    async function init() {
+        await Promise.all([loadForms(), loadHospitals()]);
+
+        if (preloadFormId) {
+            document.getElementById('form-select').value = preloadFormId;
+            document.getElementById('form-selector').style.display = 'none';
+            await loadForm(preloadFormId);
+        }
+
+        // Pre-select hospital if data_entry user
+        if (user.hospital_id) {
+            const sel = document.getElementById('hospital-select');
+            sel.value = user.hospital_id;
+            if (sel.options.length <= 1) {
+                sel.innerHTML = `<option value="${user.hospital_id}">${user.hospital_name || 'My Hospital'}</option>`;
+                document.getElementById('hospital-selector-group').querySelector('label').textContent = 'Hospital';
+            }
+        }
+
+        detectOffline();
+    }
+
+    async function loadForms() {
+        try {
+            const res = await API.get('/forms', { status: 'published', per_page: 100 });
+            const sel = document.getElementById('form-select');
+            res.data.forEach(f => {
+                const o = document.createElement('option');
+                o.value = f.id;
+                o.textContent = f.name;
+                sel.appendChild(o);
+            });
+            sel.addEventListener('change', function () {
+                if (this.value) loadForm(this.value);
+            });
+        } catch (_) {}
+    }
+
+    async function loadHospitals() {
+        try {
+            const res = await API.get('/hospitals', { per_page: 200 });
+            const sel = document.getElementById('hospital-select');
+            res.data.forEach(h => {
+                const o = document.createElement('option');
+                o.value = h.id;
+                o.textContent = h.name;
+                sel.appendChild(o);
+            });
+        } catch (_) {}
+    }
+
+    async function loadForm(formId) {
+        try {
+            const res = await API.get(`/forms/${formId}`);
+            currentForm = res.data;
+            renderFormFields(currentForm);
+            document.getElementById('form-title').textContent = currentForm.name;
+            document.getElementById('btn-submit').disabled = false;
+            document.getElementById('gps-group').style.display = currentForm.settings?.gps_required ? '' : '';
+
+            // Restore draft if exists
+            const draft = loadDraft(formId);
+            if (draft) prefillFromDraft(draft);
+        } catch (err) {
+            App.toast('Failed to load form: ' + err.message, 'error');
+        }
+    }
+
+    function renderFormFields(form) {
+        const container = document.getElementById('form-fields-container');
+        container.innerHTML = '';
+
+        form.sections?.forEach(section => {
+            if (form.sections.length > 1) {
+                const h = document.createElement('h3');
+                h.textContent = section.title;
+                h.style.cssText = 'font-size:var(--text-lg);margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--color-border);';
+                container.appendChild(h);
+            }
+
+            section.fields?.forEach(field => {
+                const group = document.createElement('div');
+                group.className = 'form-group';
+                group.dataset.fieldId = field.id;
+
+                const label = document.createElement('label');
+                label.innerHTML = App.escHtml(field.label) + (field.is_required ? ' <span style="color:var(--color-danger);">*</span>' : '');
+                group.appendChild(label);
+
+                const input = buildFieldInput(field);
+                group.appendChild(input);
+
+                if (field.help_text) {
+                    const help = document.createElement('span');
+                    help.className = 'text-muted';
+                    help.style.fontSize = 'var(--text-xs)';
+                    help.textContent = field.help_text;
+                    group.appendChild(help);
+                }
+
+                const errSpan = document.createElement('span');
+                errSpan.className = 'field-error';
+                errSpan.id = 'err-' + field.id;
+                group.appendChild(errSpan);
+
+                container.appendChild(group);
+
+                // Auto-save on change
+                input.addEventListener('change', scheduleAutosave);
+            });
+        });
+    }
+
+    function buildFieldInput(field) {
+        const id = 'field-' + field.id;
+
+        switch (field.field_type) {
+            case 'textarea': {
+                const t = document.createElement('textarea');
+                t.id = id; t.name = field.id; t.rows = 4;
+                if (field.placeholder) t.placeholder = field.placeholder;
+                return t;
+            }
+            case 'number': {
+                const i = document.createElement('input');
+                i.type = 'number'; i.id = id; i.name = field.id;
+                if (field.validation?.min !== null) i.min = field.validation.min;
+                if (field.validation?.max !== null) i.max = field.validation.max;
+                if (field.placeholder) i.placeholder = field.placeholder;
+                return i;
+            }
+            case 'date': {
+                const i = document.createElement('input');
+                i.type = 'date'; i.id = id; i.name = field.id;
+                return i;
+            }
+            case 'select': {
+                const s = document.createElement('select');
+                s.id = id; s.name = field.id;
+                s.innerHTML = '<option value="">— Select —</option>' +
+                    (field.options || []).map(o => `<option value="${App.escHtml(o.value)}">${App.escHtml(o.label)}</option>`).join('');
+                return s;
+            }
+            case 'radio': {
+                const wrap = document.createElement('div');
+                wrap.style.display = 'flex'; wrap.style.flexDirection = 'column'; wrap.style.gap = '8px';
+                (field.options || []).forEach(o => {
+                    const lbl = document.createElement('label');
+                    lbl.className = 'checkbox-label';
+                    lbl.innerHTML = `<input type="radio" name="${field.id}" value="${App.escHtml(o.value)}"> ${App.escHtml(o.label)}`;
+                    wrap.appendChild(lbl);
+                });
+                return wrap;
+            }
+            case 'checkbox': {
+                const wrap = document.createElement('div');
+                wrap.style.display = 'flex'; wrap.style.flexDirection = 'column'; wrap.style.gap = '8px';
+                (field.options || []).forEach(o => {
+                    const lbl = document.createElement('label');
+                    lbl.className = 'checkbox-label';
+                    lbl.innerHTML = `<input type="checkbox" name="${field.id}" value="${App.escHtml(o.value)}"> ${App.escHtml(o.label)}`;
+                    wrap.appendChild(lbl);
+                });
+                return wrap;
+            }
+            case 'file':
+            case 'photo': {
+                const i = document.createElement('input');
+                i.type   = 'file';
+                i.id     = id;
+                i.name   = field.id;
+                i.accept = field.field_type === 'photo' ? 'image/*' : '*/*';
+                return i;
+            }
+            case 'gps': {
+                const div = document.createElement('div');
+                div.id = id;
+                div.innerHTML = '<span class="text-muted">GPS location will be captured on submit.</span>';
+                return div;
+            }
+            default: {
+                const i = document.createElement('input');
+                i.type = 'text'; i.id = id; i.name = field.id;
+                if (field.placeholder) i.placeholder = field.placeholder;
+                if (field.validation?.maxLength) i.maxLength = field.validation.maxLength;
+                return i;
+            }
+        }
+    }
+
+    // ── GPS ────────────────────────────────────────────────
+    document.getElementById('btn-capture-gps')?.addEventListener('click', function () {
+        if (!navigator.geolocation) {
+            App.toast('Geolocation not supported by your browser', 'warning');
+            return;
+        }
+        this.disabled = true;
+        this.textContent = 'Capturing…';
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                capturedGPS = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+                document.getElementById('gps-display').textContent =
+                    `Lat: ${capturedGPS.lat.toFixed(6)}, Lng: ${capturedGPS.lng.toFixed(6)} (±${Math.round(capturedGPS.accuracy)}m)`;
+                this.textContent = '✓ Location Captured';
+                App.toast('GPS captured successfully', 'success');
+            },
+            err => {
+                App.toast('GPS capture failed: ' + err.message, 'error');
+                this.disabled = false;
+                this.textContent = '📍 Capture GPS Location';
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    });
+
+    // ── Collect values ─────────────────────────────────────
+    function collectValues() {
+        const values = {};
+        if (!currentForm) return values;
+
+        currentForm.sections?.forEach(section => {
+            section.fields?.forEach(field => {
+                const el = document.getElementById('field-' + field.id) ||
+                           document.querySelector(`[name="${field.id}"]`);
+                if (!el) return;
+
+                if (field.field_type === 'checkbox') {
+                    const checked = [...document.querySelectorAll(`input[name="${field.id}"]:checked`)].map(i => i.value);
+                    values[field.id] = checked;
+                } else if (field.field_type === 'radio') {
+                    const checked = document.querySelector(`input[name="${field.id}"]:checked`);
+                    values[field.id] = checked?.value ?? null;
+                } else if (field.field_type === 'gps') {
+                    values[field.id] = capturedGPS;
+                } else {
+                    values[field.id] = el.value || null;
+                }
+            });
+        });
+
+        return values;
+    }
+
+    // ── Submit ─────────────────────────────────────────────
+    document.getElementById('btn-submit')?.addEventListener('click', async function () {
+        const errors = validateForm();
+        if (Object.keys(errors).length) {
+            showErrors(errors);
+            return;
+        }
+
+        this.disabled = true;
+        this.textContent = 'Submitting…';
+
+        const payload = {
+            form_id:          currentForm.id,
+            hospital_id:      document.getElementById('hospital-select').value,
+            period_start:     document.getElementById('period-start').value || null,
+            period_end:       document.getElementById('period-end').value || null,
+            status:           'submitted',
+            values:           collectValues(),
+            latitude:         capturedGPS?.lat ?? null,
+            longitude:        capturedGPS?.lng ?? null,
+            local_id:         generateLocalId(),
+            duration_seconds: Math.round((Date.now() - startTime) / 1000),
+            device_info:      { user_agent: navigator.userAgent, online: navigator.onLine },
+        };
+
+        try {
+            if (!navigator.onLine) {
+                saveOffline(payload);
+                App.toast('Saved offline. Will sync when connected.', 'warning');
+                clearDraft(currentForm.id);
+            } else {
+                await API.post('/submissions', payload);
+                App.toast('Submission successful!', 'success');
+                clearDraft(currentForm.id);
+                setTimeout(() => window.location.href = '/pages/submissions.html', 1500);
+            }
+        } catch (err) {
+            App.toast('Submission failed: ' + err.message, 'error');
+            if (err.errors) showErrors(err.errors);
+        } finally {
+            this.disabled   = false;
+            this.textContent = 'Submit Data';
+        }
+    });
+
+    document.getElementById('btn-save-draft')?.addEventListener('click', function () {
+        if (!currentForm) { App.toast('Please select a form first', 'warning'); return; }
+        saveDraft(currentForm.id, collectValues());
+        App.toast('Draft saved', 'info');
+    });
+
+    // ── Validation ─────────────────────────────────────────
+    function validateForm() {
+        const errors  = {};
+        const values  = collectValues();
+
+        if (!document.getElementById('hospital-select').value) {
+            errors['hospital'] = 'Please select a hospital.';
+        }
+
+        currentForm?.sections?.forEach(section => {
+            section.fields?.forEach(field => {
+                const v = values[field.id];
+                if (field.is_required && (v === null || v === '' || (Array.isArray(v) && !v.length))) {
+                    errors[field.id] = `"${field.label}" is required.`;
+                }
+            });
+        });
+
+        return errors;
+    }
+
+    function showErrors(errors) {
+        // Clear old
+        document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+        Object.entries(errors).forEach(([fieldId, msg]) => {
+            const errEl = document.getElementById('err-' + fieldId);
+            if (errEl) errEl.textContent = msg;
+        });
+        document.getElementById('form-errors').classList.add('hidden');
+    }
+
+    // ── Auto-save draft ────────────────────────────────────
+    function scheduleAutosave() {
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(() => {
+            if (currentForm) {
+                saveDraft(currentForm.id, collectValues());
+                document.getElementById('autosave-status').textContent = 'Draft saved ' + new Date().toLocaleTimeString();
+            }
+        }, 2000);
+    }
+
+    function saveDraft(formId, values) {
+        localStorage.setItem('draft:' + formId, JSON.stringify({ values, savedAt: new Date().toISOString() }));
+    }
+
+    function loadDraft(formId) {
+        const raw = localStorage.getItem('draft:' + formId);
+        return raw ? JSON.parse(raw) : null;
+    }
+
+    function clearDraft(formId) {
+        localStorage.removeItem('draft:' + formId);
+    }
+
+    function prefillFromDraft(draft) {
+        // TODO: iterate fields and prefill — for now just toast
+        App.toast('Draft restored from last session', 'info');
+    }
+
+    // ── Offline queue ──────────────────────────────────────
+    function saveOffline(payload) {
+        const queue = JSON.parse(localStorage.getItem('offline_queue') || '[]');
+        queue.push({ payload, savedAt: new Date().toISOString() });
+        localStorage.setItem('offline_queue', JSON.stringify(queue));
+    }
+
+    async function syncOfflineQueue() {
+        const queue = JSON.parse(localStorage.getItem('offline_queue') || '[]');
+        if (!queue.length || !navigator.onLine) return;
+
+        let synced = 0;
+        const remaining = [];
+        for (const item of queue) {
+            try {
+                await API.post('/submissions', item.payload);
+                synced++;
+            } catch (_) {
+                remaining.push(item);
+            }
+        }
+        localStorage.setItem('offline_queue', JSON.stringify(remaining));
+        if (synced > 0) App.toast(`${synced} offline submission(s) synced`, 'success');
+    }
+
+    function detectOffline() {
+        const indicator = document.getElementById('offline-indicator');
+        function update() {
+            indicator.classList.toggle('hidden', navigator.onLine);
+            if (navigator.onLine) syncOfflineQueue();
+        }
+        window.addEventListener('online',  update);
+        window.addEventListener('offline', update);
+        update();
+    }
+
+    function generateLocalId() {
+        return 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>

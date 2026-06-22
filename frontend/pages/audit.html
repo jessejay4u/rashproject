@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="page-title" content="Audit Logs">
+    <title>Audit Logs — Health Platform</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-logo"><svg width="32" height="32" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="10" fill="#2e86c1"/><path d="M24 10v28M10 24h28" stroke="white" stroke-width="5" stroke-linecap="round"/></svg><span>HealthPlatform</span></div></div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer" id="sidebar-user"></div>
+    </aside>
+    <div class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title" id="page-title">Audit Logs</h1>
+        </header>
+        <main class="page-content">
+            <div class="card">
+                <div class="filters-bar">
+                    <input type="search" id="filter-action" placeholder="Filter by action…">
+                    <select id="filter-entity">
+                        <option value="">All entities</option>
+                        <option value="user">User</option>
+                        <option value="submission">Submission</option>
+                        <option value="form">Form</option>
+                        <option value="hospital">Hospital</option>
+                    </select>
+                    <input type="date" id="filter-from">
+                    <input type="date" id="filter-to">
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>IP Address</th></tr>
+                        </thead>
+                        <tbody id="audit-table">
+                            <tr><td colspan="5" class="text-center text-muted" style="padding:32px;">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination-container"></div>
+            </div>
+        </main>
+    </div>
+</div>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/app.js"></script>
+<script>
+(async function () {
+    async function load(page = 1) {
+        const params = { page, per_page: 50, action: document.getElementById('filter-action').value, entity_type: document.getElementById('filter-entity').value, from: document.getElementById('filter-from').value, to: document.getElementById('filter-to').value };
+        const tbody = document.getElementById('audit-table');
+        try {
+            const res = await API.get('/audit', params);
+            if (!res.data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:32px;">No audit logs found.</td></tr>'; return; }
+            tbody.innerHTML = res.data.map(r => `
+                <tr>
+                    <td class="text-muted">${App.formatDateTime(r.created_at)}</td>
+                    <td>${App.escHtml(r.user_name || r.user_email || 'System')}</td>
+                    <td><code style="font-size:12px;">${App.escHtml(r.action)}</code></td>
+                    <td>${r.entity_type ? `<span class="badge badge-neutral">${App.escHtml(r.entity_type)}</span> <span class="text-muted">${App.escHtml(r.entity_id || '')}</span>` : '—'}</td>
+                    <td class="text-muted">${App.escHtml(r.ip_address || '—')}</td>
+                </tr>`).join('');
+            App.renderPagination(document.getElementById('pagination-container'), res.meta, load);
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger" style="padding:24px;">${App.escHtml(err.message)}</td></tr>`;
+        }
+    }
+    let t;
+    document.getElementById('filter-action').addEventListener('input', function () { clearTimeout(t); t = setTimeout(() => load(1), 400); });
+    ['filter-entity','filter-from','filter-to'].forEach(id => document.getElementById(id).addEventListener('change', () => load(1)));
+    load();
+})();
+</script>
+</body>
+</html>

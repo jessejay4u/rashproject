@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="page-title" content="Users">
+    <title>Users — Health Platform</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-logo"><svg width="32" height="32" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="10" fill="#2e86c1"/><path d="M24 10v28M10 24h28" stroke="white" stroke-width="5" stroke-linecap="round"/></svg><span>HealthPlatform</span></div></div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer" id="sidebar-user"></div>
+    </aside>
+    <div class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title" id="page-title">Users</h1>
+            <div class="topbar-actions">
+                <button class="btn btn-primary btn-sm" id="btn-add-user">+ Invite User</button>
+            </div>
+        </header>
+        <main class="page-content">
+            <div class="card">
+                <div class="filters-bar">
+                    <input type="search" id="search-users" placeholder="Search by name or email…">
+                    <select id="filter-role">
+                        <option value="">All roles</option>
+                        <option value="super_admin">Super Admin</option>
+                        <option value="regional_admin">Regional Admin</option>
+                        <option value="hospital_admin">Hospital Admin</option>
+                        <option value="data_entry">Data Entry</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Role</th><th>Hospital</th><th>Last Login</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="users-table">
+                            <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination-container"></div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Invite Modal -->
+<div class="modal-overlay hidden" id="invite-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Invite New User</span>
+            <button class="modal-close" id="invite-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Full Name *</label><input type="text" id="u-name" placeholder="Full Name"></div>
+                <div class="form-group"><label>Email Address *</label><input type="email" id="u-email" placeholder="user@hospital.org"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Role *</label>
+                    <select id="u-role">
+                        <option value="">Select role…</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Phone</label><input type="text" id="u-phone" placeholder="+1234567890"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Hospital</label>
+                    <select id="u-hospital"><option value="">None (system/regional)</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Region</label>
+                    <select id="u-region"><option value="">None</option></select>
+                </div>
+            </div>
+            <div class="alert alert-info" style="margin-top:8px;">
+                A temporary password will be emailed to the user. They must change it on first login.
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" id="invite-cancel">Cancel</button>
+            <button class="btn btn-primary" id="invite-save">Send Invitation</button>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/app.js"></script>
+<script>
+(async function () {
+    let currentPage = 1;
+
+    async function load(page = 1) {
+        currentPage = page;
+        const params = { page, per_page: 20, search: document.getElementById('search-users').value, role: document.getElementById('filter-role').value };
+        const tbody = document.getElementById('users-table');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:24px;"><div class="spinner" style="margin:auto;"></div></td></tr>';
+
+        try {
+            const res = await API.get('/users', params);
+            renderTable(res.data);
+            App.renderPagination(document.getElementById('pagination-container'), res.meta, load);
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger" style="padding:24px;">${App.escHtml(err.message)}</td></tr>`;
+        }
+    }
+
+    function renderTable(rows) {
+        const tbody = document.getElementById('users-table');
+        if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px;">No users found.</td></tr>'; return; }
+        tbody.innerHTML = rows.map(u => `
+            <tr>
+                <td>${App.escHtml(u.name)}</td>
+                <td>${App.escHtml(u.email)}</td>
+                <td><span class="badge badge-primary">${App.escHtml(u.role_display)}</span></td>
+                <td>${App.escHtml(u.hospital_name || '—')}</td>
+                <td class="text-muted">${u.last_login_at ? App.formatDateTime(u.last_login_at) : 'Never'}</td>
+                <td>${u.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Inactive</span>'}</td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <button class="btn btn-ghost btn-sm edit-btn" data-id="${u.id}">Edit</button>
+                        ${u.is_active ? `<button class="btn btn-ghost btn-sm text-danger deactivate-btn" data-id="${u.id}">Deactivate</button>` : ''}
+                    </div>
+                </td>
+            </tr>`).join('');
+
+        tbody.querySelectorAll('.deactivate-btn').forEach(btn =>
+            btn.addEventListener('click', async () => {
+                if (!await App.confirm('Deactivate this user? They will not be able to log in.', 'Deactivate User')) return;
+                try {
+                    await API.delete(`/users/${btn.dataset.id}`);
+                    App.toast('User deactivated', 'success');
+                    load(currentPage);
+                } catch (err) { App.toast('Failed: ' + err.message, 'error'); }
+            }));
+    }
+
+    // Populate invite modal dropdowns
+    async function populateDropdowns() {
+        try {
+            const [roles, hospitals] = await Promise.all([
+                fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + API.getToken() } }).then(() =>
+                    // Inline roles (no dedicated endpoint yet)
+                    ({ data: [
+                        { id: '00000000-0000-0000-0000-000000000001', display_name: 'Super Administrator' },
+                        { id: '00000000-0000-0000-0000-000000000002', display_name: 'Regional Administrator' },
+                        { id: '00000000-0000-0000-0000-000000000003', display_name: 'Hospital Administrator' },
+                        { id: '00000000-0000-0000-0000-000000000004', display_name: 'Data Entry' },
+                        { id: '00000000-0000-0000-0000-000000000005', display_name: 'Viewer' },
+                    ]})
+                ),
+                API.get('/hospitals', { per_page: 200 }),
+            ]);
+
+            const rolesSel = document.getElementById('u-role');
+            roles.data.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = r.display_name; rolesSel.appendChild(o); });
+
+            const hospSel = document.getElementById('u-hospital');
+            hospitals.data.forEach(h => { const o = document.createElement('option'); o.value = h.id; o.textContent = h.name; hospSel.appendChild(o); });
+        } catch (_) {}
+    }
+
+    document.getElementById('btn-add-user').addEventListener('click', () => { populateDropdowns(); document.getElementById('invite-modal').classList.remove('hidden'); });
+    document.getElementById('invite-close').addEventListener('click', () => document.getElementById('invite-modal').classList.add('hidden'));
+    document.getElementById('invite-cancel').addEventListener('click', () => document.getElementById('invite-modal').classList.add('hidden'));
+
+    document.getElementById('invite-save').addEventListener('click', async function () {
+        const name  = document.getElementById('u-name').value.trim();
+        const email = document.getElementById('u-email').value.trim();
+        const role  = document.getElementById('u-role').value;
+        if (!name || !email || !role) { App.toast('Name, email and role are required', 'warning'); return; }
+        this.disabled = true;
+        try {
+            await API.post('/users', {
+                name, email, role_id: role,
+                phone:       document.getElementById('u-phone').value || null,
+                hospital_id: document.getElementById('u-hospital').value || null,
+                region_id:   document.getElementById('u-region').value || null,
+            });
+            App.toast('User invited. A welcome email has been sent.', 'success');
+            document.getElementById('invite-modal').classList.add('hidden');
+            load(1);
+        } catch (err) { App.toast('Failed: ' + err.message, 'error'); }
+        finally { this.disabled = false; }
+    });
+
+    let t;
+    document.getElementById('search-users').addEventListener('input', function () { clearTimeout(t); t = setTimeout(() => load(1), 400); });
+    document.getElementById('filter-role').addEventListener('change', () => load(1));
+    load();
+})();
+</script>
+</body>
+</html>

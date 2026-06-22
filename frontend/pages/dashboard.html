@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="page-title" content="Dashboard">
+    <title>Dashboard — Health Platform</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                    <rect width="48" height="48" rx="10" fill="#2e86c1"/>
+                    <path d="M24 10v28M10 24h28" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                </svg>
+                <span>HealthPlatform</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer" id="sidebar-user"></div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title" id="page-title">Dashboard</h1>
+            <div class="topbar-actions">
+                <div id="period-selector">
+                    <select id="period-select" class="btn btn-ghost btn-sm" style="border:1px solid var(--color-border);">
+                        <option value="week">Last 7 days</option>
+                        <option value="month" selected>Last 30 days</option>
+                        <option value="year">Last 12 months</option>
+                    </select>
+                </div>
+                <button class="notification-btn" id="notif-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span class="notification-count hidden" id="notif-count">0</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="page-content" id="page-content">
+            <!-- KPI Stats -->
+            <div class="stats-grid" id="stats-grid">
+                <!-- Populated by JS -->
+                <div class="stat-card"><div class="skeleton" style="width:100%;height:80px;"></div></div>
+                <div class="stat-card"><div class="skeleton" style="width:100%;height:80px;"></div></div>
+                <div class="stat-card"><div class="skeleton" style="width:100%;height:80px;"></div></div>
+                <div class="stat-card"><div class="skeleton" style="width:100%;height:80px;"></div></div>
+                <div class="stat-card"><div class="skeleton" style="width:100%;height:80px;"></div></div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Submissions Over Time</span>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-ghost btn-sm" id="trend-by-day">Daily</button>
+                            <button class="btn btn-ghost btn-sm" id="trend-by-week">Weekly</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-wrapper" style="height:280px;">
+                            <canvas id="trend-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">By Form Type</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-wrapper" style="height:280px;">
+                            <canvas id="forms-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map + Rankings -->
+            <div class="dashboard-grid mb-6">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Geographic Distribution</span>
+                        <span class="text-muted" id="map-info"></span>
+                    </div>
+                    <div class="card-body" style="padding:0;">
+                        <div id="map" style="height:360px;border-radius:0 0 var(--radius-lg) var(--radius-lg);"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Hospital Rankings</span>
+                        <a href="/pages/hospitals.html" class="btn btn-ghost btn-sm">View all</a>
+                    </div>
+                    <div class="card-body" style="padding:0;">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Hospital</th>
+                                        <th>Submissions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rankings-table">
+                                    <tr><td colspan="3" class="text-center text-muted" style="padding:24px;">Loading…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missing Reports + Recent -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Recent Submissions</span>
+                        <a href="/pages/submissions.html" class="btn btn-ghost btn-sm">View all</a>
+                    </div>
+                    <div class="card-body" style="padding:0;">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Form</th>
+                                        <th>Hospital</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-table">
+                                    <tr><td colspan="4" class="text-center text-muted" style="padding:24px;">Loading…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title" style="color:var(--color-danger);">&#9888; Missing Reports</span>
+                    </div>
+                    <div class="card-body" style="padding:0;">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Hospital</th>
+                                        <th>Region</th>
+                                        <th>Last Seen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="missing-table">
+                                    <tr><td colspan="3" class="text-center text-muted" style="padding:24px;">Loading…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/app.js"></script>
+<script src="/assets/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="page-title" content="Forms">
+    <title>Forms — Health Platform</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                    <rect width="48" height="48" rx="10" fill="#2e86c1"/>
+                    <path d="M24 10v28M10 24h28" stroke="white" stroke-width="5" stroke-linecap="round"/>
+                </svg>
+                <span>HealthPlatform</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer" id="sidebar-user"></div>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title" id="page-title">Forms</h1>
+            <div class="topbar-actions">
+                <button class="btn btn-primary btn-sm" id="btn-new-form">+ New Form</button>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="card">
+                <div class="filters-bar">
+                    <input type="search" id="search-forms" placeholder="Search forms…">
+                    <select id="filter-status">
+                        <option value="">All statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                    <select id="filter-category">
+                        <option value="">All categories</option>
+                        <option value="immunization">Immunization</option>
+                        <option value="maternal">Maternal Health</option>
+                        <option value="child_health">Child Health</option>
+                        <option value="outreach">Outreach</option>
+                        <option value="disease_screening">Disease Screening</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Fields</th>
+                                <th>Version</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="forms-table">
+                            <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination-container"></div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Form Builder Modal -->
+<div class="modal-overlay hidden" id="form-builder-modal">
+    <div class="modal" style="max-width:800px;">
+        <div class="modal-header">
+            <span class="modal-title" id="builder-modal-title">New Form</span>
+            <button class="modal-close" id="builder-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- Step 1: Form details -->
+            <div id="step-details">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Form Name *</label>
+                        <input type="text" id="form-name" placeholder="e.g. Monthly Immunization Report">
+                    </div>
+                    <div class="form-group">
+                        <label>Form Code *</label>
+                        <input type="text" id="form-code" placeholder="e.g. monthly_immunization">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="form-category">
+                            <option value="">Select category</option>
+                            <option value="immunization">Immunization</option>
+                            <option value="maternal">Maternal Health</option>
+                            <option value="child_health">Child Health</option>
+                            <option value="outreach">Outreach</option>
+                            <option value="disease_screening">Disease Screening</option>
+                            <option value="general">General</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Recurrence</label>
+                        <select id="form-recurrence">
+                            <option value="">One-time / On-demand</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="form-description" rows="2" placeholder="Brief description of this form's purpose…"></textarea>
+                </div>
+            </div>
+
+            <!-- Step 2: Section + Fields -->
+            <div id="step-fields">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <h3 style="font-size:var(--text-lg);">Form Fields</h3>
+                    <button class="btn btn-outline btn-sm" id="btn-add-field">+ Add Field</button>
+                </div>
+
+                <div id="fields-list">
+                    <!-- Fields rendered here -->
+                </div>
+                <div id="no-fields-msg" class="text-center text-muted" style="padding:24px;border:2px dashed var(--color-border);border-radius:var(--radius);">
+                    No fields yet. Click "+ Add Field" to start building your form.
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" id="builder-cancel">Cancel</button>
+            <button class="btn btn-outline" id="btn-save-draft">Save Draft</button>
+            <button class="btn btn-primary" id="btn-publish-form">Publish</button>
+        </div>
+    </div>
+</div>
+
+<!-- Field Editor Modal -->
+<div class="modal-overlay hidden" id="field-editor-modal">
+    <div class="modal" style="max-width:500px;">
+        <div class="modal-header">
+            <span class="modal-title">Add / Edit Field</span>
+            <button class="modal-close" id="field-editor-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Field Label *</label>
+                <input type="text" id="field-label" placeholder="e.g. Number of Children Immunized">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Field Type *</label>
+                    <select id="field-type">
+                        <option value="text">Short Text</option>
+                        <option value="textarea">Long Text</option>
+                        <option value="number">Number</option>
+                        <option value="date">Date</option>
+                        <option value="select">Dropdown</option>
+                        <option value="multiselect">Multi-select</option>
+                        <option value="radio">Radio Buttons</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="file">File Upload</option>
+                        <option value="photo">Photo</option>
+                        <option value="gps">GPS Location</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Required?</label>
+                    <select id="field-required">
+                        <option value="0">Optional</option>
+                        <option value="1">Required</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Help Text</label>
+                <input type="text" id="field-help" placeholder="Instructions or hint for the user">
+            </div>
+            <div class="form-group" id="options-group" style="display:none;">
+                <label>Options (one per line)</label>
+                <textarea id="field-options" rows="5" placeholder="Option A&#10;Option B&#10;Option C"></textarea>
+            </div>
+            <div class="form-row" id="validation-group">
+                <div class="form-group">
+                    <label>Min value / length</label>
+                    <input type="number" id="field-min" placeholder="e.g. 0">
+                </div>
+                <div class="form-group">
+                    <label>Max value / length</label>
+                    <input type="number" id="field-max" placeholder="e.g. 1000">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" id="field-editor-cancel">Cancel</button>
+            <button class="btn btn-primary" id="field-editor-save">Add Field</button>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/app.js"></script>
+<script src="/assets/js/forms.js"></script>
+</body>
+</html>
