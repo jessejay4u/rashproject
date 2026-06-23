@@ -1,6 +1,4 @@
-/* Shared app utilities — included on every protected page */
-
-// ─── Current user ─────────────────────────────────────────────────────────────
+/* Shared app utilities */
 let currentUser = null;
 
 async function requireAuth() {
@@ -16,26 +14,22 @@ async function requireAuth() {
 }
 
 function fillUserUI(user) {
-    const name  = document.getElementById('user-name');
-    const role  = document.getElementById('user-role');
-    const av    = document.getElementById('user-avatar');
-    const avSb  = document.getElementById('sidebar-avatar');
-    const nameSb = document.getElementById('sidebar-user-name');
-    const roleSb = document.getElementById('sidebar-user-role');
     const initial = (user.name || 'U').charAt(0).toUpperCase();
-    if (name)  name.textContent  = user.name;
-    if (role)  role.textContent  = roleLabel(user.role);
-    if (av)    av.textContent    = initial;
-    if (avSb)  avSb.textContent  = initial;
-    if (nameSb) nameSb.textContent = user.name;
-    if (roleSb) roleSb.textContent = roleLabel(user.role);
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('user-name', user.name);
+    set('user-role', roleLabel(user.role));
+    set('sidebar-user-name', user.name);
+    set('sidebar-user-role', roleLabel(user.role));
+    const av   = document.getElementById('user-avatar');
+    const avSb = document.getElementById('sidebar-avatar');
+    if (av)   av.textContent   = initial;
+    if (avSb) avSb.textContent = initial;
 
-    // Hide admin-only nav items for non-admins
     if (!['super_admin'].includes(user.role)) {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.add('d-none'));
     }
     if (!['super_admin', 'regional_admin', 'hospital_admin'].includes(user.role)) {
-        document.querySelectorAll('.manager-only').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.manager-only').forEach(el => el.classList.add('d-none'));
     }
 }
 
@@ -47,30 +41,38 @@ function roleLabel(role) {
     return labels[role] || role;
 }
 
-// ─── Logout ───────────────────────────────────────────────────────────────────
 async function logout() {
     try { await API.post('api/logout.php'); } catch {}
     window.location.href = 'index.html';
 }
 
-// ─── Toast notifications ──────────────────────────────────────────────────────
+// ── Toast (Bootstrap) ─────────────────────────────────────────
 function toast(msg, type = 'info', duration = 3500) {
     let container = document.getElementById('toast-container');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast-container';
-        container.className = 'toast-container';
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = 9999;
         document.body.appendChild(container);
     }
-    const el = document.createElement('div');
-    el.className = `toast toast-${type}`;
-    el.textContent = msg;
-    el.onclick = () => el.remove();
-    container.appendChild(el);
-    setTimeout(() => el.remove(), duration);
+    const bgMap = { success: 'bg-success', error: 'bg-danger', info: 'bg-primary', warning: 'bg-warning text-dark' };
+    const bg    = bgMap[type] || 'bg-secondary';
+    const id    = 'toast-' + Date.now();
+    container.insertAdjacentHTML('beforeend', `
+      <div id="${id}" class="toast align-items-center text-white ${bg} border-0" role="alert" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">${esc(msg)}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>`);
+    const el = document.getElementById(id);
+    const bsToast = new bootstrap.Toast(el, { delay: duration });
+    bsToast.show();
+    el.addEventListener('hidden.bs.toast', () => el.remove());
 }
 
-// ─── Date formatting ──────────────────────────────────────────────────────────
+// ── Date helpers ──────────────────────────────────────────────
 function fmtDate(d) {
     if (!d) return '—';
     return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -84,19 +86,91 @@ function fmtDateTime(d) {
 function timeAgo(d) {
     if (!d) return '—';
     const diff = (Date.now() - new Date(d)) / 1000;
-    if (diff < 60)   return 'just now';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
     if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
     return Math.floor(diff / 86400) + 'd ago';
 }
 
-// ─── Badge HTML ───────────────────────────────────────────────────────────────
+// ── Badge helper ──────────────────────────────────────────────
 function badge(status, label) {
     const text = label || status || '—';
-    return `<span class="badge badge-${(status || '').toLowerCase().replace(/\s+/g, '_')}">${text}</span>`;
+    const cls  = 'badge-status-' + (status || '').toLowerCase().replace(/\s+/g, '_');
+    return `<span class="badge ${cls}">${esc(text)}</span>`;
 }
 
-// ─── Sidebar toggle ───────────────────────────────────────────────────────────
+// ── Modal helpers (Bootstrap) ─────────────────────────────────
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) bootstrap.Modal.getOrCreateInstance(el).show();
+}
+
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) bootstrap.Modal.getOrCreateInstance(el).hide();
+}
+
+// ── Pagination (Bootstrap) ────────────────────────────────────
+function renderPagination(containerId, page, pages, total, perPage, onPage) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const start = total > 0 ? (page - 1) * perPage + 1 : 0;
+    const end   = Math.min(page * perPage, total);
+
+    const infoId = containerId + '-info';
+    let infoEl = document.getElementById(infoId);
+    if (!infoEl) {
+        infoEl = document.createElement('p');
+        infoEl.id = infoId;
+        infoEl.className = 'text-muted small mb-1 mt-2 px-3';
+        container.parentNode.insertBefore(infoEl, container);
+    }
+    infoEl.textContent = total > 0 ? `Showing ${start}–${end} of ${total}` : '0 results';
+
+    container.innerHTML = '';
+    if (pages <= 1) return;
+
+    const ul = document.createElement('ul');
+    ul.className = 'pagination pagination-sm mb-0';
+
+    const addItem = (label, p, disabled = false, active = false) => {
+        const li = document.createElement('li');
+        li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.href = '#';
+        a.innerHTML = label;
+        if (!disabled && !active) a.onclick = e => { e.preventDefault(); onPage(p); };
+        li.appendChild(a);
+        ul.appendChild(li);
+    };
+
+    addItem('&laquo;', page - 1, page === 1);
+    for (let i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || (i >= page - 2 && i <= page + 2)) {
+            addItem(i, i, false, i === page);
+        } else if (i === page - 3 || i === page + 3) {
+            addItem('…', i, true);
+        }
+    }
+    addItem('&raquo;', page + 1, page === pages);
+    container.appendChild(ul);
+}
+
+// ── Loading state ─────────────────────────────────────────────
+function setLoading(btnEl, loading) {
+    if (loading) {
+        btnEl._origHTML = btnEl.innerHTML;
+        btnEl.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        btnEl.disabled  = true;
+    } else {
+        btnEl.innerHTML = btnEl._origHTML || btnEl.innerHTML;
+        btnEl.disabled  = false;
+    }
+}
+
+// ── Sidebar toggle ────────────────────────────────────────────
 function initSidebar() {
     const toggle  = document.getElementById('menu-toggle');
     const sidebar = document.getElementById('sidebar');
@@ -111,84 +185,18 @@ function initSidebar() {
         overlay.classList.remove('open');
     });
 
-    // Mark active link
     const page = window.location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('.nav-link').forEach(link => {
+    document.querySelectorAll('.sidebar-link').forEach(link => {
         if (link.getAttribute('href') === page) link.classList.add('active');
     });
 }
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
-function renderPagination(containerId, page, pages, total, perPage, onPage) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    const infoId = containerId + '-info';
-    let infoEl = document.getElementById(infoId);
-    if (!infoEl) {
-        infoEl = document.createElement('p');
-        infoEl.id = infoId;
-        infoEl.className = 'pagination-info';
-        container.parentNode.insertBefore(infoEl, container);
-    }
-    const start = (page - 1) * perPage + 1;
-    const end   = Math.min(page * perPage, total);
-    infoEl.textContent = total > 0 ? `Showing ${start}–${end} of ${total}` : '0 results';
-
-    container.innerHTML = '';
-    if (pages <= 1) return;
-
-    const btn = (label, p, disabled = false) => {
-        const b = document.createElement('button');
-        b.className = 'page-btn' + (p === page ? ' active' : '');
-        b.textContent = label;
-        b.disabled = disabled;
-        if (!disabled) b.onclick = () => onPage(p);
-        container.appendChild(b);
-    };
-
-    btn('‹', page - 1, page === 1);
-    for (let i = 1; i <= pages; i++) {
-        if (i === 1 || i === pages || (i >= page - 2 && i <= page + 2)) {
-            btn(i, i);
-        } else if (i === page - 3 || i === page + 3) {
-            const dots = document.createElement('span');
-            dots.textContent = '…';
-            dots.style.cssText = 'padding:0 6px;color:var(--text-m)';
-            container.appendChild(dots);
-        }
-    }
-    btn('›', page + 1, page === pages);
-}
-
-// ─── Loading state helper ─────────────────────────────────────────────────────
-function setLoading(btnEl, loading) {
-    if (loading) {
-        btnEl._origHTML = btnEl.innerHTML;
-        btnEl.innerHTML = '<span class="spinner"></span>';
-        btnEl.disabled = true;
-    } else {
-        btnEl.innerHTML = btnEl._origHTML || btnEl.innerHTML;
-        btnEl.disabled = false;
-    }
-}
-
-// ─── Modal helpers ────────────────────────────────────────────────────────────
-function openModal(id)  { document.getElementById(id)?.classList.add('open'); }
-function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
-
-// Close modal on overlay click
-document.addEventListener('click', e => {
-    if (e.target.classList.contains('modal-overlay')) {
-        e.target.classList.remove('open');
-    }
-});
-
-// ─── Escape HTML ─────────────────────────────────────────────────────────────
+// ── Escape HTML ───────────────────────────────────────────────
 function esc(str) {
     if (str == null) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// ─── Init on DOM ready ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', initSidebar);
