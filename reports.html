@@ -4,84 +4,81 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reports — Health Platform</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </head>
-<body class="bg-light">
+<body>
 
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="d-flex">
-  <!-- Sidebar -->
+<div class="layout">
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">Health<span>+</span></div>
       <div class="brand-sub">Information Management</div>
     </div>
-    <div class="flex-grow-1">
+    <div class="sidebar-nav">
       <div class="nav-section-label">Main</div>
-      <a href="dashboard.html"   class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
-      <a href="submissions.html" class="sidebar-link"><i class="bi bi-clipboard-data"></i> Submissions</a>
-      <a href="forms.html"       class="sidebar-link"><i class="bi bi-file-earmark-text"></i> Forms</a>
+      <a href="dashboard.html"   class="sidebar-link"><span class="dot dot-blue"></span> Dashboard</a>
+      <a href="submissions.html" class="sidebar-link"><span class="dot dot-purple"></span> Submissions</a>
+      <a href="forms.html"       class="sidebar-link"><span class="dot dot-green"></span> Forms</a>
       <div class="nav-section-label manager-only">Management</div>
-      <a href="hospitals.html" class="sidebar-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
-      <a href="users.html"     class="sidebar-link admin-only"><i class="bi bi-people"></i> Users</a>
-      <a href="reports.html"   class="sidebar-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
+      <a href="hospitals.html" class="sidebar-link manager-only"><span class="dot dot-orange"></span> Hospitals</a>
+      <a href="users.html"     class="sidebar-link admin-only"><span class="dot dot-red"></span> Users</a>
+      <a href="reports.html"   class="sidebar-link manager-only"><span class="dot dot-teal"></span> Reports</a>
     </div>
     <div class="sidebar-footer">
-      <div class="d-flex align-items-center gap-2">
-        <div class="sidebar-avatar" id="sidebar-avatar">U</div>
-        <div>
-          <div class="user-name-sb" id="sidebar-user-name">Loading…</div>
-          <div class="user-role-sb" id="sidebar-user-role"></div>
-        </div>
+      <div class="sidebar-avatar" id="sidebar-avatar">U</div>
+      <div class="sidebar-user-info">
+        <div class="user-name-sb" id="sidebar-user-name">Loading…</div>
+        <div class="user-role-sb" id="sidebar-user-role"></div>
       </div>
     </div>
   </nav>
 
-  <!-- Main -->
-  <div class="main-content flex-grow-1">
-    <nav class="navbar bg-white border-bottom px-3 py-2 sticky-top shadow-sm">
-      <button class="btn btn-link text-dark d-lg-none p-1 me-2" id="menu-toggle">
-        <i class="bi bi-list fs-4"></i>
-      </button>
-      <span class="navbar-brand mb-0 fw-bold">Reports</span>
-      <div class="ms-auto d-flex align-items-center gap-3">
-        <div class="d-none d-md-block text-end lh-sm">
-          <div class="fw-semibold small" id="user-name">Loading…</div>
-          <div class="text-muted" style="font-size:.72rem" id="user-role"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="topbar-menu-btn" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <span class="topbar-title">Reports</span>
+      <div class="topbar-right">
+        <button class="topbar-btn"><i class="bi bi-bell"></i></button>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="user-avatar">U</div>
+          <div class="topbar-user-info">
+            <div class="fw-600 small" id="user-name">Loading…</div>
+            <div class="text-muted xsmall" id="user-role"></div>
+          </div>
         </div>
-        <div class="avatar" id="user-avatar">U</div>
-        <button onclick="logout()" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-box-arrow-right me-1"></i>Logout
-        </button>
+        <button onclick="logout()" class="btn btn-outline btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
       </div>
-    </nav>
+    </header>
 
-    <div class="container-fluid p-4">
-      <div class="mb-4">
-        <h4 class="fw-bold mb-1">Reports &amp; Analytics</h4>
-        <p class="text-muted small mb-0">Export data and view submission analytics</p>
+    <div class="page-body">
+      <div class="page-header">
+        <div>
+          <h4 class="page-title">Reports &amp; Analytics</h4>
+          <p class="page-sub">Export data and view submission analytics</p>
+        </div>
       </div>
 
       <!-- Export Card -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header border-0 py-3">
-          <h6 class="fw-bold mb-0"><i class="bi bi-download me-2"></i>Export Submissions (CSV)</h6>
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="card-title"><i class="bi bi-download me-2"></i>Export Submissions (CSV)</h6>
         </div>
         <div class="card-body">
-          <div class="row g-3 align-items-end">
-            <div class="col-sm-6 col-md-4 col-lg-2">
-              <label class="form-label fw-semibold small">Form</label>
-              <select class="form-select form-select-sm" id="exp-form">
+          <div class="filter-bar">
+            <div class="filter-item">
+              <label class="form-label small">Form</label>
+              <select class="form-ctrl" id="exp-form">
                 <option value="">All Forms</option>
               </select>
             </div>
-            <div class="col-sm-6 col-md-4 col-lg-2">
-              <label class="form-label fw-semibold small">Status</label>
-              <select class="form-select form-select-sm" id="exp-status">
+            <div class="filter-item">
+              <label class="form-label small">Status</label>
+              <select class="form-ctrl" id="exp-status">
                 <option value="">All Statuses</option>
                 <option value="draft">Draft</option>
                 <option value="submitted">Submitted</option>
@@ -89,22 +86,22 @@
                 <option value="rejected">Rejected</option>
               </select>
             </div>
-            <div class="col-sm-6 col-md-4 col-lg-2">
-              <label class="form-label fw-semibold small">Date From</label>
-              <input type="date" class="form-control form-control-sm" id="exp-from">
+            <div class="filter-item">
+              <label class="form-label small">Date From</label>
+              <input type="date" class="form-ctrl" id="exp-from">
             </div>
-            <div class="col-sm-6 col-md-4 col-lg-2">
-              <label class="form-label fw-semibold small">Date To</label>
-              <input type="date" class="form-control form-control-sm" id="exp-to">
+            <div class="filter-item">
+              <label class="form-label small">Date To</label>
+              <input type="date" class="form-ctrl" id="exp-to">
             </div>
-            <div class="col-sm-6 col-md-4 col-lg-2">
-              <label class="form-label fw-semibold small">Hospital</label>
-              <select class="form-select form-select-sm" id="exp-hospital">
+            <div class="filter-item">
+              <label class="form-label small">Hospital</label>
+              <select class="form-ctrl" id="exp-hospital">
                 <option value="">All Hospitals</option>
               </select>
             </div>
-            <div class="col-sm-6 col-md-4 col-lg-2">
-              <button class="btn btn-primary w-100" onclick="exportCSV()" id="export-btn">
+            <div class="filter-item" style="align-self:flex-end">
+              <button class="btn btn-primary w-100" onclick="exportCSV()">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i>Download CSV
               </button>
             </div>
@@ -112,34 +109,29 @@
         </div>
       </div>
 
-      <!-- Charts row -->
-      <div class="row g-3 mb-4">
-        <div class="col-xl-5">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3">
-              <h6 class="fw-bold mb-0">Submissions by Status</h6>
-            </div>
-            <div class="card-body" style="height:260px;position:relative">
-              <canvas id="status-chart"></canvas>
-            </div>
+      <!-- Charts -->
+      <div class="grid-2 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title">Submissions by Status</h6>
+          </div>
+          <div class="card-body" style="height:260px;position:relative">
+            <canvas id="status-chart"></canvas>
           </div>
         </div>
-        <div class="col-xl-7">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3">
-              <h6 class="fw-bold mb-0">Submissions by Form</h6>
-            </div>
-            <div class="card-body" style="height:260px;position:relative">
-              <canvas id="form-chart"></canvas>
-            </div>
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title">Submissions by Form</h6>
+          </div>
+          <div class="card-body" style="height:260px;position:relative">
+            <canvas id="form-chart"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- Trend -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header border-0 py-3">
-          <h6 class="fw-bold mb-0">Submission Trend — Last 30 Days</h6>
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="card-title">Submission Trend — Last 30 Days</h6>
         </div>
         <div class="card-body" style="height:240px;position:relative">
           <canvas id="trend-chart"></canvas>
@@ -147,24 +139,24 @@
       </div>
 
       <!-- Hospital table -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-header border-0 py-3">
-          <h6 class="fw-bold mb-0">Submissions by Hospital</h6>
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title">Submissions by Hospital</h6>
         </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
               <tr>
                 <th>#</th>
                 <th>Hospital</th>
-                <th class="d-none d-md-table-cell">Region</th>
+                <th class="d-none d-md">Region</th>
                 <th>Total</th>
                 <th>Approved</th>
                 <th>Pending</th>
               </tr>
             </thead>
             <tbody id="hospital-table">
-              <tr><td colspan="6" class="text-center text-muted py-4">Loading…</td></tr>
+              <tr><td colspan="6" class="tbl-empty">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -173,7 +165,6 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -185,14 +176,13 @@
 
 async function loadDropdowns() {
   try {
-    const [formsRes, hospitalsRes] = await Promise.all([
+    const [formsRes, hospsRes] = await Promise.all([
       API.get('api/forms.php?status=published&per_page=100'),
       API.get('api/hospitals.php?per_page=200'),
     ]);
     const fOpts = (formsRes.data||[]).map(f => `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join('');
     document.getElementById('exp-form').innerHTML = '<option value="">All Forms</option>' + fOpts;
-
-    const hOpts = (hospitalsRes.data||[]).map(h => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('');
+    const hOpts = (hospsRes.data||[]).map(h => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('');
     document.getElementById('exp-hospital').innerHTML = '<option value="">All Hospitals</option>' + hOpts;
   } catch {}
 }
@@ -202,8 +192,8 @@ async function loadCharts() {
     const res      = await API.get('api/dashboard.php');
     const dashData = res.data;
 
-    const byStatus   = dashData.byStatus || [];
-    const sColors    = { draft:'#94a3b8', submitted:'#3b82f6', approved:'#22c55e', rejected:'#ef4444' };
+    const byStatus = dashData.byStatus || [];
+    const sColors  = { draft:'#94a3b8', submitted:'#4a6cf7', approved:'#00b69b', rejected:'#ef3826' };
     new Chart(document.getElementById('status-chart'), {
       type: 'doughnut',
       data: {
@@ -218,36 +208,38 @@ async function loadCharts() {
       type: 'bar',
       data: {
         labels: byForm.map(r => r.form_name||'Unknown'),
-        datasets: [{ label:'Submissions', data: byForm.map(r => parseInt(r.count)), backgroundColor:'#2563eb', borderRadius:4 }],
+        datasets: [{ label:'Submissions', data: byForm.map(r => parseInt(r.count)), backgroundColor:'#4a6cf7', borderRadius:6 }],
       },
       options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}} },
     });
 
-    const trendData = dashData.trend || [];
+    const trend = dashData.trend || [];
     new Chart(document.getElementById('trend-chart'), {
-      type: 'bar',
+      type: 'line',
       data: {
-        labels: trendData.map(r => r.day ? r.day.slice(5) : ''),
-        datasets: [{ label:'Submissions', data: trendData.map(r => parseInt(r.count)||0), backgroundColor:'#2563eb', borderRadius:4 }],
+        labels: trend.map(r => r.day ? r.day.slice(5) : ''),
+        datasets: [{ label:'Submissions', data: trend.map(r => parseInt(r.count)||0),
+          borderColor:'#4a6cf7', backgroundColor:'rgba(74,108,247,.1)', fill:true,
+          tension:.4, pointRadius:3, pointBackgroundColor:'#4a6cf7' }],
       },
-      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}} },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ y:{beginAtZero:true, ticks:{stepSize:1}}, x:{ticks:{maxTicksLimit:10}} } },
     });
 
     const byHosp = dashData.byHospital || [];
     const tbody  = document.getElementById('hospital-table');
-    if (byHosp.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No data</td></tr>';
+    if (!byHosp.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="tbl-empty">No data</td></tr>';
     } else {
-      tbody.innerHTML = byHosp.map((r, i) => `
+      tbody.innerHTML = byHosp.map((r,i) => `
         <tr>
-          <td class="text-muted small">${i + 1}</td>
-          <td class="fw-semibold">${esc(r.hospital_name||'—')}</td>
-          <td class="d-none d-md-table-cell text-muted small">${esc(r.region_name||'—')}</td>
+          <td class="text-muted small">${i+1}</td>
+          <td class="fw-500">${esc(r.hospital_name||'—')}</td>
+          <td class="d-none d-md text-muted small">${esc(r.region_name||'—')}</td>
           <td><strong>${r.total}</strong></td>
           <td>${badge('approved', r.approved||0)}</td>
           <td>${badge('submitted', r.pending||0)}</td>
-        </tr>
-      `).join('');
+        </tr>`).join('');
     }
   } catch (e) {
     toast('Failed to load report data: ' + e.message, 'error');
@@ -262,15 +254,15 @@ function exportCSV() {
   const hospital = document.getElementById('exp-hospital').value;
 
   let url = 'api/reports.php?export=csv';
-  if (form)     url += `&form_id=${encodeURIComponent(form)}`;
-  if (status)   url += `&status=${encodeURIComponent(status)}`;
-  if (from)     url += `&date_from=${encodeURIComponent(from)}`;
-  if (to)       url += `&date_to=${encodeURIComponent(to)}`;
-  if (hospital) url += `&hospital_id=${encodeURIComponent(hospital)}`;
+  if (form)     url += '&form_id='    + encodeURIComponent(form);
+  if (status)   url += '&status='     + encodeURIComponent(status);
+  if (from)     url += '&date_from='  + encodeURIComponent(from);
+  if (to)       url += '&date_to='    + encodeURIComponent(to);
+  if (hospital) url += '&hospital_id='+ encodeURIComponent(hospital);
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = `submissions_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = 'submissions_' + new Date().toISOString().slice(0,10) + '.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

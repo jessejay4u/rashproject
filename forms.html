@@ -4,355 +4,329 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forms — Health Platform</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-light">
+<body>
 
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="d-flex">
-  <!-- Sidebar -->
+<div class="layout">
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">Health<span>+</span></div>
       <div class="brand-sub">Information Management</div>
     </div>
-    <div class="flex-grow-1">
+    <div class="sidebar-nav">
       <div class="nav-section-label">Main</div>
-      <a href="dashboard.html"   class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
-      <a href="submissions.html" class="sidebar-link"><i class="bi bi-clipboard-data"></i> Submissions</a>
-      <a href="forms.html"       class="sidebar-link"><i class="bi bi-file-earmark-text"></i> Forms</a>
+      <a href="dashboard.html"   class="sidebar-link"><span class="dot dot-blue"></span> Dashboard</a>
+      <a href="submissions.html" class="sidebar-link"><span class="dot dot-purple"></span> Submissions</a>
+      <a href="forms.html"       class="sidebar-link"><span class="dot dot-green"></span> Forms</a>
       <div class="nav-section-label manager-only">Management</div>
-      <a href="hospitals.html" class="sidebar-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
-      <a href="users.html"     class="sidebar-link admin-only"><i class="bi bi-people"></i> Users</a>
-      <a href="reports.html"   class="sidebar-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
+      <a href="hospitals.html" class="sidebar-link manager-only"><span class="dot dot-orange"></span> Hospitals</a>
+      <a href="users.html"     class="sidebar-link admin-only"><span class="dot dot-red"></span> Users</a>
+      <a href="reports.html"   class="sidebar-link manager-only"><span class="dot dot-teal"></span> Reports</a>
     </div>
     <div class="sidebar-footer">
-      <div class="d-flex align-items-center gap-2">
-        <div class="sidebar-avatar" id="sidebar-avatar">U</div>
-        <div>
-          <div class="user-name-sb" id="sidebar-user-name">Loading…</div>
-          <div class="user-role-sb" id="sidebar-user-role"></div>
-        </div>
+      <div class="sidebar-avatar" id="sidebar-avatar">U</div>
+      <div class="sidebar-user-info">
+        <div class="user-name-sb" id="sidebar-user-name">Loading…</div>
+        <div class="user-role-sb" id="sidebar-user-role"></div>
       </div>
     </div>
   </nav>
 
-  <!-- Main -->
-  <div class="main-content flex-grow-1">
-    <nav class="navbar bg-white border-bottom px-3 py-2 sticky-top shadow-sm">
-      <button class="btn btn-link text-dark d-lg-none p-1 me-2" id="menu-toggle">
-        <i class="bi bi-list fs-4"></i>
-      </button>
-      <span class="navbar-brand mb-0 fw-bold">Forms</span>
-      <div class="ms-auto d-flex align-items-center gap-3">
-        <div class="d-none d-md-block text-end lh-sm">
-          <div class="fw-semibold small" id="user-name">Loading…</div>
-          <div class="text-muted" style="font-size:.72rem" id="user-role"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="topbar-menu-btn" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <span class="topbar-title">Forms</span>
+      <div class="topbar-right">
+        <button class="topbar-btn"><i class="bi bi-bell"></i></button>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="user-avatar">U</div>
+          <div class="topbar-user-info">
+            <div class="fw-600 small" id="user-name">Loading…</div>
+            <div class="text-muted xsmall" id="user-role"></div>
+          </div>
         </div>
-        <div class="avatar" id="user-avatar">U</div>
-        <button onclick="logout()" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        <button onclick="logout()" class="btn btn-outline btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="page-header">
+        <div>
+          <h4 class="page-title">Forms</h4>
+          <p class="page-sub">Manage data collection forms</p>
+        </div>
+        <button class="btn btn-primary manager-only" id="new-form-btn">
+          <i class="bi bi-plus-lg me-1"></i>New Form
         </button>
       </div>
-    </nav>
 
-    <div class="container-fluid p-4">
-
-      <!-- List view -->
-      <div id="list-view">
-        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
-          <div>
-            <h4 class="fw-bold mb-1">Data Collection Forms</h4>
-            <p class="text-muted small mb-0">Manage forms used for data submission</p>
-          </div>
-          <button class="btn btn-primary admin-only d-none" onclick="openModal('new-form-modal')">
-            <i class="bi bi-plus-lg me-1"></i>New Form
-          </button>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-          <div class="card-header border-0 py-3">
-            <div class="row g-2">
-              <div class="col-sm-4 col-md-3">
-                <select class="form-select form-select-sm" id="filter-status" onchange="loadList(1)">
-                  <option value="">All Statuses</option>
-                  <option value="published">Published</option>
-                  <option value="draft">Draft</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </div>
-              <div class="col-sm-8 col-md-5">
-                <input type="text" class="form-control form-control-sm" id="filter-search"
-                       placeholder="Search forms…" oninput="debounceLoad()">
-              </div>
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="filter-bar">
+            <div class="filter-item">
+              <input type="text" id="search" class="form-ctrl" placeholder="Search forms…">
             </div>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Name</th>
-                  <th class="d-none d-md-table-cell">Category</th>
-                  <th>Status</th>
-                  <th class="d-none d-md-table-cell">Fields</th>
-                  <th class="d-none d-md-table-cell">Submissions</th>
-                  <th class="d-none d-lg-table-cell">Published</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="list-body">
-                <tr><td colspan="7" class="text-center text-muted py-4">Loading…</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="card-footer bg-white border-0 d-flex justify-content-end py-2 px-3">
-            <div id="list-pagination"></div>
+            <div class="filter-item">
+              <select id="filter-status" class="form-ctrl">
+                <option value="">All Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="applyFilters()"><i class="bi bi-search me-1"></i>Search</button>
+            <button class="btn btn-outline" onclick="resetFilters()">Reset</button>
           </div>
         </div>
       </div>
 
-      <!-- Detail view -->
-      <div id="detail-view" style="display:none">
-        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
-          <div>
-            <button class="btn btn-outline-secondary btn-sm mb-2" onclick="backToList()">
-              <i class="bi bi-arrow-left me-1"></i>Back
-            </button>
-            <h4 class="fw-bold mb-0" id="detail-title"></h4>
-          </div>
-          <div class="d-flex gap-2" id="form-actions"></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th class="d-none d-md">Description</th>
+                <th>Fields</th>
+                <th>Status</th>
+                <th class="d-none d-md">Created</th>
+                <th class="manager-only">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="forms-tbody">
+              <tr><td colspan="7" class="tbl-empty">Loading…</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div id="detail-content"></div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- New Form Modal -->
-<div class="modal fade" id="new-form-modal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Create New Form</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label fw-semibold small">Form Name <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="new-name" placeholder="e.g. Monthly Hospital Report">
+        <div class="card-footer">
+          <div id="forms-pagination"></div>
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold small">Form Code <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="new-code" placeholder="e.g. monthly_report">
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold small">Category</label>
-          <input type="text" class="form-control" id="new-category" placeholder="e.g. Monthly, Quarterly">
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold small">Description</label>
-          <textarea class="form-control" id="new-desc" rows="3" placeholder="Optional description…"></textarea>
-        </div>
-        <p class="text-muted small mb-0">After creating, add sections and fields via the form detail page.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" id="create-form-btn" onclick="createForm()">Create Form</button>
       </div>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Form Modal -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h6 class="modal-title" id="modal-title">New Form</h6>
+      <button class="modal-close" onclick="closeModal('form-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label class="form-label">Form Name <span style="color:#ef3826">*</span></label>
+        <input type="text" id="f-name" class="form-ctrl" placeholder="e.g. Monthly Health Report">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea id="f-desc" class="form-ctrl" rows="2" placeholder="Brief description…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="f-status" class="form-ctrl">
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label class="form-label mb-0">Fields</label>
+          <button class="btn btn-outline btn-sm" onclick="addField()"><i class="bi bi-plus-lg me-1"></i>Add Field</button>
+        </div>
+        <div id="fields-list"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('form-modal')">Cancel</button>
+      <button class="btn btn-primary" id="save-form-btn" onclick="saveForm()"><i class="bi bi-check-lg me-1"></i>Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal-box modal-sm">
+    <div class="modal-header">
+      <h6 class="modal-title">Delete Form</h6>
+      <button class="modal-close" onclick="closeModal('delete-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong id="delete-name"></strong>? This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('delete-modal')">Cancel</button>
+      <button class="btn btn-danger" id="confirm-delete-btn" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
-let searchTimer;
-let currentUser2;
+let page = 1, deleteId = null, fieldIdx = 0;
 
 (async () => {
-  currentUser2 = await requireAuth();
-  loadList(1);
+  await requireAuth();
+  loadForms();
+  document.getElementById('new-form-btn').addEventListener('click', openNewForm);
 })();
 
-function debounceLoad() {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => loadList(1), 400);
+function buildParams() {
+  const p = new URLSearchParams({ page, per_page:15 });
+  const s  = document.getElementById('search').value.trim();
+  const st = document.getElementById('filter-status').value;
+  if (s)  p.set('search', s);
+  if (st) p.set('status', st);
+  return p;
 }
 
-async function loadList(page) {
-  const status = document.getElementById('filter-status').value;
-  const search = document.getElementById('filter-search').value;
-  let url = `api/forms.php?page=${page}`;
-  if (status) url += `&status=${encodeURIComponent(status)}`;
-  if (search) url += `&search=${encodeURIComponent(search)}`;
-
-  const tbody = document.getElementById('list-body');
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Loading…</td></tr>';
-
+async function loadForms() {
+  const tbody = document.getElementById('forms-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" class="tbl-empty">Loading…</td></tr>';
   try {
-    const res  = await API.get(url);
+    const res  = await API.get('api/forms.php?' + buildParams());
     const rows = res.data || [];
-    if (rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5">
-        <div class="text-muted"><i class="bi bi-file-earmark-x fs-2 d-block mb-2"></i>
-        <strong>No forms found</strong></div></td></tr>`;
+    const meta = res.meta || {};
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="tbl-empty">No forms found</td></tr>';
     } else {
-      tbody.innerHTML = rows.map(r => `
+      tbody.innerHTML = rows.map((r,i) => `
         <tr>
-          <td>
-            <div class="fw-semibold">${esc(r.name)}</div>
-            <div class="text-muted small">${esc(r.code)}</div>
-          </td>
-          <td class="d-none d-md-table-cell">
-            ${r.category ? `<span class="badge badge-status-submitted">${esc(r.category)}</span>` : '—'}
-          </td>
+          <td class="text-muted small">${(page-1)*15+i+1}</td>
+          <td class="fw-500">${esc(r.name)}</td>
+          <td class="d-none d-md text-muted small">${esc(r.description||'—')}</td>
+          <td>${(r.fields||[]).length}</td>
           <td>${badge(r.status)}</td>
-          <td class="d-none d-md-table-cell text-muted small">${r.field_count}</td>
-          <td class="d-none d-md-table-cell text-muted small">${r.submission_count}</td>
-          <td class="d-none d-lg-table-cell text-muted small">${fmtDate(r.published_at)}</td>
-          <td><button class="btn btn-outline-primary btn-sm" onclick="loadDetail('${esc(r.id)}')">View</button></td>
-        </tr>
-      `).join('');
+          <td class="d-none d-md text-muted small">${fmtDate(r.created_at)}</td>
+          <td class="manager-only">
+            <button class="btn btn-outline btn-sm me-1" onclick="editForm(${r.id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="promptDelete(${r.id},'${esc(r.name).replace(/'/g,"\\'")}')" ><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>`).join('');
     }
-    renderPagination('list-pagination', res.page, res.pages, res.total, res.per_page, loadList);
+    renderPagination('forms-pagination', meta.page||1, meta.pages||1, meta.total||0, 15, p => { page=p; loadForms(); });
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error: ${esc(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="tbl-empty text-danger">Error: ${esc(e.message)}</td></tr>`;
   }
 }
 
-async function loadDetail(id) {
-  document.getElementById('list-view').style.display   = 'none';
-  document.getElementById('detail-view').style.display = '';
-  document.getElementById('detail-content').innerHTML  =
-    '<div class="text-center text-muted py-5"><span class="spinner-border"></span></div>';
-  document.getElementById('form-actions').innerHTML = '';
+function applyFilters() { page=1; loadForms(); }
+function resetFilters() {
+  document.getElementById('search').value='';
+  document.getElementById('filter-status').value='';
+  applyFilters();
+}
 
-  try {
-    const res  = await API.get(`api/forms.php?id=${encodeURIComponent(id)}`);
-    const form = res.data;
-    document.getElementById('detail-title').textContent = form.name;
-
-    const actions = document.getElementById('form-actions');
-    if (['super_admin','regional_admin'].includes(currentUser2?.role)) {
-      if (form.status === 'draft') {
-        actions.innerHTML += `<button class="btn btn-success" onclick="publishForm('${esc(id)}')">
-          <i class="bi bi-send me-1"></i>Publish</button>`;
-      }
-      if (form.status === 'published') {
-        actions.innerHTML += `<button class="btn btn-outline-secondary" onclick="archiveForm('${esc(id)}')">Archive</button>`;
-      }
-      actions.innerHTML += `<a href="submissions.html" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>Submit Data</a>`;
-    }
-
-    let sectionsHTML = '';
-    (form.sections||[]).forEach(s => {
-      sectionsHTML += `
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-header border-0 py-3"><h6 class="fw-bold mb-0">${esc(s.title)}</h6></div>
-          <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
-              <thead class="table-light">
-                <tr><th>Field Name</th><th>Label</th><th>Type</th><th>Required</th></tr>
-              </thead>
-              <tbody>
-                ${(s.fields||[]).length === 0
-                  ? '<tr><td colspan="4" class="text-muted small py-3">No fields in this section</td></tr>'
-                  : (s.fields||[]).map(f => `
-                      <tr>
-                        <td class="text-muted small">${esc(f.name)}</td>
-                        <td class="fw-semibold small">${esc(f.label)}</td>
-                        <td><span class="badge badge-status-submitted">${esc(f.field_type)}</span></td>
-                        <td>${f.is_required ? '<span class="badge bg-success">Yes</span>' : '<span class="text-muted">—</span>'}</td>
-                      </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>`;
-    });
-
-    document.getElementById('detail-content').innerHTML = `
-      <div class="row g-3 mb-3">
-        <div class="col-lg-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3"><h6 class="fw-bold mb-0">Form Details</h6></div>
-            <div class="card-body">
-              <dl class="row mb-0 small">
-                <dt class="col-5 text-muted">Status</dt><dd class="col-7">${badge(form.status)}</dd>
-                <dt class="col-5 text-muted">Code</dt><dd class="col-7"><code>${esc(form.code)}</code></dd>
-                <dt class="col-5 text-muted">Category</dt><dd class="col-7">${esc(form.category||'—')}</dd>
-                <dt class="col-5 text-muted">Version</dt><dd class="col-7">v${esc(form.version)}</dd>
-                <dt class="col-5 text-muted">Created By</dt><dd class="col-7">${esc(form.created_by_name)}</dd>
-                <dt class="col-5 text-muted">Published</dt><dd class="col-7">${fmtDate(form.published_at)}</dd>
-                ${form.description ? `<dt class="col-5 text-muted">Description</dt><dd class="col-7">${esc(form.description)}</dd>` : ''}
-              </dl>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3"><h6 class="fw-bold mb-0">Summary</h6></div>
-            <div class="card-body">
-              <dl class="row mb-0 small">
-                <dt class="col-6 text-muted">Sections</dt><dd class="col-6 fw-bold">${(form.sections||[]).length}</dd>
-                <dt class="col-6 text-muted">Total Fields</dt><dd class="col-6 fw-bold">${(form.sections||[]).reduce((n,s)=>n+(s.fields||[]).length,0)}</dd>
-                <dt class="col-6 text-muted">Is Recurring</dt><dd class="col-6">${form.is_recurring?'Yes':'No'}</dd>
-              </dl>
-            </div>
-          </div>
-        </div>
+function addField(f = {}) {
+  const id = 'field-' + fieldIdx++;
+  document.getElementById('fields-list').insertAdjacentHTML('beforeend', `
+    <div class="field-row" id="${id}">
+      <div class="field-row-inputs">
+        <input class="form-ctrl" placeholder="Field name (key)" value="${esc(f.name||'')}" data-key="name">
+        <input class="form-ctrl" placeholder="Label" value="${esc(f.label||'')}" data-key="label">
+        <select class="form-ctrl" data-key="type">
+          ${['text','number','email','date','textarea','select'].map(t => `<option value="${t}"${(f.type||'text')===t?' selected':''}>${t}</option>`).join('')}
+        </select>
+        <label style="display:flex;align-items:center;gap:4px;font-size:.85rem;white-space:nowrap">
+          <input type="checkbox" ${f.required?'checked':''} data-key="required"> Required
+        </label>
       </div>
-      ${sectionsHTML}
-    `;
+      <button class="btn btn-danger btn-sm" onclick="document.getElementById('${id}').remove()"><i class="bi bi-trash"></i></button>
+    </div>`);
+}
+
+function getFields() {
+  return [...document.querySelectorAll('#fields-list .field-row')].map(row => ({
+    name:     row.querySelector('[data-key="name"]').value.trim(),
+    label:    row.querySelector('[data-key="label"]').value.trim(),
+    type:     row.querySelector('[data-key="type"]').value,
+    required: row.querySelector('[data-key="required"]').checked,
+  })).filter(f => f.name);
+}
+
+function openNewForm() {
+  document.getElementById('modal-title').textContent = 'New Form';
+  document.getElementById('edit-id').value  = '';
+  document.getElementById('f-name').value   = '';
+  document.getElementById('f-desc').value   = '';
+  document.getElementById('f-status').value = 'draft';
+  document.getElementById('fields-list').innerHTML = '';
+  fieldIdx = 0;
+  openModal('form-modal');
+}
+
+async function editForm(id) {
+  try {
+    const res  = await API.get('api/forms.php?id=' + id);
+    const form = res.data;
+    document.getElementById('modal-title').textContent = 'Edit Form';
+    document.getElementById('edit-id').value   = form.id;
+    document.getElementById('f-name').value    = form.name;
+    document.getElementById('f-desc').value    = form.description||'';
+    document.getElementById('f-status').value  = form.status;
+    document.getElementById('fields-list').innerHTML = '';
+    fieldIdx = 0;
+    (form.fields||[]).forEach(addField);
+    openModal('form-modal');
+  } catch (e) { toast(e.message,'error'); }
+}
+
+async function saveForm() {
+  const id   = document.getElementById('edit-id').value;
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { toast('Form name is required','warning'); return; }
+  const btn  = document.getElementById('save-form-btn');
+  setLoading(btn, true);
+  const body = {
+    name,
+    description: document.getElementById('f-desc').value.trim(),
+    status:      document.getElementById('f-status').value,
+    fields:      getFields(),
+  };
+  try {
+    if (id) await API.put('api/forms.php?id='+id, body);
+    else    await API.post('api/forms.php', body);
+    toast('Form saved successfully','success');
+    closeModal('form-modal');
+    loadForms();
   } catch (e) {
-    document.getElementById('detail-content').innerHTML =
-      `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${esc(e.message)}</div>`;
+    toast(e.message,'error');
+  } finally {
+    setLoading(btn, false);
   }
 }
 
-function backToList() {
-  document.getElementById('list-view').style.display   = '';
-  document.getElementById('detail-view').style.display = 'none';
+function promptDelete(id, name) {
+  deleteId = id;
+  document.getElementById('delete-name').textContent = name;
+  openModal('delete-modal');
 }
 
-async function createForm() {
-  const btn = document.getElementById('create-form-btn');
+async function confirmDelete() {
+  const btn = document.getElementById('confirm-delete-btn');
   setLoading(btn, true);
   try {
-    const res = await API.post('api/forms.php', {
-      name:        document.getElementById('new-name').value,
-      code:        document.getElementById('new-code').value,
-      category:    document.getElementById('new-category').value,
-      description: document.getElementById('new-desc').value,
-      sections:    [],
-    });
-    toast('Form created', 'success');
-    closeModal('new-form-modal');
-    loadDetail(res.data.id);
-  } catch (e) { toast(e.message, 'error'); }
-  setLoading(btn, false);
+    await API.delete('api/forms.php?id=' + deleteId);
+    toast('Form deleted','success');
+    closeModal('delete-modal');
+    loadForms();
+  } catch (e) {
+    toast(e.message,'error');
+  } finally {
+    setLoading(btn, false);
+  }
 }
 
-async function publishForm(id) {
-  if (!confirm('Publish this form? Users will be able to submit data.')) return;
-  try {
-    await API.post(`api/forms.php?id=${id}&action=publish`);
-    toast('Form published!', 'success'); loadDetail(id);
-  } catch (e) { toast(e.message, 'error'); }
-}
-
-async function archiveForm(id) {
-  if (!confirm('Archive this form? It will no longer accept new submissions.')) return;
-  try {
-    await API.post(`api/forms.php?id=${id}&action=archive`);
-    toast('Form archived', 'success'); loadDetail(id);
-  } catch (e) { toast(e.message, 'error'); }
-}
+document.getElementById('search').addEventListener('keydown', e => { if (e.key==='Enter') applyFilters(); });
 </script>
 </body>
 </html>

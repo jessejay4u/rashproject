@@ -4,127 +4,154 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — Health Platform</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </head>
-<body class="bg-light">
+<body>
 
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="d-flex">
+<div class="layout">
   <!-- Sidebar -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">Health<span>+</span></div>
       <div class="brand-sub">Information Management</div>
     </div>
-    <div class="flex-grow-1">
+    <div class="sidebar-nav">
       <div class="nav-section-label">Main</div>
-      <a href="dashboard.html"   class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
-      <a href="submissions.html" class="sidebar-link"><i class="bi bi-clipboard-data"></i> Submissions</a>
-      <a href="forms.html"       class="sidebar-link"><i class="bi bi-file-earmark-text"></i> Forms</a>
+      <a href="dashboard.html"   class="sidebar-link"><span class="dot dot-blue"></span> Dashboard</a>
+      <a href="submissions.html" class="sidebar-link"><span class="dot dot-purple"></span> Submissions</a>
+      <a href="forms.html"       class="sidebar-link"><span class="dot dot-green"></span> Forms</a>
       <div class="nav-section-label manager-only">Management</div>
-      <a href="hospitals.html" class="sidebar-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
-      <a href="users.html"     class="sidebar-link admin-only"><i class="bi bi-people"></i> Users</a>
-      <a href="reports.html"   class="sidebar-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
+      <a href="hospitals.html" class="sidebar-link manager-only"><span class="dot dot-orange"></span> Hospitals</a>
+      <a href="users.html"     class="sidebar-link admin-only"><span class="dot dot-red"></span> Users</a>
+      <a href="reports.html"   class="sidebar-link manager-only"><span class="dot dot-teal"></span> Reports</a>
     </div>
     <div class="sidebar-footer">
-      <div class="d-flex align-items-center gap-2">
-        <div class="sidebar-avatar" id="sidebar-avatar">U</div>
-        <div>
-          <div class="user-name-sb" id="sidebar-user-name">Loading…</div>
-          <div class="user-role-sb" id="sidebar-user-role"></div>
-        </div>
+      <div class="sidebar-avatar" id="sidebar-avatar">U</div>
+      <div class="sidebar-user-info">
+        <div class="user-name-sb" id="sidebar-user-name">Loading…</div>
+        <div class="user-role-sb" id="sidebar-user-role"></div>
       </div>
     </div>
   </nav>
 
   <!-- Main -->
-  <div class="main-content flex-grow-1">
-    <!-- Topbar -->
-    <nav class="navbar bg-white border-bottom px-3 py-2 sticky-top shadow-sm">
-      <button class="btn btn-link text-dark d-lg-none p-1 me-2" id="menu-toggle">
-        <i class="bi bi-list fs-4"></i>
+  <div class="main">
+    <header class="topbar">
+      <button class="topbar-menu-btn" id="menu-toggle">
+        <i class="bi bi-list"></i>
       </button>
-      <span class="navbar-brand mb-0 fw-bold">Dashboard</span>
-      <div class="ms-auto d-flex align-items-center gap-3">
-        <div class="d-none d-md-block text-end lh-sm">
-          <div class="fw-semibold small" id="user-name">Loading…</div>
-          <div class="text-muted" style="font-size:.72rem" id="user-role"></div>
+      <span class="topbar-title">Dashboard</span>
+      <div class="topbar-right">
+        <button class="topbar-btn"><i class="bi bi-bell"></i></button>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="user-avatar">U</div>
+          <div class="topbar-user-info">
+            <div class="fw-600 small" id="user-name">Loading…</div>
+            <div class="text-muted xsmall" id="user-role"></div>
+          </div>
         </div>
-        <div class="avatar" id="user-avatar">U</div>
-        <button onclick="logout()" class="btn btn-outline-secondary btn-sm">
+        <button onclick="logout()" class="btn btn-outline btn-sm">
           <i class="bi bi-box-arrow-right me-1"></i>Logout
         </button>
       </div>
-    </nav>
+    </header>
 
-    <div class="container-fluid p-4">
-      <!-- Page header -->
-      <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div class="page-body">
+      <div class="page-header">
         <div>
-          <h4 class="fw-bold mb-1">Overview</h4>
-          <p class="text-muted mb-0 small" id="date-display"></p>
+          <h4 class="page-title">Dashboard</h4>
+          <p class="page-sub">Welcome back! Here's what's happening.</p>
         </div>
-        <a href="submissions.html" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-1"></i>New Submission
-        </a>
       </div>
 
-      <!-- Stats -->
-      <div class="row g-3 mb-4" id="stats-grid">
-        <div class="col-12">
-          <div class="card border-0 bg-white text-center py-4 shadow-sm">
-            <span class="text-muted">Loading stats…</span>
+      <!-- Stat cards -->
+      <div class="grid-4 mb-4" id="stat-cards">
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:#e8edff">
+            <i class="bi bi-file-earmark-text" style="color:#4a6cf7"></i>
+          </div>
+          <div>
+            <div class="stat-num" id="stat-total">—</div>
+            <div class="stat-lbl">Total Submissions</div>
+            <div class="stat-sub" id="stat-total-sub"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:#e8f9f5">
+            <i class="bi bi-check-circle" style="color:#00b69b"></i>
+          </div>
+          <div>
+            <div class="stat-num" id="stat-approved">—</div>
+            <div class="stat-lbl">Approved</div>
+            <div class="stat-sub" id="stat-approved-sub"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:#fff4e6">
+            <i class="bi bi-clock" style="color:#ff9500"></i>
+          </div>
+          <div>
+            <div class="stat-num" id="stat-pending">—</div>
+            <div class="stat-lbl">Pending Review</div>
+            <div class="stat-sub" id="stat-pending-sub"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:#feeceb">
+            <i class="bi bi-x-circle" style="color:#ef3826"></i>
+          </div>
+          <div>
+            <div class="stat-num" id="stat-rejected">—</div>
+            <div class="stat-lbl">Rejected</div>
+            <div class="stat-sub" id="stat-rejected-sub"></div>
           </div>
         </div>
       </div>
 
-      <!-- Charts -->
-      <div class="row g-3 mb-4">
-        <div class="col-xl-7">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 pb-0">
-              <h6 class="fw-bold mb-0">Submissions — Last 30 Days</h6>
-            </div>
-            <div class="card-body" style="height:240px;position:relative">
-              <canvas id="trend-chart"></canvas>
-            </div>
+      <!-- Charts row -->
+      <div class="grid-2 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title">Submission Trend — Last 30 Days</h6>
+          </div>
+          <div class="card-body" style="height:240px;position:relative">
+            <canvas id="trend-chart"></canvas>
           </div>
         </div>
-        <div class="col-xl-5">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 pb-0">
-              <h6 class="fw-bold mb-0">By Status</h6>
-            </div>
-            <div class="card-body" style="height:240px;position:relative">
-              <canvas id="status-chart"></canvas>
-            </div>
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title">Submissions by Status</h6>
+          </div>
+          <div class="card-body" style="height:240px;position:relative">
+            <canvas id="status-chart"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- Recent -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-header border-0 d-flex justify-content-between align-items-center py-3">
-          <h6 class="fw-bold mb-0">Recent Submissions</h6>
-          <a href="submissions.html" class="btn btn-outline-secondary btn-sm">View All</a>
+      <!-- Recent submissions -->
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title">Recent Submissions</h6>
+          <a href="submissions.html" class="btn btn-outline btn-sm">View All</a>
         </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
               <tr>
                 <th>Form</th>
-                <th>Hospital</th>
-                <th class="d-none d-md-table-cell">Submitted By</th>
+                <th>Submitted By</th>
+                <th class="d-none d-md">Hospital</th>
                 <th>Status</th>
-                <th class="d-none d-md-table-cell">Date</th>
+                <th>Date</th>
               </tr>
             </thead>
-            <tbody id="recent-body">
-              <tr><td colspan="5" class="text-center text-muted py-4">Loading…</td></tr>
+            <tbody id="recent-tbody">
+              <tr><td colspan="5" class="tbl-empty">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -133,120 +160,82 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
-document.getElementById('date-display').textContent =
-  new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-
 (async () => {
   await requireAuth();
-
-  let data;
-  try {
-    const res = await API.get('api/dashboard.php');
-    data = res.data;
-  } catch (e) {
-    toast('Failed to load dashboard: ' + e.message, 'error'); return;
-  }
-
-  const s = data.stats;
-  document.getElementById('stats-grid').innerHTML = `
-    <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card stat-blue p-3 shadow-sm">
-        <div class="stat-icon">📋</div>
-        <div class="stat-value">${s.total_submissions}</div>
-        <div class="stat-label">Total Submissions</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card stat-orange p-3 shadow-sm">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-value">${s.pending_review}</div>
-        <div class="stat-label">Pending Review</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card stat-green p-3 shadow-sm">
-        <div class="stat-icon">✅</div>
-        <div class="stat-value">${s.approved}</div>
-        <div class="stat-label">Approved</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card stat-red p-3 shadow-sm">
-        <div class="stat-icon">❌</div>
-        <div class="stat-value">${s.rejected}</div>
-        <div class="stat-label">Rejected</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card stat-blue p-3 shadow-sm">
-        <div class="stat-icon">🏥</div>
-        <div class="stat-value">${s.total_hospitals}</div>
-        <div class="stat-label">Hospitals</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card stat-green p-3 shadow-sm">
-        <div class="stat-icon">📝</div>
-        <div class="stat-value">${s.total_forms}</div>
-        <div class="stat-label">Published Forms</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card stat-orange p-3 shadow-sm">
-        <div class="stat-icon">👥</div>
-        <div class="stat-value">${s.total_users}</div>
-        <div class="stat-label">Active Users</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card stat-blue p-3 shadow-sm">
-        <div class="stat-icon">📅</div>
-        <div class="stat-value">${s.this_month}</div>
-        <div class="stat-label">This Month</div>
-      </div>
-    </div>
-  `;
-
-  const trendData = data.trend || [];
-  new Chart(document.getElementById('trend-chart'), {
-    type: 'bar',
-    data: {
-      labels: trendData.map(r => r.day ? r.day.slice(5) : ''),
-      datasets: [{ label: 'Submissions', data: trendData.map(r => parseInt(r.count)||0), backgroundColor: '#2563eb', borderRadius: 4 }]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}} },
-  });
-
-  const byStatus = data.byStatus || [];
-  const sColors  = { draft:'#94a3b8', submitted:'#3b82f6', approved:'#22c55e', rejected:'#ef4444' };
-  new Chart(document.getElementById('status-chart'), {
-    type: 'doughnut',
-    data: {
-      labels: byStatus.map(r => r.status),
-      datasets: [{ data: byStatus.map(r => parseInt(r.count)), backgroundColor: byStatus.map(r => sColors[r.status]||'#94a3b8'), borderWidth:2 }],
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} },
-  });
-
-  const tbody = document.getElementById('recent-body');
-  if (!data.recent || data.recent.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No submissions yet</td></tr>';
-  } else {
-    tbody.innerHTML = data.recent.map(r => `
-      <tr>
-        <td><a href="submissions.html?id=${esc(r.id)}" class="text-decoration-none fw-semibold">${esc(r.form)}</a></td>
-        <td class="text-muted small">${esc(r.hospital)}</td>
-        <td class="d-none d-md-table-cell text-muted small">${esc(r.submitted_by)}</td>
-        <td>${badge(r.status)}</td>
-        <td class="d-none d-md-table-cell text-muted small">${fmtDateTime(r.submitted_at)}</td>
-      </tr>
-    `).join('');
-  }
+  await loadDashboard();
 })();
+
+async function loadDashboard() {
+  try {
+    const res  = await API.get('api/dashboard.php');
+    const data = res.data;
+
+    const counts = {};
+    (data.byStatus || []).forEach(r => counts[r.status] = parseInt(r.count)||0);
+    const total    = Object.values(counts).reduce((a,b) => a+b, 0);
+    const approved = counts.approved || 0;
+    const pending  = (counts.submitted || 0) + (counts.draft || 0);
+    const rejected = counts.rejected || 0;
+
+    document.getElementById('stat-total').textContent    = total;
+    document.getElementById('stat-approved').textContent = approved;
+    document.getElementById('stat-pending').textContent  = pending;
+    document.getElementById('stat-rejected').textContent = rejected;
+
+    const pct = n => total ? Math.round(n/total*100)+'% of total' : '';
+    document.getElementById('stat-total-sub').textContent    = 'All time';
+    document.getElementById('stat-approved-sub').textContent = pct(approved);
+    document.getElementById('stat-pending-sub').textContent  = pct(pending);
+    document.getElementById('stat-rejected-sub').textContent = pct(rejected);
+
+    // Trend chart
+    const trendData = data.trend || [];
+    new Chart(document.getElementById('trend-chart'), {
+      type: 'line',
+      data: {
+        labels: trendData.map(r => r.day ? r.day.slice(5) : ''),
+        datasets: [{ label:'Submissions', data: trendData.map(r => parseInt(r.count)||0),
+          borderColor:'#4a6cf7', backgroundColor:'rgba(74,108,247,.1)', fill:true,
+          tension:.4, pointRadius:3, pointBackgroundColor:'#4a6cf7' }],
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ y:{beginAtZero:true, ticks:{stepSize:1}}, x:{ticks:{maxTicksLimit:10}} } },
+    });
+
+    // Status doughnut
+    const byStatus = data.byStatus || [];
+    const sColors  = { draft:'#94a3b8', submitted:'#4a6cf7', approved:'#00b69b', rejected:'#ef3826' };
+    new Chart(document.getElementById('status-chart'), {
+      type: 'doughnut',
+      data: {
+        labels: byStatus.map(r => r.status),
+        datasets: [{ data: byStatus.map(r => parseInt(r.count)), backgroundColor: byStatus.map(r => sColors[r.status]||'#94a3b8'), borderWidth:2 }],
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} },
+    });
+
+    // Recent submissions table
+    const tbody = document.getElementById('recent-tbody');
+    const recent = (data.recent || []).slice(0, 8);
+    if (!recent.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="tbl-empty">No submissions yet</td></tr>';
+    } else {
+      tbody.innerHTML = recent.map(r => `
+        <tr>
+          <td class="fw-500">${esc(r.form_name||'—')}</td>
+          <td>${esc(r.submitted_by_name||'—')}</td>
+          <td class="d-none d-md text-muted">${esc(r.hospital_name||'—')}</td>
+          <td>${badge(r.status)}</td>
+          <td class="text-muted small">${fmtDate(r.submitted_at||r.created_at)}</td>
+        </tr>`).join('');
+    }
+  } catch (e) {
+    toast('Failed to load dashboard data: ' + e.message, 'error');
+  }
+}
 </script>
 </body>
 </html>

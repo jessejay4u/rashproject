@@ -4,476 +4,344 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Submissions — Health Platform</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-light">
+<body>
 
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="d-flex">
+<div class="layout">
   <!-- Sidebar -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">Health<span>+</span></div>
       <div class="brand-sub">Information Management</div>
     </div>
-    <div class="flex-grow-1">
+    <div class="sidebar-nav">
       <div class="nav-section-label">Main</div>
-      <a href="dashboard.html"   class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
-      <a href="submissions.html" class="sidebar-link"><i class="bi bi-clipboard-data"></i> Submissions</a>
-      <a href="forms.html"       class="sidebar-link"><i class="bi bi-file-earmark-text"></i> Forms</a>
+      <a href="dashboard.html"   class="sidebar-link"><span class="dot dot-blue"></span> Dashboard</a>
+      <a href="submissions.html" class="sidebar-link"><span class="dot dot-purple"></span> Submissions</a>
+      <a href="forms.html"       class="sidebar-link"><span class="dot dot-green"></span> Forms</a>
       <div class="nav-section-label manager-only">Management</div>
-      <a href="hospitals.html" class="sidebar-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
-      <a href="users.html"     class="sidebar-link admin-only"><i class="bi bi-people"></i> Users</a>
-      <a href="reports.html"   class="sidebar-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
+      <a href="hospitals.html" class="sidebar-link manager-only"><span class="dot dot-orange"></span> Hospitals</a>
+      <a href="users.html"     class="sidebar-link admin-only"><span class="dot dot-red"></span> Users</a>
+      <a href="reports.html"   class="sidebar-link manager-only"><span class="dot dot-teal"></span> Reports</a>
     </div>
     <div class="sidebar-footer">
-      <div class="d-flex align-items-center gap-2">
-        <div class="sidebar-avatar" id="sidebar-avatar">U</div>
-        <div>
-          <div class="user-name-sb" id="sidebar-user-name">Loading…</div>
-          <div class="user-role-sb" id="sidebar-user-role"></div>
-        </div>
+      <div class="sidebar-avatar" id="sidebar-avatar">U</div>
+      <div class="sidebar-user-info">
+        <div class="user-name-sb" id="sidebar-user-name">Loading…</div>
+        <div class="user-role-sb" id="sidebar-user-role"></div>
       </div>
     </div>
   </nav>
 
   <!-- Main -->
-  <div class="main-content flex-grow-1">
-    <nav class="navbar bg-white border-bottom px-3 py-2 sticky-top shadow-sm">
-      <button class="btn btn-link text-dark d-lg-none p-1 me-2" id="menu-toggle">
-        <i class="bi bi-list fs-4"></i>
-      </button>
-      <span class="navbar-brand mb-0 fw-bold">Submissions</span>
-      <div class="ms-auto d-flex align-items-center gap-3">
-        <div class="d-none d-md-block text-end lh-sm">
-          <div class="fw-semibold small" id="user-name">Loading…</div>
-          <div class="text-muted" style="font-size:.72rem" id="user-role"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="topbar-menu-btn" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <span class="topbar-title">Submissions</span>
+      <div class="topbar-right">
+        <button class="topbar-btn"><i class="bi bi-bell"></i></button>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="user-avatar">U</div>
+          <div class="topbar-user-info">
+            <div class="fw-600 small" id="user-name">Loading…</div>
+            <div class="text-muted xsmall" id="user-role"></div>
+          </div>
         </div>
-        <div class="avatar" id="user-avatar">U</div>
-        <button onclick="logout()" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        <button onclick="logout()" class="btn btn-outline btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="page-header">
+        <div>
+          <h4 class="page-title">Submissions</h4>
+          <p class="page-sub">View and manage all form submissions</p>
+        </div>
+        <button class="btn btn-primary" onclick="openNewModal()">
+          <i class="bi bi-plus-lg me-1"></i>New Submission
         </button>
       </div>
-    </nav>
 
-    <div class="container-fluid p-4">
-
-      <!-- List view -->
-      <div id="list-view">
-        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
-          <div>
-            <h4 class="fw-bold mb-1">Submissions</h4>
-            <p class="text-muted small mb-0">Track and manage all data submissions</p>
-          </div>
-          <button class="btn btn-primary" id="new-btn" onclick="showNewForm()">
-            <i class="bi bi-plus-lg me-1"></i>New Submission
-          </button>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-          <!-- Filters -->
-          <div class="card-header border-0 py-3">
-            <div class="row g-2">
-              <div class="col-sm-6 col-md-3">
-                <select class="form-select form-select-sm" id="filter-status" onchange="loadList(1)">
-                  <option value="">All Statuses</option>
-                  <option value="draft">Draft</option>
-                  <option value="submitted">Submitted</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
-              <div class="col-sm-6 col-md-3">
-                <select class="form-select form-select-sm" id="filter-form" onchange="loadList(1)">
-                  <option value="">All Forms</option>
-                </select>
-              </div>
-              <div class="col-sm-6 col-md-2">
-                <input type="date" class="form-control form-control-sm" id="filter-from" onchange="loadList(1)">
-              </div>
-              <div class="col-sm-6 col-md-2">
-                <input type="date" class="form-control form-control-sm" id="filter-to" onchange="loadList(1)">
-              </div>
-              <div class="col-sm-12 col-md-2">
-                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
-                  <i class="bi bi-x-circle me-1"></i>Clear
-                </button>
-              </div>
+      <!-- Filters -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="filter-bar">
+            <div class="filter-item">
+              <input type="text" id="search" class="form-ctrl" placeholder="Search submissions…">
             </div>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Form</th>
-                  <th>Hospital</th>
-                  <th class="d-none d-md-table-cell">Submitted By</th>
-                  <th>Status</th>
-                  <th class="d-none d-lg-table-cell">Period</th>
-                  <th class="d-none d-md-table-cell">Date</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="list-body">
-                <tr><td colspan="7" class="text-center text-muted py-4">Loading…</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="card-footer bg-white border-0 d-flex justify-content-end py-2 px-3">
-            <div id="list-pagination"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Detail view -->
-      <div id="detail-view" style="display:none">
-        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
-          <div>
-            <button class="btn btn-outline-secondary btn-sm mb-2" onclick="backToList()">
-              <i class="bi bi-arrow-left me-1"></i>Back
-            </button>
-            <h4 class="fw-bold mb-0" id="detail-title">Submission Detail</h4>
-          </div>
-          <div id="review-actions" style="display:none" class="d-flex gap-2">
-            <button class="btn btn-success" onclick="reviewSubmission('approved')">
-              <i class="bi bi-check-lg me-1"></i>Approve
-            </button>
-            <button class="btn btn-danger" onclick="reviewSubmission('rejected')">
-              <i class="bi bi-x-lg me-1"></i>Reject
-            </button>
-          </div>
-        </div>
-        <div id="detail-content"></div>
-      </div>
-
-      <!-- New submission view -->
-      <div id="new-view" style="display:none">
-        <div class="d-flex justify-content-between align-items-start mb-4">
-          <div>
-            <button class="btn btn-outline-secondary btn-sm mb-2" onclick="backToList()">
-              <i class="bi bi-arrow-left me-1"></i>Back
-            </button>
-            <h4 class="fw-bold mb-0">New Submission</h4>
-          </div>
-        </div>
-        <div class="card border-0 shadow-sm">
-          <div class="card-body p-4">
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label class="form-label fw-semibold small">Form <span class="text-danger">*</span></label>
-                <select class="form-select" id="new-form-id" onchange="loadFormFields()">
-                  <option value="">— Select Form —</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label fw-semibold small">Hospital <span class="text-danger">*</span></label>
-                <select class="form-select" id="new-hospital-id">
-                  <option value="">— Select Hospital —</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label fw-semibold small">Period Start</label>
-                <input type="date" class="form-control" id="new-period-start">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label fw-semibold small">Period End</label>
-                <input type="date" class="form-control" id="new-period-end">
-              </div>
+            <div class="filter-item">
+              <select id="filter-form" class="form-ctrl">
+                <option value="">All Forms</option>
+              </select>
             </div>
-            <div id="form-fields-container"></div>
-            <div class="d-flex gap-2 mt-4">
-              <button class="btn btn-primary" id="submit-btn" onclick="submitForm('submitted')">
-                <i class="bi bi-send me-1"></i>Submit
-              </button>
-              <button class="btn btn-outline-secondary" onclick="submitForm('draft')">
-                <i class="bi bi-save me-1"></i>Save as Draft
-              </button>
+            <div class="filter-item">
+              <select id="filter-status" class="form-ctrl">
+                <option value="">All Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="submitted">Submitted</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
             </div>
+            <div class="filter-item">
+              <select id="filter-hospital" class="form-ctrl manager-only">
+                <option value="">All Hospitals</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="applyFilters()">
+              <i class="bi bi-search me-1"></i>Search
+            </button>
+            <button class="btn btn-outline" onclick="resetFilters()">Reset</button>
           </div>
         </div>
       </div>
 
-    </div>
-  </div>
-</div>
-
-<!-- Review Modal -->
-<div class="modal fade" id="review-modal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="review-modal-title">Review Submission</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label fw-semibold small">Review Notes <span class="text-muted">(optional)</span></label>
-          <textarea class="form-control" id="review-notes" rows="4" placeholder="Add notes or feedback…"></textarea>
+      <!-- Table -->
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Form</th>
+                <th>Submitted By</th>
+                <th class="d-none d-md">Hospital</th>
+                <th>Status</th>
+                <th class="d-none d-md">Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="submissions-tbody">
+              <tr><td colspan="7" class="tbl-empty">Loading…</td></tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" id="review-confirm-btn" onclick="confirmReview()">Confirm</button>
+        <div class="card-footer">
+          <div id="submissions-pagination"></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- View Modal -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h6 class="modal-title">Submission Details</h6>
+      <button class="modal-close" onclick="closeModal('view-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="view-body">Loading…</div>
+    <div class="modal-footer">
+      <div id="review-actions"></div>
+      <button class="btn btn-outline" onclick="closeModal('view-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Submission Modal -->
+<div class="modal-overlay" id="new-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h6 class="modal-title">New Submission</h6>
+      <button class="modal-close" onclick="closeModal('new-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Form</label>
+        <select id="new-form" class="form-ctrl" onchange="loadFormFields()">
+          <option value="">Select form…</option>
+        </select>
+      </div>
+      <div id="form-fields"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('new-modal')">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveSubmission()">
+        <i class="bi bi-check-lg me-1"></i>Submit
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
-let currentPage = 1;
-let currentSubId = null;
-let pendingReviewStatus = null;
-let currentUser2 = null;
+let page = 1, allForms = [], currentSub = null;
 
 (async () => {
-  currentUser2 = await requireAuth();
-
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('id')) { loadDetail(params.get('id')); return; }
-
-  API.get('api/forms.php').then(r => {
-    const sel = document.getElementById('filter-form');
-    (r.data || []).forEach(f => sel.innerHTML += `<option value="${esc(f.id)}">${esc(f.name)}</option>`);
-  }).catch(() => {});
-
-  loadNewFormOptions();
-  loadList(1);
+  await requireAuth();
+  await Promise.all([loadDropdowns(), loadSubmissions()]);
 })();
 
-async function loadList(page) {
-  currentPage = page;
-  const status = document.getElementById('filter-status').value;
-  const formId = document.getElementById('filter-form').value;
-  const from   = document.getElementById('filter-from').value;
-  const to     = document.getElementById('filter-to').value;
-
-  let url = `api/submissions.php?page=${page}`;
-  if (status) url += `&status=${encodeURIComponent(status)}`;
-  if (formId) url += `&form_id=${encodeURIComponent(formId)}`;
-  if (from)   url += `&from=${encodeURIComponent(from)}`;
-  if (to)     url += `&to=${encodeURIComponent(to)}`;
-
-  const tbody = document.getElementById('list-body');
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Loading…</td></tr>';
-
+async function loadDropdowns() {
   try {
-    const res  = await API.get(url);
-    const rows = res.data || [];
-    if (rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5">
-        <div class="text-muted"><i class="bi bi-clipboard-x fs-2 d-block mb-2"></i>
-        <strong>No submissions found</strong><br><small>Adjust filters or create a new submission.</small></div>
-      </td></tr>`;
-    } else {
-      tbody.innerHTML = rows.map(r => `
-        <tr>
-          <td class="fw-semibold">${esc(r.form)}</td>
-          <td class="text-muted small">${esc(r.hospital)}</td>
-          <td class="d-none d-md-table-cell text-muted small">${esc(r.submitted_by)}</td>
-          <td>${badge(r.status)}</td>
-          <td class="d-none d-lg-table-cell text-muted small">${r.period_start ? esc(r.period_start)+' → '+esc(r.period_end) : '—'}</td>
-          <td class="d-none d-md-table-cell text-muted small">${fmtDateTime(r.submitted_at||r.created_at)}</td>
-          <td><button class="btn btn-outline-primary btn-sm" onclick="loadDetail('${esc(r.id)}')">View</button></td>
-        </tr>
-      `).join('');
-    }
-    renderPagination('list-pagination', res.page, res.pages, res.total, res.per_page, loadList);
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error: ${esc(e.message)}</td></tr>`;
-  }
-}
-
-async function loadDetail(id) {
-  currentSubId = id;
-  document.getElementById('list-view').style.display   = 'none';
-  document.getElementById('new-view').style.display    = 'none';
-  document.getElementById('detail-view').style.display = '';
-  document.getElementById('detail-content').innerHTML  =
-    '<div class="text-center text-muted py-5"><span class="spinner-border"></span></div>';
-
-  try {
-    const res = await API.get(`api/submissions.php?id=${encodeURIComponent(id)}`);
-    const s   = res.data;
-    document.getElementById('detail-title').textContent = s.form_name;
-
-    const canReview = currentUser2 &&
-      ['super_admin','regional_admin','hospital_admin'].includes(currentUser2.role) &&
-      s.status === 'submitted';
-    document.getElementById('review-actions').style.display = canReview ? 'flex' : 'none';
-
-    document.getElementById('detail-content').innerHTML = `
-      <div class="row g-3">
-        <div class="col-lg-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3"><h6 class="fw-bold mb-0">Submission Info</h6></div>
-            <div class="card-body">
-              <dl class="row mb-0 small">
-                <dt class="col-5 text-muted">Status</dt><dd class="col-7">${badge(s.status)}</dd>
-                <dt class="col-5 text-muted">Form</dt><dd class="col-7">${esc(s.form_name)}</dd>
-                <dt class="col-5 text-muted">Hospital</dt><dd class="col-7">${esc(s.hospital_name)}</dd>
-                <dt class="col-5 text-muted">Submitted By</dt><dd class="col-7">${esc(s.submitted_by_name)}</dd>
-                <dt class="col-5 text-muted">Submitted At</dt><dd class="col-7">${fmtDateTime(s.submitted_at)}</dd>
-                <dt class="col-5 text-muted">Period</dt><dd class="col-7">${s.period_start ? esc(s.period_start)+' → '+esc(s.period_end) : '—'}</dd>
-                ${s.reviewed_by ? `
-                  <dt class="col-5 text-muted">Reviewed By</dt><dd class="col-7">${esc(s.reviewer_name)}</dd>
-                  <dt class="col-5 text-muted">Reviewed At</dt><dd class="col-7">${fmtDateTime(s.reviewed_at)}</dd>
-                  ${s.review_notes ? `<dt class="col-5 text-muted">Notes</dt><dd class="col-7">${esc(s.review_notes)}</dd>` : ''}
-                ` : ''}
-              </dl>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3"><h6 class="fw-bold mb-0">Field Values</h6></div>
-            <div class="card-body">
-              ${(s.values||[]).length === 0
-                ? '<p class="text-muted small">No field values recorded.</p>'
-                : `<dl class="row mb-0 small">${s.values.map(v => `
-                    <dt class="col-5 text-muted">${esc(v.label)}</dt>
-                    <dd class="col-7">${esc(v.value_text||v.value_number||v.value_date||(v.value_boolean!==null?(v.value_boolean?'Yes':'No'):'')||'—')}</dd>
-                  `).join('')}</dl>`}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  } catch (e) {
-    document.getElementById('detail-content').innerHTML =
-      `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${esc(e.message)}</div>`;
-  }
-}
-
-function backToList() {
-  document.getElementById('list-view').style.display   = '';
-  document.getElementById('detail-view').style.display = 'none';
-  document.getElementById('new-view').style.display    = 'none';
-  history.replaceState(null, '', 'submissions.html');
-}
-
-function reviewSubmission(status) {
-  pendingReviewStatus = status;
-  document.getElementById('review-modal-title').textContent = status === 'approved' ? 'Approve Submission' : 'Reject Submission';
-  const btn = document.getElementById('review-confirm-btn');
-  btn.className = 'btn ' + (status === 'approved' ? 'btn-success' : 'btn-danger');
-  document.getElementById('review-notes').value = '';
-  openModal('review-modal');
-}
-
-async function confirmReview() {
-  const btn = document.getElementById('review-confirm-btn');
-  setLoading(btn, true);
-  try {
-    await API.post(`api/submissions.php?id=${encodeURIComponent(currentSubId)}&action=review`, {
-      status: pendingReviewStatus,
-      notes:  document.getElementById('review-notes').value,
-    });
-    toast('Submission ' + pendingReviewStatus, 'success');
-    closeModal('review-modal');
-    loadDetail(currentSubId);
-  } catch (e) { toast(e.message, 'error'); }
-  setLoading(btn, false);
-}
-
-async function loadNewFormOptions() {
-  try {
-    const [formsRes, hospsRes] = await Promise.all([
-      API.get('api/forms.php?status=published'),
-      API.get('api/hospitals.php'),
+    const [fRes, hRes] = await Promise.all([
+      API.get('api/forms.php?status=published&per_page=100'),
+      API.get('api/hospitals.php?per_page=200'),
     ]);
-    const fSel = document.getElementById('new-form-id');
-    const hSel = document.getElementById('new-hospital-id');
-    (formsRes.data||[]).forEach(f => fSel.innerHTML += `<option value="${esc(f.id)}">${esc(f.name)}</option>`);
-    (hospsRes.data||[]).forEach(h => {
-      const sel = currentUser2 && h.id === currentUser2.hospital_id ? ' selected' : '';
-      hSel.innerHTML += `<option value="${esc(h.id)}"${sel}>${esc(h.name)}</option>`;
-    });
+    allForms = fRes.data || [];
+    const fOpts = allForms.map(f => `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join('');
+    document.getElementById('filter-form').innerHTML = '<option value="">All Forms</option>' + fOpts;
+    document.getElementById('new-form').innerHTML    = '<option value="">Select form…</option>' + fOpts;
+    const hOpts = (hRes.data||[]).map(h => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('');
+    document.getElementById('filter-hospital').innerHTML = '<option value="">All Hospitals</option>' + hOpts;
   } catch {}
 }
 
-async function loadFormFields() {
-  const formId    = document.getElementById('new-form-id').value;
-  const container = document.getElementById('form-fields-container');
-  container.innerHTML = '';
-  if (!formId) return;
-  try {
-    const res = await API.get(`api/forms.php?id=${encodeURIComponent(formId)}`);
-    (res.data.sections||[]).forEach(section => {
-      if (section.fields && section.fields.length > 0) {
-        container.innerHTML += `<h6 class="text-muted text-uppercase small fw-bold mt-4 mb-2">${esc(section.title)}</h6>`;
-        container.innerHTML += '<div class="row g-3">' + section.fields.map(f => `
-          <div class="${f.field_type==='textarea'||f.field_type==='text_area' ? 'col-12' : 'col-md-6'}">
-            <label class="form-label small fw-semibold">${esc(f.label)}${f.is_required?'<span class="text-danger ms-1">*</span>':''}</label>
-            ${renderField(f)}
-            ${f.help_text ? `<div class="form-text">${esc(f.help_text)}</div>` : ''}
-          </div>`).join('') + '</div>';
-      }
-    });
-  } catch (e) { toast('Failed to load form fields: ' + e.message, 'error'); }
+function buildParams() {
+  const p = new URLSearchParams({ page, per_page:15 });
+  const s = document.getElementById('search').value.trim();
+  const f = document.getElementById('filter-form').value;
+  const st= document.getElementById('filter-status').value;
+  const h = document.getElementById('filter-hospital').value;
+  if (s)  p.set('search', s);
+  if (f)  p.set('form_id', f);
+  if (st) p.set('status', st);
+  if (h)  p.set('hospital_id', h);
+  return p;
 }
 
-function renderField(f) {
-  const id  = `field_${esc(f.id)}`;
-  const req = f.is_required ? 'required' : '';
-  switch (f.field_type) {
-    case 'number':   return `<input type="number" class="form-control" id="${id}" ${req} placeholder="${esc(f.placeholder||'')}">`;
-    case 'date':     return `<input type="date" class="form-control" id="${id}" ${req}>`;
-    case 'select': {
-      const opts = (f.options||[]).map(o => `<option value="${esc(typeof o==='object'?o.value:o)}">${esc(typeof o==='object'?o.label:o)}</option>`).join('');
-      return `<select class="form-select" id="${id}" ${req}><option value="">— Select —</option>${opts}</select>`;
+async function loadSubmissions() {
+  const tbody = document.getElementById('submissions-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" class="tbl-empty">Loading…</td></tr>';
+  try {
+    const res  = await API.get('api/submissions.php?' + buildParams());
+    const rows = res.data || [];
+    const meta = res.meta || {};
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="tbl-empty">No submissions found</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map((r,i) => `
+        <tr>
+          <td class="text-muted small">${(page-1)*15+i+1}</td>
+          <td class="fw-500">${esc(r.form_name||'—')}</td>
+          <td>${esc(r.submitted_by_name||'—')}</td>
+          <td class="d-none d-md text-muted small">${esc(r.hospital_name||'—')}</td>
+          <td>${badge(r.status)}</td>
+          <td class="d-none d-md text-muted small">${fmtDate(r.submitted_at||r.created_at)}</td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="viewSubmission(${r.id})">
+              <i class="bi bi-eye"></i>
+            </button>
+          </td>
+        </tr>`).join('');
     }
-    case 'textarea':
-    case 'text_area': return `<textarea class="form-control" id="${id}" ${req} rows="3" placeholder="${esc(f.placeholder||'')}"></textarea>`;
-    case 'checkbox':  return `<div class="form-check mt-1"><input class="form-check-input" type="checkbox" id="${id}"><label class="form-check-label" for="${id}">${esc(f.label)}</label></div>`;
-    default:          return `<input type="text" class="form-control" id="${id}" ${req} placeholder="${esc(f.placeholder||'')}">`;
+    renderPagination('submissions-pagination', meta.page||1, meta.pages||1, meta.total||0, 15, p => { page=p; loadSubmissions(); });
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" class="tbl-empty text-danger">Error: ${esc(e.message)}</td></tr>`;
   }
 }
 
-function showNewForm() {
-  document.getElementById('list-view').style.display = 'none';
-  document.getElementById('new-view').style.display  = '';
+function applyFilters() { page = 1; loadSubmissions(); }
+function resetFilters() {
+  document.getElementById('search').value        = '';
+  document.getElementById('filter-form').value   = '';
+  document.getElementById('filter-status').value = '';
+  document.getElementById('filter-hospital').value = '';
+  applyFilters();
 }
 
-async function submitForm(status) {
-  const formId     = document.getElementById('new-form-id').value;
-  const hospitalId = document.getElementById('new-hospital-id').value;
-  if (!formId || !hospitalId) { toast('Please select a form and hospital', 'error'); return; }
+async function viewSubmission(id) {
+  openModal('view-modal');
+  document.getElementById('view-body').innerHTML = '<div class="tbl-empty">Loading…</div>';
+  document.getElementById('review-actions').innerHTML = '';
+  try {
+    const res = await API.get('api/submissions.php?id=' + id);
+    const sub = res.data;
+    currentSub = sub;
+    const answers = sub.answers || {};
+    const fields  = sub.form_fields || [];
+    const rows = fields.map(f => `
+      <div class="detail-row">
+        <div class="detail-label">${esc(f.label)}</div>
+        <div class="detail-value">${esc(answers[f.name]||'—')}</div>
+      </div>`).join('') || '<p class="text-muted">No fields</p>';
+    document.getElementById('view-body').innerHTML = `
+      <div class="detail-row"><div class="detail-label">Form</div><div class="detail-value fw-500">${esc(sub.form_name||'—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${badge(sub.status)}</div></div>
+      <div class="detail-row"><div class="detail-label">Submitted By</div><div class="detail-value">${esc(sub.submitted_by_name||'—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Hospital</div><div class="detail-value">${esc(sub.hospital_name||'—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Date</div><div class="detail-value">${fmtDateTime(sub.submitted_at||sub.created_at)}</div></div>
+      <hr style="border-color:var(--border);margin:12px 0">
+      ${rows}`;
 
-  const values = {};
-  document.querySelectorAll('[id^="field_"]').forEach(el => {
-    values[el.id.replace('field_', '')] = el.type === 'checkbox' ? el.checked : el.value;
-  });
+    if (sub.status === 'submitted' && currentUser && ['super_admin','regional_admin','hospital_admin'].includes(currentUser.role)) {
+      document.getElementById('review-actions').innerHTML = `
+        <button class="btn btn-primary btn-sm me-2" onclick="review(${id},'approved')"><i class="bi bi-check-lg me-1"></i>Approve</button>
+        <button class="btn btn-danger btn-sm" onclick="review(${id},'rejected')"><i class="bi bi-x-lg me-1"></i>Reject</button>`;
+    }
+  } catch (e) {
+    document.getElementById('view-body').innerHTML = `<p class="text-danger">${esc(e.message)}</p>`;
+  }
+}
 
-  const btn = document.getElementById('submit-btn');
+async function review(id, status) {
+  try {
+    await API.put('api/submissions.php?id=' + id, { status });
+    toast('Submission ' + status, 'success');
+    closeModal('view-modal');
+    loadSubmissions();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function openNewModal() {
+  document.getElementById('form-fields').innerHTML = '';
+  document.getElementById('new-form').value = '';
+  openModal('new-modal');
+}
+
+async function loadFormFields() {
+  const formId = document.getElementById('new-form').value;
+  if (!formId) { document.getElementById('form-fields').innerHTML = ''; return; }
+  try {
+    const res  = await API.get('api/forms.php?id=' + formId);
+    const form = res.data;
+    const fields = form.fields || [];
+    document.getElementById('form-fields').innerHTML = fields.map(f => `
+      <div class="form-group">
+        <label class="form-label">${esc(f.label)}${f.required?'<span style="color:#ef3826">*</span>':''}</label>
+        ${f.type === 'textarea'
+          ? `<textarea class="form-ctrl" name="${esc(f.name)}" ${f.required?'required':''}></textarea>`
+          : f.type === 'select'
+          ? `<select class="form-ctrl" name="${esc(f.name)}" ${f.required?'required':''}><option value="">Select…</option>${(f.options||[]).map(o=>`<option>${esc(o)}</option>`).join('')}</select>`
+          : `<input type="${esc(f.type||'text')}" class="form-ctrl" name="${esc(f.name)}" ${f.required?'required':''}>`
+        }
+      </div>`).join('');
+  } catch (e) { toast(e.message,'error'); }
+}
+
+async function saveSubmission() {
+  const formId = document.getElementById('new-form').value;
+  if (!formId) { toast('Please select a form','warning'); return; }
+  const btn  = document.getElementById('save-btn');
+  const inputs = document.querySelectorAll('#form-fields [name]');
+  const answers = {};
+  for (const el of inputs) {
+    if (el.required && !el.value.trim()) { toast('Please fill all required fields','warning'); return; }
+    answers[el.name] = el.value;
+  }
   setLoading(btn, true);
   try {
-    await API.post('api/submissions.php', {
-      form_id:      formId,
-      hospital_id:  hospitalId,
-      period_start: document.getElementById('new-period-start').value || null,
-      period_end:   document.getElementById('new-period-end').value   || null,
-      status, values,
-    });
-    toast('Submission saved!', 'success');
-    backToList();
-    loadList(1);
-  } catch (e) { toast(e.message, 'error'); }
-  setLoading(btn, false);
+    await API.post('api/submissions.php', { form_id: formId, answers, status:'submitted' });
+    toast('Submission saved successfully','success');
+    closeModal('new-modal');
+    loadSubmissions();
+  } catch (e) {
+    toast(e.message,'error');
+  } finally {
+    setLoading(btn, false);
+  }
 }
 
-function clearFilters() {
-  ['filter-status','filter-form','filter-from','filter-to'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  loadList(1);
-}
+document.getElementById('search').addEventListener('keydown', e => { if (e.key==='Enter') applyFilters(); });
 </script>
 </body>
 </html>

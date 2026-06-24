@@ -1,4 +1,4 @@
-/* Shared app utilities */
+/* Shared app utilities — custom UI (no Bootstrap JS) */
 let currentUser = null;
 
 async function requireAuth() {
@@ -26,10 +26,10 @@ function fillUserUI(user) {
     if (avSb) avSb.textContent = initial;
 
     if (!['super_admin'].includes(user.role)) {
-        document.querySelectorAll('.admin-only').forEach(el => el.classList.add('d-none'));
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     }
     if (!['super_admin', 'regional_admin', 'hospital_admin'].includes(user.role)) {
-        document.querySelectorAll('.manager-only').forEach(el => el.classList.add('d-none'));
+        document.querySelectorAll('.manager-only').forEach(el => el.style.display = 'none');
     }
 }
 
@@ -46,41 +46,37 @@ async function logout() {
     window.location.href = 'index.html';
 }
 
-// ── Toast (Bootstrap) ─────────────────────────────────────────
+// ── Toast ──────────────────────────────────────────────────────
 function toast(msg, type = 'info', duration = 3500) {
     let container = document.getElementById('toast-container');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast-container';
-        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-        container.style.zIndex = 9999;
+        Object.assign(container.style, { position:'fixed', bottom:'24px', right:'24px', zIndex:9999, display:'flex', flexDirection:'column', gap:'8px' });
         document.body.appendChild(container);
     }
-    const bgMap = { success: 'bg-success', error: 'bg-danger', info: 'bg-primary', warning: 'bg-warning text-dark' };
-    const bg    = bgMap[type] || 'bg-secondary';
-    const id    = 'toast-' + Date.now();
+    const clsMap = { success:'success', error:'error', warning:'warning', info:'info' };
+    const cls    = clsMap[type] || 'info';
+    const id     = 'toast-' + Date.now();
+    const icons  = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', warning:'bi-exclamation-triangle-fill', info:'bi-info-circle-fill' };
     container.insertAdjacentHTML('beforeend', `
-      <div id="${id}" class="toast align-items-center text-white ${bg} border-0" role="alert" aria-atomic="true">
-        <div class="d-flex">
-          <div class="toast-body">${esc(msg)}</div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
+      <div id="${id}" class="toast-item ${cls}">
+        <i class="bi ${icons[cls]||icons.info}"></i>
+        <span>${esc(msg)}</span>
+        <button onclick="this.closest('.toast-item').remove()" style="background:none;border:none;cursor:pointer;margin-left:auto;opacity:.6;font-size:1rem;">&times;</button>
       </div>`);
-    const el = document.getElementById(id);
-    const bsToast = new bootstrap.Toast(el, { delay: duration });
-    bsToast.show();
-    el.addEventListener('hidden.bs.toast', () => el.remove());
+    setTimeout(() => document.getElementById(id)?.remove(), duration);
 }
 
-// ── Date helpers ──────────────────────────────────────────────
+// ── Date helpers ───────────────────────────────────────────────
 function fmtDate(d) {
     if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
 }
 
 function fmtDateTime(d) {
     if (!d) return '—';
-    return new Date(d).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date(d).toLocaleString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 
 function timeAgo(d) {
@@ -92,25 +88,44 @@ function timeAgo(d) {
     return Math.floor(diff / 86400) + 'd ago';
 }
 
-// ── Badge helper ──────────────────────────────────────────────
+// ── Badge helper ───────────────────────────────────────────────
 function badge(status, label) {
-    const text = label || status || '—';
-    const cls  = 'badge-status-' + (status || '').toLowerCase().replace(/\s+/g, '_');
-    return `<span class="badge ${cls}">${esc(text)}</span>`;
+    const text    = label !== undefined ? label : (status || '—');
+    const clsMap  = {
+        approved:  'badge-success',
+        active:    'badge-success',
+        published: 'badge-success',
+        rejected:  'badge-danger',
+        inactive:  'badge-danger',
+        archived:  'badge-secondary',
+        submitted: 'badge-info',
+        draft:     'badge-secondary',
+        pending:   'badge-warning',
+    };
+    const cls = clsMap[(status||'').toLowerCase()] || 'badge-secondary';
+    return `<span class="badge ${cls}">${esc(String(text))}</span>`;
 }
 
-// ── Modal helpers (Bootstrap) ─────────────────────────────────
+// ── Modal helpers ──────────────────────────────────────────────
 function openModal(id) {
-    const el = document.getElementById(id);
-    if (el) bootstrap.Modal.getOrCreateInstance(el).show();
+    document.getElementById(id)?.classList.add('open');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeModal(id) {
-    const el = document.getElementById(id);
-    if (el) bootstrap.Modal.getOrCreateInstance(el).hide();
+    document.getElementById(id)?.classList.remove('open');
+    document.body.style.overflow = '';
 }
 
-// ── Pagination (Bootstrap) ────────────────────────────────────
+// Close modal on overlay click
+document.addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+});
+
+// ── Pagination ─────────────────────────────────────────────────
 function renderPagination(containerId, page, pages, total, perPage, onPage) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -123,7 +138,7 @@ function renderPagination(containerId, page, pages, total, perPage, onPage) {
     if (!infoEl) {
         infoEl = document.createElement('p');
         infoEl.id = infoId;
-        infoEl.className = 'text-muted small mb-1 mt-2 px-3';
+        infoEl.className = 'text-muted small mb-1 mt-2';
         container.parentNode.insertBefore(infoEl, container);
     }
     infoEl.textContent = total > 0 ? `Showing ${start}–${end} of ${total}` : '0 results';
@@ -131,38 +146,35 @@ function renderPagination(containerId, page, pages, total, perPage, onPage) {
     container.innerHTML = '';
     if (pages <= 1) return;
 
-    const ul = document.createElement('ul');
-    ul.className = 'pagination pagination-sm mb-0';
+    const wrap = document.createElement('div');
+    wrap.className = 'pagination';
 
-    const addItem = (label, p, disabled = false, active = false) => {
-        const li = document.createElement('li');
-        li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
-        const a = document.createElement('a');
-        a.className = 'page-link';
-        a.href = '#';
-        a.innerHTML = label;
-        if (!disabled && !active) a.onclick = e => { e.preventDefault(); onPage(p); };
-        li.appendChild(a);
-        ul.appendChild(li);
+    const addBtn = (label, p, disabled = false, active = false) => {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (active ? ' active' : '');
+        btn.innerHTML = label;
+        btn.disabled  = disabled;
+        if (!disabled && !active) btn.onclick = () => onPage(p);
+        wrap.appendChild(btn);
     };
 
-    addItem('&laquo;', page - 1, page === 1);
+    addBtn('&laquo;', page - 1, page === 1);
     for (let i = 1; i <= pages; i++) {
         if (i === 1 || i === pages || (i >= page - 2 && i <= page + 2)) {
-            addItem(i, i, false, i === page);
+            addBtn(i, i, false, i === page);
         } else if (i === page - 3 || i === page + 3) {
-            addItem('…', i, true);
+            addBtn('…', i, true);
         }
     }
-    addItem('&raquo;', page + 1, page === pages);
-    container.appendChild(ul);
+    addBtn('&raquo;', page + 1, page === pages);
+    container.appendChild(wrap);
 }
 
-// ── Loading state ─────────────────────────────────────────────
+// ── Loading state ──────────────────────────────────────────────
 function setLoading(btnEl, loading) {
     if (loading) {
         btnEl._origHTML = btnEl.innerHTML;
-        btnEl.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        btnEl.innerHTML = '<span class="spinner"></span>';
         btnEl.disabled  = true;
     } else {
         btnEl.innerHTML = btnEl._origHTML || btnEl.innerHTML;
@@ -170,19 +182,19 @@ function setLoading(btnEl, loading) {
     }
 }
 
-// ── Sidebar toggle ────────────────────────────────────────────
+// ── Sidebar toggle ─────────────────────────────────────────────
 function initSidebar() {
     const toggle  = document.getElementById('menu-toggle');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
 
     toggle?.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('open');
+        sidebar?.classList.toggle('open');
+        overlay?.classList.toggle('open');
     });
     overlay?.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('open');
+        sidebar?.classList.remove('open');
+        overlay?.classList.remove('open');
     });
 
     const page = window.location.pathname.split('/').pop() || 'index.html';
@@ -191,7 +203,7 @@ function initSidebar() {
     });
 }
 
-// ── Escape HTML ───────────────────────────────────────────────
+// ── Escape HTML ────────────────────────────────────────────────
 function esc(str) {
     if (str == null) return '';
     return String(str)
