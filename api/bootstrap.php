@@ -53,12 +53,14 @@ function fail(string $msg, int $code = 400): void {
 
 function paginate(array $rows, int $total, int $page, int $perPage): void {
     send([
-        'success'  => true,
-        'data'     => $rows,
-        'total'    => $total,
-        'page'     => $page,
-        'per_page' => $perPage,
-        'pages'    => (int) ceil($total / max(1, $perPage)),
+        'success' => true,
+        'data'    => $rows,
+        'meta'    => [
+            'total'    => $total,
+            'page'     => $page,
+            'per_page' => $perPage,
+            'pages'    => (int) ceil($total / max(1, $perPage)),
+        ],
     ]);
 }
 

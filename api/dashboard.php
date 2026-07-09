@@ -33,7 +33,7 @@ $stats = [
 
 // Recent submissions
 $recent = $db->query("
-    SELECT s.id, f.name AS form, h.name AS hospital, u.name AS submitted_by,
+    SELECT s.id, f.name AS form_name, h.name AS hospital_name, u.name AS submitted_by_name,
            s.status, s.submitted_at
     FROM submissions s
     JOIN forms f ON f.id = s.form_id

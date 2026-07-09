@@ -245,12 +245,12 @@ async function loadUsers() {
           <td class="d-none d-md text-muted small">${esc(r.hospital_name||'—')}</td>
           <td>${badge(r.status||'active')}</td>
           <td>
-            <button class="btn btn-outline btn-sm me-1" onclick="editUser(${r.id})"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="promptDelete(${r.id},'${esc(r.name).replace(/'/g,"\\'")}')" ><i class="bi bi-trash"></i></button>
+            <button class="btn btn-outline btn-sm me-1" onclick="editUser('${r.id}')"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.id}','${esc(r.name).replace(/'/g,"\\'")}')" ><i class="bi bi-trash"></i></button>
           </td>
         </tr>`).join('');
     }
-    renderPagination('users-pagination', meta.page||1, meta.pages||1, meta.total||0, 15, p => { page=p; loadUsers(); });
+    renderPagination('users-pagination', (meta.page||res.page)||1, (meta.pages||res.pages)||1, (meta.total||res.total)||0, 15, p => { page=p; loadUsers(); });
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="7" class="tbl-empty text-danger">Error: ${esc(e.message)}</td></tr>`;
   }

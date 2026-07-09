@@ -24,11 +24,12 @@ if ($method === 'GET' && $id) {
     if (!$sub) fail('Submission not found', 404);
 
     $vals = $db->prepare("
-        SELECT sv.*, ff.label, ff.field_type
+        SELECT sv.field_id, ff.label, ff.field_type, ff.name AS field_name,
+               sv.value_text, sv.value_number, sv.value_date, sv.value_boolean
         FROM submission_values sv
         JOIN form_fields ff ON ff.id = sv.field_id
         WHERE sv.submission_id = :id
-        ORDER BY ff.order_index
+        ORDER BY ff.sort_order
     ");
     $vals->execute(['id' => $id]);
     $sub['values'] = $vals->fetchAll();
@@ -38,7 +39,7 @@ if ($method === 'GET' && $id) {
 // ── GET list ─────────────────────────────────────────────────────────────────
 if ($method === 'GET') {
     $page    = max(1, (int) qp('page', 1));
-    $perPage = 25;
+    $perPage = max(1, (int) qp('per_page', 25));
     $offset  = ($page - 1) * $perPage;
 
     $where  = ['1=1'];
@@ -60,10 +61,20 @@ if ($method === 'GET') {
     if (qp('status'))      { $where[] = 's.status = :status';       $params['status']      = qp('status'); }
     if (qp('from'))        { $where[] = 's.submitted_at >= :from';   $params['from']        = qp('from'); }
     if (qp('to'))          { $where[] = 's.submitted_at <= :to';     $params['to']          = qp('to'); }
+    if (qp('search'))      {
+        $where[] = '(f.name LIKE :search OR h.name LIKE :search OR u.name LIKE :search)';
+        $params['search'] = '%' . qp('search') . '%';
+    }
 
     $w = implode(' AND ', $where);
 
-    $countStmt = $db->prepare("SELECT COUNT(*) FROM submissions s JOIN hospitals h ON h.id = s.hospital_id WHERE $w");
+    $countStmt = $db->prepare("
+        SELECT COUNT(*) FROM submissions s
+        JOIN forms f ON f.id = s.form_id
+        JOIN hospitals h ON h.id = s.hospital_id
+        JOIN users u ON u.id = s.submitted_by
+        WHERE $w
+    ");
     $countStmt->execute($params);
     $total = (int) $countStmt->fetchColumn();
 
@@ -71,7 +82,7 @@ if ($method === 'GET') {
     $params['offset'] = $offset;
 
     $stmt = $db->prepare("
-        SELECT s.id, f.name AS form, h.name AS hospital, u.name AS submitted_by,
+        SELECT s.id, f.name AS form_name, h.name AS hospital_name, u.name AS submitted_by_name,
                s.status, s.period_start, s.period_end, s.submitted_at, s.created_at
         FROM submissions s
         JOIN forms f ON f.id = s.form_id
@@ -90,9 +101,26 @@ if ($method === 'GET') {
     paginate($stmt->fetchAll(), $total, $page, $perPage);
 }
 
-// ── POST review ───────────────────────────────────────────────────────────────
+// ── PUT review ────────────────────────────────────────────────────────────────
+if ($method === 'PUT' && $id) {
+    need($user, 'review_submissions');
+    $b      = body();
+    $status = $b['status'] ?? '';
+    if (!in_array($status, ['approved', 'rejected'], true)) fail('Status must be approved or rejected');
+
+    $db->prepare("
+        UPDATE submissions
+        SET status = :status, reviewed_by = :rev, reviewed_at = NOW(),
+            review_notes = :notes, updated_at = NOW()
+        WHERE id = :id
+    ")->execute(['status' => $status, 'rev' => $user['id'], 'notes' => $b['notes'] ?? null, 'id' => $id]);
+
+    ok(null, "Submission $status");
+}
+
+// ── POST review (legacy action param) ─────────────────────────────────────────
 if ($method === 'POST' && $action === 'review' && $id) {
-    need($user, 'submissions.review');
+    need($user, 'review_submissions');
     $b      = body();
     $status = $b['status'] ?? '';
     if (!in_array($status, ['approved', 'rejected'], true)) fail('Status must be approved or rejected');
@@ -109,7 +137,7 @@ if ($method === 'POST' && $action === 'review' && $id) {
 
 // ── POST create ───────────────────────────────────────────────────────────────
 if ($method === 'POST') {
-    need($user, 'submissions.create');
+    need($user, 'create_submissions');
     $b = body();
 
     $formId     = $b['form_id'] ?? '';
@@ -125,30 +153,26 @@ if ($method === 'POST') {
 
     $subId  = uid();
     $status = ($b['status'] ?? 'submitted') === 'draft' ? 'draft' : 'submitted';
-    $now    = $status === 'submitted' ? 'NOW()' : 'NULL';
+    $submittedAt = $status === 'submitted' ? date('Y-m-d H:i:s') : null;
 
     $db->prepare("
-        INSERT INTO submissions
-            (id, form_id, form_version, hospital_id, submitted_by, status, period_start, period_end, submitted_at)
-        VALUES
-            (:id, :form_id, :version, :hospital_id, :user_id, :status, :ps, :pe, $now)
+        INSERT INTO submissions (id, form_id, hospital_id, submitted_by, status, period_start, period_end, submitted_at)
+        VALUES (:id, :form_id, :hospital_id, :user_id, :status, :ps, :pe, :sat)
     ")->execute([
         'id'          => $subId,
         'form_id'     => $formId,
-        'version'     => $form['version'],
         'hospital_id' => $hospitalId,
         'user_id'     => $user['id'],
         'status'      => $status,
         'ps'          => $b['period_start'] ?? null,
         'pe'          => $b['period_end']   ?? null,
+        'sat'         => $submittedAt,
     ]);
 
     if (!empty($b['values']) && is_array($b['values'])) {
         $valStmt = $db->prepare("
-            INSERT INTO submission_values
-                (id, submission_id, field_id, field_name, value_text, value_number, value_date, value_boolean, value_json)
-            VALUES
-                (:id, :sub_id, :field_id, :field_name, :text, :number, :date, :boolean, :json)
+            INSERT INTO submission_values (id, submission_id, field_id, value_text, value_number, value_date, value_boolean)
+            VALUES (:id, :sub_id, :field_id, :text, :number, :date, :boolean)
         ");
         foreach ($b['values'] as $fieldId => $value) {
             $fld = $db->prepare('SELECT * FROM form_fields WHERE id = :id');
@@ -157,15 +181,13 @@ if ($method === 'POST') {
             if (!$fld) continue;
 
             $valStmt->execute([
-                'id'         => uid(),
-                'sub_id'     => $subId,
-                'field_id'   => $fieldId,
-                'field_name' => $fld['name'],
-                'text'       => is_string($value) ? $value : null,
-                'number'     => is_numeric($value) ? $value : null,
-                'date'       => $fld['field_type'] === 'date' ? $value : null,
-                'boolean'    => is_bool($value) ? ($value ? 1 : 0) : null,
-                'json'       => is_array($value) ? json_encode($value) : null,
+                'id'      => uid(),
+                'sub_id'  => $subId,
+                'field_id'=> $fieldId,
+                'text'    => ($fld['field_type'] === 'number') ? null : (string)$value,
+                'number'  => is_numeric($value) ? $value : null,
+                'date'    => $fld['field_type'] === 'date' ? $value : null,
+                'boolean' => is_bool($value) ? ($value ? 1 : 0) : null,
             ]);
         }
     }

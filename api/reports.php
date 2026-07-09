@@ -6,7 +6,12 @@ $db     = db();
 $action = qp('action', 'export');
 $format = qp('format', 'csv');
 
-need($user, 'reports.export');
+need($user, 'export_reports');
+
+if ($user['role'] === 'regional_admin' && $user['region_id']) {
+    $where[] = 'h.region_id = :rid_scope';
+    $params['rid_scope'] = $user['region_id'];
+}
 
 $where  = ['1=1'];
 $params = [];

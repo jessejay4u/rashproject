@@ -226,13 +226,13 @@ async function loadSubmissions() {
           <td>${badge(r.status)}</td>
           <td class="d-none d-md text-muted small">${fmtDate(r.submitted_at||r.created_at)}</td>
           <td>
-            <button class="btn btn-outline btn-sm" onclick="viewSubmission(${r.id})">
+            <button class="btn btn-outline btn-sm" onclick="viewSubmission('${r.id}')">
               <i class="bi bi-eye"></i>
             </button>
           </td>
         </tr>`).join('');
     }
-    renderPagination('submissions-pagination', meta.page||1, meta.pages||1, meta.total||0, 15, p => { page=p; loadSubmissions(); });
+    renderPagination('submissions-pagination', (meta.page||res.page)||1, (meta.pages||res.pages)||1, (meta.total||res.total)||0, 15, p => { page=p; loadSubmissions(); });
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="7" class="tbl-empty text-danger">Error: ${esc(e.message)}</td></tr>`;
   }
@@ -255,13 +255,14 @@ async function viewSubmission(id) {
     const res = await API.get('api/submissions.php?id=' + id);
     const sub = res.data;
     currentSub = sub;
-    const answers = sub.answers || {};
-    const fields  = sub.form_fields || [];
-    const rows = fields.map(f => `
-      <div class="detail-row">
-        <div class="detail-label">${esc(f.label)}</div>
-        <div class="detail-value">${esc(answers[f.name]||'—')}</div>
-      </div>`).join('') || '<p class="text-muted">No fields</p>';
+    const values = sub.values || [];
+    const rows = values.map(v => {
+      const val = v.value_text ?? v.value_number ?? v.value_date ?? '—';
+      return `<div class="detail-row">
+        <div class="detail-label">${esc(v.label)}</div>
+        <div class="detail-value">${esc(String(val))}</div>
+      </div>`;
+    }).join('') || '<p class="text-muted">No field data recorded</p>';
     document.getElementById('view-body').innerHTML = `
       <div class="detail-row"><div class="detail-label">Form</div><div class="detail-value fw-500">${esc(sub.form_name||'—')}</div></div>
       <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${badge(sub.status)}</div></div>
@@ -273,8 +274,8 @@ async function viewSubmission(id) {
 
     if (sub.status === 'submitted' && currentUser && ['super_admin','regional_admin','hospital_admin'].includes(currentUser.role)) {
       document.getElementById('review-actions').innerHTML = `
-        <button class="btn btn-primary btn-sm me-2" onclick="review(${id},'approved')"><i class="bi bi-check-lg me-1"></i>Approve</button>
-        <button class="btn btn-danger btn-sm" onclick="review(${id},'rejected')"><i class="bi bi-x-lg me-1"></i>Reject</button>`;
+        <button class="btn btn-primary btn-sm me-2" onclick="review('${id}','approved')"><i class="bi bi-check-lg me-1"></i>Approve</button>
+        <button class="btn btn-danger btn-sm" onclick="review('${id}','rejected')"><i class="bi bi-x-lg me-1"></i>Reject</button>`;
     }
   } catch (e) {
     document.getElementById('view-body').innerHTML = `<p class="text-danger">${esc(e.message)}</p>`;
@@ -302,17 +303,18 @@ async function loadFormFields() {
   const formId = document.getElementById('new-form').value;
   if (!formId) { document.getElementById('form-fields').innerHTML = ''; return; }
   try {
-    const res  = await API.get('api/forms.php?id=' + formId);
-    const form = res.data;
-    const fields = form.fields || [];
-    document.getElementById('form-fields').innerHTML = fields.map(f => `
+    const res    = await API.get('api/forms.php?id=' + formId);
+    const form   = res.data;
+    const allFields = [];
+    (form.sections||[]).forEach(s => (s.fields||[]).forEach(f => allFields.push(f)));
+    document.getElementById('form-fields').innerHTML = allFields.map(f => `
       <div class="form-group">
-        <label class="form-label">${esc(f.label)}${f.required?'<span style="color:#ef3826">*</span>':''}</label>
-        ${f.type === 'textarea'
-          ? `<textarea class="form-ctrl" name="${esc(f.name)}" ${f.required?'required':''}></textarea>`
-          : f.type === 'select'
-          ? `<select class="form-ctrl" name="${esc(f.name)}" ${f.required?'required':''}><option value="">Select…</option>${(f.options||[]).map(o=>`<option>${esc(o)}</option>`).join('')}</select>`
-          : `<input type="${esc(f.type||'text')}" class="form-ctrl" name="${esc(f.name)}" ${f.required?'required':''}>`
+        <label class="form-label">${esc(f.label)}${f.is_required?'<span style="color:#ef3826">*</span>':''}</label>
+        ${f.field_type === 'textarea'
+          ? `<textarea class="form-ctrl" data-field-id="${esc(f.id)}" ${f.is_required?'required':''}></textarea>`
+          : f.field_type === 'select'
+          ? `<select class="form-ctrl" data-field-id="${esc(f.id)}" ${f.is_required?'required':''}><option value="">Select…</option>${(f.options||[]).map(o=>`<option>${esc(o)}</option>`).join('')}</select>`
+          : `<input type="${esc(f.field_type||'text')}" class="form-ctrl" data-field-id="${esc(f.id)}" ${f.is_required?'required':''}>`
         }
       </div>`).join('');
   } catch (e) { toast(e.message,'error'); }
@@ -321,16 +323,16 @@ async function loadFormFields() {
 async function saveSubmission() {
   const formId = document.getElementById('new-form').value;
   if (!formId) { toast('Please select a form','warning'); return; }
-  const btn  = document.getElementById('save-btn');
-  const inputs = document.querySelectorAll('#form-fields [name]');
-  const answers = {};
+  const btn    = document.getElementById('save-btn');
+  const inputs = document.querySelectorAll('#form-fields [data-field-id]');
+  const values = {};
   for (const el of inputs) {
     if (el.required && !el.value.trim()) { toast('Please fill all required fields','warning'); return; }
-    answers[el.name] = el.value;
+    values[el.dataset.fieldId] = el.value;
   }
   setLoading(btn, true);
   try {
-    await API.post('api/submissions.php', { form_id: formId, answers, status:'submitted' });
+    await API.post('api/submissions.php', { form_id: formId, values, status:'submitted' });
     toast('Submission saved successfully','success');
     closeModal('new-modal');
     loadSubmissions();

@@ -14,7 +14,7 @@ if ($method === 'GET' && $id) {
                (SELECT COUNT(*) FROM submissions WHERE hospital_id = h.id) AS total_submissions,
                (SELECT MAX(submitted_at) FROM submissions WHERE hospital_id = h.id) AS last_submission
         FROM hospitals h
-        JOIN regions r ON r.id = h.region_id
+        LEFT JOIN regions r ON r.id = h.region_id
         WHERE h.id = :id
     ");
     $stmt->execute(['id' => $id]);
@@ -26,7 +26,7 @@ if ($method === 'GET' && $id) {
 // ── GET list ─────────────────────────────────────────────────────────────────
 if ($method === 'GET') {
     $page    = max(1, (int) qp('page', 1));
-    $perPage = 25;
+    $perPage = max(1, (int) qp('per_page', 25));
     $offset  = ($page - 1) * $perPage;
 
     $where  = ['h.is_active = 1'];
@@ -50,12 +50,12 @@ if ($method === 'GET') {
     $params['offset'] = $offset;
 
     $stmt = $db->prepare("
-        SELECT h.id, h.name, h.code, h.type, h.level, h.phone, h.email, h.is_active,
+        SELECT h.id, h.name, h.code, h.type, h.phone, h.email, h.bed_count, h.is_active,
                r.name AS region_name,
                (SELECT COUNT(*) FROM submissions s WHERE s.hospital_id = h.id AND s.submitted_at >= NOW() - INTERVAL 30 DAY) AS monthly_submissions,
                (SELECT MAX(submitted_at) FROM submissions WHERE hospital_id = h.id) AS last_submission
         FROM hospitals h
-        JOIN regions r ON r.id = h.region_id
+        LEFT JOIN regions r ON r.id = h.region_id
         WHERE $w
         ORDER BY h.name
         LIMIT :limit OFFSET :offset
@@ -71,55 +71,73 @@ if ($method === 'GET') {
 
 // ── POST create ───────────────────────────────────────────────────────────────
 if ($method === 'POST') {
-    need($user, 'hospitals.create');
+    need($user, 'create_hospitals');
     $b = body();
     if (empty($b['name']))      fail('Name is required');
     if (empty($b['code']))      fail('Code is required');
     if (empty($b['region_id'])) fail('Region is required');
     if (empty($b['type']))      fail('Type is required');
 
-    $id = uid();
+    $newId = uid();
     $db->prepare("
-        INSERT INTO hospitals (id, region_id, name, code, type, level, address, phone, email, latitude, longitude, capacity_beds)
-        VALUES (:id, :rid, :name, :code, :type, :level, :addr, :phone, :email, :lat, :lon, :beds)
+        INSERT INTO hospitals (id, region_id, name, code, type, address, phone, email, latitude, longitude, bed_count)
+        VALUES (:id, :rid, :name, :code, :type, :addr, :phone, :email, :lat, :lon, :beds)
     ")->execute([
-        'id'    => $id,
+        'id'    => $newId,
         'rid'   => $b['region_id'],
         'name'  => $b['name'],
         'code'  => strtoupper($b['code']),
         'type'  => $b['type'],
-        'level' => $b['level'] ?? 1,
         'addr'  => $b['address'] ?? null,
-        'phone' => $b['phone'] ?? null,
-        'email' => $b['email'] ?? null,
+        'phone' => $b['phone']   ?? null,
+        'email' => $b['email']   ?? null,
         'lat'   => $b['latitude'] ?? null,
         'lon'   => $b['longitude'] ?? null,
-        'beds'  => $b['capacity_beds'] ?? null,
+        'beds'  => $b['bed_count'] ?? $b['beds'] ?? 0,
     ]);
 
-    ok(['id' => $id], 'Hospital created', 201);
+    ok(['id' => $newId], 'Hospital created', 201);
 }
 
 // ── PUT/PATCH update ──────────────────────────────────────────────────────────
 if (($method === 'PUT' || $method === 'PATCH') && $id) {
-    need($user, 'hospitals.edit');
+    need($user, 'edit_hospitals');
     $b = body();
 
-    $fields  = ['name', 'type', 'level', 'address', 'phone', 'email', 'latitude', 'longitude', 'capacity_beds', 'is_active'];
-    $sets    = ['updated_at = NOW()'];
-    $params  = ['id' => $id];
+    $sets   = ['updated_at = NOW()'];
+    $params = ['id' => $id];
 
-    foreach ($fields as $field) {
+    $allowed = ['name', 'type', 'address', 'phone', 'email', 'latitude', 'longitude', 'is_active'];
+    foreach ($allowed as $field) {
         if (array_key_exists($field, $b)) {
-            $sets[]        = "$field = :$field";
+            $sets[]         = "$field = :$field";
             $params[$field] = $b[$field];
         }
+    }
+
+    // Accept either bed_count or beds from frontend
+    $bedVal = $b['bed_count'] ?? $b['beds'] ?? null;
+    if ($bedVal !== null) {
+        $sets[]              = 'bed_count = :bed_count';
+        $params['bed_count'] = $bedVal;
+    }
+
+    if (array_key_exists('status', $b)) {
+        $sets[]            = 'is_active = :is_active_s';
+        $params['is_active_s'] = $b['status'] === 'active' ? 1 : 0;
     }
 
     $db->prepare('UPDATE hospitals SET ' . implode(', ', $sets) . ' WHERE id = :id')
        ->execute($params);
 
     ok(null, 'Hospital updated');
+}
+
+// ── DELETE (deactivate) ───────────────────────────────────────────────────────
+if ($method === 'DELETE' && $id) {
+    need($user, 'edit_hospitals');
+    $db->prepare("UPDATE hospitals SET is_active = 0, updated_at = NOW() WHERE id = :id")->execute(['id' => $id]);
+    ok(null, 'Hospital deactivated');
 }
 
 fail('Method not allowed', 405);

@@ -244,14 +244,14 @@ async function loadHospitals() {
           <td class="d-none d-md text-muted small">${esc(r.region_name||'—')}</td>
           <td class="d-none d-md text-muted small">${esc(r.type||'—')}</td>
           <td>${badge(r.status||'active')}</td>
-          <td class="d-none d-md text-muted small">${r.beds||'—'}</td>
+          <td class="d-none d-md text-muted small">${r.bed_count||'—'}</td>
           <td class="admin-only">
-            <button class="btn btn-outline btn-sm me-1" onclick="editHospital(${r.id})"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="promptDelete(${r.id},'${esc(r.name).replace(/'/g,"\\'")}')" ><i class="bi bi-trash"></i></button>
+            <button class="btn btn-outline btn-sm me-1" onclick="editHospital('${r.id}')"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.id}','${esc(r.name).replace(/'/g,"\\'")}')" ><i class="bi bi-trash"></i></button>
           </td>
         </tr>`).join('');
     }
-    renderPagination('hospitals-pagination', meta.page||1, meta.pages||1, meta.total||0, 15, p => { page=p; loadHospitals(); });
+    renderPagination('hospitals-pagination', (meta.page||res.page)||1, (meta.pages||res.pages)||1, (meta.total||res.total)||0, 15, p => { page=p; loadHospitals(); });
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="7" class="tbl-empty text-danger">Error: ${esc(e.message)}</td></tr>`;
   }
@@ -288,7 +288,7 @@ async function editHospital(id) {
     document.getElementById('h-name').value    = h.name;
     document.getElementById('h-region').value  = h.region_id||'';
     document.getElementById('h-type').value    = h.type||'public';
-    document.getElementById('h-beds').value    = h.beds||'';
+    document.getElementById('h-beds').value    = h.bed_count||'';
     document.getElementById('h-phone').value   = h.phone||'';
     document.getElementById('h-email').value   = h.email||'';
     document.getElementById('h-address').value = h.address||'';
@@ -307,7 +307,7 @@ async function saveHospital() {
     name,
     region_id: document.getElementById('h-region').value||null,
     type:      document.getElementById('h-type').value,
-    beds:      document.getElementById('h-beds').value||null,
+    bed_count: document.getElementById('h-beds').value||null,
     phone:     document.getElementById('h-phone').value.trim(),
     email:     document.getElementById('h-email').value.trim(),
     address:   document.getElementById('h-address').value.trim(),
