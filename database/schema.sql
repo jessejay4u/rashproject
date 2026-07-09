@@ -1,11 +1,13 @@
--- Health Platform — MySQL Schema
+-- Health Platform - MySQL Schema
 -- Compatible with MySQL 5.7+ and MariaDB 10.3+
 -- Run this file first, then seed.sql
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- ─── Regions ──────────────────────────────────────────────────────────────────
+-- ============================================================
+-- Regions
+-- ============================================================
 CREATE TABLE IF NOT EXISTS regions (
     id          CHAR(36)     NOT NULL,
     name        VARCHAR(150) NOT NULL,
@@ -18,7 +20,9 @@ CREATE TABLE IF NOT EXISTS regions (
     UNIQUE KEY uq_regions_code (code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Hospitals ────────────────────────────────────────────────────────────────
+-- ============================================================
+-- Hospitals
+-- ============================================================
 CREATE TABLE IF NOT EXISTS hospitals (
     id          CHAR(36)     NOT NULL,
     name        VARCHAR(200) NOT NULL,
@@ -40,7 +44,9 @@ CREATE TABLE IF NOT EXISTS hospitals (
     CONSTRAINT fk_hospitals_region FOREIGN KEY (region_id) REFERENCES regions(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Roles ────────────────────────────────────────────────────────────────────
+-- ============================================================
+-- Roles
+-- ============================================================
 CREATE TABLE IF NOT EXISTS roles (
     id          CHAR(36)     NOT NULL,
     name        VARCHAR(50)  NOT NULL,
@@ -51,7 +57,9 @@ CREATE TABLE IF NOT EXISTS roles (
     UNIQUE KEY uq_roles_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Permissions ──────────────────────────────────────────────────────────────
+-- ============================================================
+-- Permissions
+-- ============================================================
 CREATE TABLE IF NOT EXISTS permissions (
     id           CHAR(36)     NOT NULL,
     name         VARCHAR(100) NOT NULL,
@@ -62,7 +70,9 @@ CREATE TABLE IF NOT EXISTS permissions (
     UNIQUE KEY uq_permissions_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Role Permissions ─────────────────────────────────────────────────────────
+-- ============================================================
+-- Role Permissions
+-- ============================================================
 CREATE TABLE IF NOT EXISTS role_permissions (
     role_id       CHAR(36) NOT NULL,
     permission_id CHAR(36) NOT NULL,
@@ -71,7 +81,9 @@ CREATE TABLE IF NOT EXISTS role_permissions (
     CONSTRAINT fk_rp_permission FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Users ────────────────────────────────────────────────────────────────────
+-- ============================================================
+-- Users
+-- ============================================================
 CREATE TABLE IF NOT EXISTS users (
     id             CHAR(36)     NOT NULL,
     name           VARCHAR(150) NOT NULL,
@@ -93,7 +105,9 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT fk_users_region   FOREIGN KEY (region_id)   REFERENCES regions(id)   ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Forms ────────────────────────────────────────────────────────────────────
+-- ============================================================
+-- Forms
+-- ============================================================
 CREATE TABLE IF NOT EXISTS forms (
     id            CHAR(36)     NOT NULL,
     name          VARCHAR(200) NOT NULL,
@@ -113,7 +127,9 @@ CREATE TABLE IF NOT EXISTS forms (
     CONSTRAINT fk_forms_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Form Sections ────────────────────────────────────────────────────────────
+-- ============================================================
+-- Form Sections
+-- ============================================================
 CREATE TABLE IF NOT EXISTS form_sections (
     id           CHAR(36)     NOT NULL,
     form_id      CHAR(36)     NOT NULL,
@@ -126,7 +142,9 @@ CREATE TABLE IF NOT EXISTS form_sections (
     CONSTRAINT fk_fs_form FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Form Fields ──────────────────────────────────────────────────────────────
+-- ============================================================
+-- Form Fields
+-- ============================================================
 CREATE TABLE IF NOT EXISTS form_fields (
     id           CHAR(36)     NOT NULL,
     section_id   CHAR(36)     NOT NULL,
@@ -147,7 +165,9 @@ CREATE TABLE IF NOT EXISTS form_fields (
     CONSTRAINT fk_ff_form    FOREIGN KEY (form_id)    REFERENCES forms(id)          ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Submissions ──────────────────────────────────────────────────────────────
+-- ============================================================
+-- Submissions
+-- ============================================================
 CREATE TABLE IF NOT EXISTS submissions (
     id              CHAR(36)    NOT NULL,
     form_id         CHAR(36)    NOT NULL,
@@ -173,7 +193,9 @@ CREATE TABLE IF NOT EXISTS submissions (
     CONSTRAINT fk_sub_reviewer   FOREIGN KEY (reviewed_by)  REFERENCES users(id)      ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Submission Values ────────────────────────────────────────────────────────
+-- ============================================================
+-- Submission Values
+-- ============================================================
 CREATE TABLE IF NOT EXISTS submission_values (
     id            CHAR(36)  NOT NULL,
     submission_id CHAR(36)  NOT NULL,
@@ -191,7 +213,9 @@ CREATE TABLE IF NOT EXISTS submission_values (
     CONSTRAINT fk_sv_field      FOREIGN KEY (field_id)      REFERENCES form_fields(id)  ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ─── Audit Log ────────────────────────────────────────────────────────────────
+-- ============================================================
+-- Audit Log
+-- ============================================================
 CREATE TABLE IF NOT EXISTS audit_logs (
     id          CHAR(36)     NOT NULL,
     user_id     CHAR(36),
