@@ -101,12 +101,12 @@ INSERT IGNORE INTO hospitals (id, name, code, region_id, type, bed_count, phone,
 ('hosp0001-0000-0000-0000-000000000005', 'Western Regional Hospital',   'WRH001', 'reg00001-0000-0000-0000-000000000004', 'general',     280, '+1-555-0500', 'wrh@healthplatform.org', 1);
 
 -- ─── Admin User ───────────────────────────────────────────────────────────────
--- Password: Admin@12345!  (argon2id hash)
+-- Password: Admin@12345!  (bcrypt hash)
 INSERT IGNORE INTO users (id, name, email, password_hash, role, is_active) VALUES
 ('user0001-0000-0000-0000-000000000001',
  'System Administrator',
  'admin@healthplatform.org',
- '$argon2id$v=19$m=65536,t=4,p=1$c29tZXNhbHRoZXJl$8X3gQzAqhAv2sIKiYjH9gI+4Kz5oFzXyJJwpMmIVdVk',
+ '$2y$12$5QYbV0z1/7fmTj5poadeGuDar3KJhq1/JDYoNiQ6Cv9hkWTvxgd7a',
  'super_admin',
  1);
 
@@ -174,11 +174,12 @@ INSERT IGNORE INTO hospitals (id, name, code, region_id, type, phone, email, is_
 ('hosp0001-0000-0000-0000-000000000006', 'Sioma Government Hospital', 'SGH001', 'reg00001-0000-0000-0000-000000000002', 'general', '+260-977-000006', 'sgh@healthplatform.org', 1);
 
 -- ─── Sioma Hospital Admin User ────────────────────────────────────────────────
+-- Password: Hospital@12345!  (bcrypt hash)
 INSERT IGNORE INTO users (id, name, email, password_hash, role, hospital_id, is_active) VALUES
 ('user0001-0000-0000-0000-000000000002',
  'Mary Namakau',
  'mary.namakau@siomahospital.org',
- '$argon2id$v=19$m=65536,t=4,p=1$c29tZXNhbHRoZXJl$8X3gQzAqhAv2sIKiYjH9gI+4Kz5oFzXyJJwpMmIVdVk',
+ '$2y$12$0x5gFuiDYByuCgE2iPetXeTiy/UJ2g0Poo9RrkO.toAJUVbwo4Fli',
  'hospital_admin',
  'hosp0001-0000-0000-0000-000000000006',
  1);
