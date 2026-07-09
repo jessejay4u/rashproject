@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FBGDSD — Health Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><div class="brand-logo">Health<span>+</span></div><div class="brand-sub">Information Management</div></div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="submissions.html" class="nav-link"><span class="nav-icon">📋</span> Submissions</a>
+      <a href="forms.html"       class="nav-link"><span class="nav-icon">📝</span> Forms</a>
+      <a href="fbgdsd.html"      class="nav-link"><span class="nav-icon">👥</span> FBGDSD Groups</a>
+      <a href="fbgdsd_import.html" class="nav-link"><span class="nav-icon">📥</span> Import Register</a>
+      <div class="nav-section manager-only">Management</div>
+      <a href="hospitals.html"   class="nav-link manager-only"><span class="nav-icon">🏥</span> Hospitals</a>
+      <a href="users.html"       class="nav-link admin-only"><span class="nav-icon">👤</span> Users</a>
+      <a href="reports.html"     class="nav-link manager-only"><span class="nav-icon">📈</span> Reports</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar" id="sidebar-avatar">U</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
+          <div class="sidebar-user-role" id="sidebar-user-role"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="header">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <h1 class="header-title">FBGDSD Groups</h1>
+      <div class="header-actions">
+        <div class="header-user-info">
+          <div class="header-user-name" id="user-name">Loading…</div>
+          <div class="header-user-role" id="user-role"></div>
+        </div>
+        <div class="avatar" id="user-avatar">U</div>
+        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- List View -->
+      <div id="list-view">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">Facility-Based Group DSD</h2>
+            <p class="page-sub">Group Differentiated Service Delivery meeting groups</p>
+          </div>
+          <div class="d-flex gap-8">
+            <a href="fbgdsd_import.html" class="btn btn-outline">📥 Import Register</a>
+            <button class="btn btn-primary" onclick="openModal('add-modal')">+ New Group</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="filters">
+              <select id="filter-hospital" onchange="loadGroups(1)">
+                <option value="">All Hospitals</option>
+              </select>
+              <input type="text" id="filter-search" placeholder="Search groups…" oninput="debounceLoad()" style="min-width:200px">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Group Name</th>
+                  <th class="hide-mobile">Hospital</th>
+                  <th class="hide-mobile">Lead Nurse</th>
+                  <th>Members</th>
+                  <th class="hide-mobile">Meetings</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="groups-body">
+                <tr><td colspan="6" class="text-center text-muted" style="padding:32px">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="groups-pagination" class="pagination"></div>
+        </div>
+      </div>
+
+      <!-- Group Detail View -->
+      <div id="detail-view" style="display:none">
+        <div class="page-header">
+          <div>
+            <button class="btn btn-ghost btn-sm" onclick="backToList()">← Back</button>
+            <h2 class="page-title" id="detail-title" style="margin-top:8px"></h2>
+          </div>
+          <div class="d-flex gap-8">
+            <button class="btn btn-outline" onclick="showTab('members')">Members</button>
+            <button class="btn btn-outline" onclick="showTab('meetings')">Meetings</button>
+            <button class="btn btn-primary" id="add-member-btn" onclick="openModal('add-member-modal')">+ Add Member</button>
+            <button class="btn btn-success" id="add-meeting-btn" onclick="openModal('add-meeting-modal')">+ Record Meeting</button>
+          </div>
+        </div>
+
+        <div id="group-meta" class="two-col" style="margin-bottom:16px"></div>
+
+        <!-- Members Tab -->
+        <div id="tab-members" class="card">
+          <div class="card-header"><h3 class="card-title">Group Members</h3></div>
+          <div class="table-wrap" style="overflow-x:auto">
+            <table style="min-width:900px">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>ART No.</th>
+                  <th>Sex</th>
+                  <th>Age</th>
+                  <th>Regimen</th>
+                  <th>Level of Care</th>
+                  <th>VL Sup.</th>
+                  <th>CD4</th>
+                  <th>Disclosure</th>
+                  <th>TB Screen</th>
+                  <th>TPT</th>
+                </tr>
+              </thead>
+              <tbody id="members-body">
+                <tr><td colspan="11" class="text-center text-muted" style="padding:24px">Select a group to view members</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Meetings Tab -->
+        <div id="tab-meetings" class="card" style="display:none">
+          <div class="card-header"><h3 class="card-title">Meeting History</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Topic Covered</th>
+                  <th>Attendance</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="meetings-body">
+                <tr><td colspan="4" class="text-center text-muted" style="padding:24px">No meetings recorded</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Group Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">New FBGDSD Group</h3>
+      <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Group Name <span class="req">*</span></label>
+          <input type="text" id="add-gname" placeholder="e.g. Group A – CGH">
+        </div>
+        <div class="form-group">
+          <label>Hospital <span class="req">*</span></label>
+          <select id="add-hospital-sel"></select>
+        </div>
+        <div class="form-group">
+          <label>Lead Nurse</label>
+          <input type="text" id="add-nurse" placeholder="Nurse name">
+        </div>
+        <div class="form-group">
+          <label>District</label>
+          <input type="text" id="add-district" placeholder="District">
+        </div>
+        <div class="form-group">
+          <label>Region</label>
+          <input type="text" id="add-region" placeholder="Region">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-modal')">Cancel</button>
+      <button class="btn btn-primary" id="add-group-btn" onclick="submitAddGroup()">Create Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal-overlay" id="add-member-modal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3 class="modal-title">Add Group Member</h3>
+      <button class="modal-close" onclick="closeModal('add-member-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="mb-fname">
+        </div>
+        <div class="form-group">
+          <label>Surname</label>
+          <input type="text" id="mb-sname">
+        </div>
+        <div class="form-group">
+          <label>ART Registration No. <span class="req">*</span></label>
+          <input type="text" id="mb-art" placeholder="e.g. NW123456">
+        </div>
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" id="mb-age" min="0" max="120">
+        </div>
+        <div class="form-group">
+          <label>Sex</label>
+          <select id="mb-sex">
+            <option value="">—</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Educational Level</label>
+          <input type="text" id="mb-edu" placeholder="e.g. Secondary">
+        </div>
+        <div class="form-group">
+          <label>Drug Regimen</label>
+          <select id="mb-reg">
+            <option value="">—</option>
+            <option value="first_line">First Line</option>
+            <option value="second_line">Second Line</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Level of Care</label>
+          <select id="mb-loc">
+            <option value="">—</option>
+            <option value="established">Established</option>
+            <option value="non_established">Non-Established</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>VL Status</label>
+          <select id="mb-vl">
+            <option value="">—</option>
+            <option value="1">Suppressed</option>
+            <option value="0">Non-Suppressed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>CD4 Count</label>
+          <select id="mb-cd4">
+            <option value="">—</option>
+            <option value="1">≥ 200</option>
+            <option value="0">&lt; 200</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="mb-disc"> Disclosure Done</label>
+        </div>
+        <div class="form-group">
+          <label>Disclosure Date</label>
+          <input type="date" id="mb-disc-date">
+        </div>
+        <div class="form-group">
+          <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="mb-tpte"> TPT Eligible</label>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="mb-tptp"> TPT Provided</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-member-modal')">Cancel</button>
+      <button class="btn btn-primary" id="add-member-btn2" onclick="submitAddMember()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Meeting Modal -->
+<div class="modal-overlay" id="add-meeting-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Record Meeting</h3>
+      <button class="modal-close" onclick="closeModal('add-meeting-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Meeting Date <span class="req">*</span></label>
+        <input type="date" id="mtg-date">
+      </div>
+      <div class="form-group">
+        <label>Topic Covered</label>
+        <select id="mtg-topic">
+          <option value="">Select topic…</option>
+          <option>Disclosure Support</option>
+          <option>Psychosocial Support</option>
+          <option>Adherence Counselling & Support</option>
+          <option>HIV Health Education & Treatment Literacy</option>
+          <option>ART Defaulter Counselling</option>
+          <option>Post Violence Counselling and Support</option>
+          <option>Nutritional Counselling</option>
+          <option>Sexual Reproductive Health & Rights Counselling</option>
+          <option>Family Planning Methods Counselling</option>
+          <option>U=U Concept</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="mtg-notes" rows="2" placeholder="Optional notes…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Mark Attendance</label>
+        <div id="attendance-list" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px">
+          <p class="text-muted text-sm">Loading members…</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-meeting-modal')">Cancel</button>
+      <button class="btn btn-primary" id="add-meeting-btn2" onclick="submitMeeting()">Save Meeting</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+let searchTimer, currentGroupId, currentGroupData, currentMembers = [];
+
+(async () => {
+  await requireAuth();
+  await loadHospitals();
+  loadGroups(1);
+  document.getElementById('mtg-date').value = new Date().toISOString().slice(0, 10);
+})();
+
+function debounceLoad() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadGroups(1), 400);
+}
+
+async function loadHospitals() {
+  try {
+    const res = await API.get('api/hospitals.php?per_page=200');
+    const opts = (res.data || []).map(h => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('');
+    document.getElementById('filter-hospital').innerHTML = '<option value="">All Hospitals</option>' + opts;
+    document.getElementById('add-hospital-sel').innerHTML = '<option value="">Select…</option>' + opts;
+  } catch {}
+}
+
+async function loadGroups(page) {
+  const hid    = document.getElementById('filter-hospital').value;
+  const search = document.getElementById('filter-search').value;
+  let url = `api/fbgdsd.php?page=${page}`;
+  if (hid)    url += `&hospital_id=${encodeURIComponent(hid)}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+
+  const tbody = document.getElementById('groups-body');
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:32px">Loading…</td></tr>';
+  try {
+    const res  = await API.get(url);
+    const rows = res.data || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><h3>No groups yet</h3><p>Create a group or <a href="fbgdsd_import.html">import a register</a></p></div></td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td><strong>${esc(r.group_name)}</strong></td>
+          <td class="hide-mobile text-muted text-sm">${esc(r.hospital_name || '—')}</td>
+          <td class="hide-mobile text-muted text-sm">${esc(r.lead_nurse || '—')}</td>
+          <td><strong>${r.member_count}</strong></td>
+          <td class="hide-mobile text-muted text-sm">${r.meeting_count}</td>
+          <td class="td-actions"><button class="btn btn-outline btn-xs" onclick="loadDetail('${esc(r.id)}')">View</button></td>
+        </tr>`).join('');
+    }
+    renderPagination('groups-pagination', res.page, res.pages, res.total, res.per_page, loadGroups);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function loadDetail(id) {
+  currentGroupId = id;
+  document.getElementById('list-view').style.display   = 'none';
+  document.getElementById('detail-view').style.display = '';
+  try {
+    const res = await API.get(`api/fbgdsd.php?id=${id}`);
+    currentGroupData = res.data;
+    document.getElementById('detail-title').textContent = currentGroupData.group_name;
+    document.getElementById('group-meta').innerHTML = `
+      <div class="card mb-0">
+        <div class="card-header"><h3 class="card-title">Group Info</h3></div>
+        <div class="card-body">
+          <div class="detail-list">
+            <div class="detail-row"><span class="detail-label">Hospital</span><span class="detail-value">${esc(currentGroupData.hospital_name || '—')}</span></div>
+            <div class="detail-row"><span class="detail-label">Lead Nurse</span><span class="detail-value">${esc(currentGroupData.lead_nurse || '—')}</span></div>
+            <div class="detail-row"><span class="detail-label">District</span><span class="detail-value">${esc(currentGroupData.district || '—')}</span></div>
+            <div class="detail-row"><span class="detail-label">Region</span><span class="detail-value">${esc(currentGroupData.region || '—')}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card mb-0">
+        <div class="card-header"><h3 class="card-title">Summary</h3></div>
+        <div class="card-body">
+          <div class="detail-list">
+            <div class="detail-row"><span class="detail-label">Members</span><span class="detail-value fw-bold">${currentGroupData.member_count}</span></div>
+            <div class="detail-row"><span class="detail-label">Meetings Held</span><span class="detail-value fw-bold">${currentGroupData.meeting_count}</span></div>
+          </div>
+        </div>
+      </div>`;
+    showTab('members');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function showTab(tab) {
+  document.getElementById('tab-members').style.display  = tab === 'members'  ? '' : 'none';
+  document.getElementById('tab-meetings').style.display = tab === 'meetings' ? '' : 'none';
+  if (tab === 'members')  await loadMembers();
+  if (tab === 'meetings') await loadMeetings();
+}
+
+async function loadMembers() {
+  const tbody = document.getElementById('members-body');
+  tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted" style="padding:24px">Loading…</td></tr>';
+  try {
+    const res = await API.get(`api/fbgdsd.php?resource=members&group_id=${currentGroupId}`);
+    currentMembers = res.data || [];
+    if (!currentMembers.length) {
+      tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted" style="padding:24px">No members. Add members or <a href="fbgdsd_import.html">import a register</a>.</td></tr>';
+    } else {
+      const yn = v => v === null || v === undefined || v === '' ? '—' : (parseInt(v) ? '<span class="badge badge-approved">Yes</span>' : '<span class="badge badge-rejected">No</span>');
+      tbody.innerHTML = currentMembers.map(m => `
+        <tr>
+          <td><strong>${esc(m.surname)}</strong>, ${esc(m.first_name)}</td>
+          <td class="text-muted text-sm">${esc(m.art_reg_number)}</td>
+          <td>${esc(m.sex || '—')}</td>
+          <td>${m.age || '—'}</td>
+          <td><span class="badge badge-submitted">${esc(m.drug_regimen || '—').replace('_',' ')}</span></td>
+          <td>${esc(m.level_of_care || '—').replace('_',' ')}</td>
+          <td>${yn(m.vl_suppressed)}</td>
+          <td>${m.cd4_above_200 === null || m.cd4_above_200 === '' ? '—' : (m.cd4_above_200 ? '≥200' : '<200')}</td>
+          <td>${yn(m.disclosure_done)}</td>
+          <td>${m.tb_result ? esc(m.tb_result) : '—'}</td>
+          <td>${yn(m.tpt_provided)}</td>
+        </tr>`).join('');
+    }
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function loadMeetings() {
+  const tbody = document.getElementById('meetings-body');
+  tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding:24px">Loading…</td></tr>';
+  try {
+    const res  = await API.get(`api/fbgdsd.php?resource=meetings&group_id=${currentGroupId}`);
+    const rows = res.data || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding:24px">No meetings recorded yet</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${fmtDate(r.meeting_date)}</td>
+          <td>${esc(r.topic || '—')}</td>
+          <td><strong>${r.attendance_count}</strong> members</td>
+          <td class="td-actions"><button class="btn btn-outline btn-xs" onclick="viewMeeting('${esc(r.id)}')">View</button></td>
+        </tr>`).join('');
+    }
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function backToList() {
+  document.getElementById('list-view').style.display   = '';
+  document.getElementById('detail-view').style.display = 'none';
+}
+
+async function submitAddGroup() {
+  const btn = document.getElementById('add-group-btn');
+  setLoading(btn, true);
+  try {
+    await API.post('api/fbgdsd.php', {
+      group_name: document.getElementById('add-gname').value,
+      hospital_id: document.getElementById('add-hospital-sel').value,
+      lead_nurse: document.getElementById('add-nurse').value,
+      district:   document.getElementById('add-district').value,
+      region:     document.getElementById('add-region').value,
+    });
+    toast('Group created', 'success');
+    closeModal('add-modal');
+    loadGroups(1);
+  } catch (e) { toast(e.message, 'error'); }
+  setLoading(btn, false);
+}
+
+async function submitAddMember() {
+  const btn = document.getElementById('add-member-btn2');
+  setLoading(btn, true);
+  try {
+    await API.post('api/fbgdsd.php?resource=members', {
+      group_id:         currentGroupId,
+      hospital_id:      currentGroupData.hospital_id,
+      first_name:       document.getElementById('mb-fname').value,
+      surname:          document.getElementById('mb-sname').value,
+      art_reg_number:   document.getElementById('mb-art').value,
+      age:              document.getElementById('mb-age').value || null,
+      sex:              document.getElementById('mb-sex').value,
+      educational_level:document.getElementById('mb-edu').value,
+      drug_regimen:     document.getElementById('mb-reg').value,
+      level_of_care:    document.getElementById('mb-loc').value,
+      vl_suppressed:    document.getElementById('mb-vl').value,
+      cd4_above_200:    document.getElementById('mb-cd4').value,
+      disclosure_done:  document.getElementById('mb-disc').checked ? 1 : 0,
+      disclosure_date:  document.getElementById('mb-disc-date').value || null,
+      tpt_eligible:     document.getElementById('mb-tpte').checked ? 1 : 0,
+      tpt_provided:     document.getElementById('mb-tptp').checked ? 1 : 0,
+    });
+    toast('Member added', 'success');
+    closeModal('add-member-modal');
+    loadMembers();
+  } catch (e) { toast(e.message, 'error'); }
+  setLoading(btn, false);
+}
+
+function openModal(id) {
+  if (id === 'add-meeting-modal') renderAttendanceList();
+  document.getElementById(id)?.classList.add('open');
+}
+
+function renderAttendanceList() {
+  const div = document.getElementById('attendance-list');
+  if (!currentMembers.length) { div.innerHTML = '<p class="text-muted text-sm">No members in this group</p>'; return; }
+  div.innerHTML = currentMembers.map(m => `
+    <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer">
+      <input type="checkbox" checked data-mid="${esc(m.id)}">
+      <span>${esc(m.surname)}, ${esc(m.first_name)} <span class="text-muted text-sm">(${esc(m.art_reg_number)})</span></span>
+    </label>`).join('');
+}
+
+async function submitMeeting() {
+  const btn = document.getElementById('add-meeting-btn2');
+  setLoading(btn, true);
+  const checks = document.querySelectorAll('#attendance-list input[type="checkbox"]');
+  const attendance = Array.from(checks).map(c => ({ member_id: c.dataset.mid, attended: c.checked ? 1 : 0 }));
+  try {
+    await API.post('api/fbgdsd.php?resource=meetings', {
+      group_id:    currentGroupId,
+      hospital_id: currentGroupData.hospital_id,
+      meeting_date:document.getElementById('mtg-date').value,
+      topic:       document.getElementById('mtg-topic').value,
+      notes:       document.getElementById('mtg-notes').value,
+      attendance,
+    });
+    toast('Meeting recorded', 'success');
+    closeModal('add-meeting-modal');
+    showTab('meetings');
+  } catch (e) { toast(e.message, 'error'); }
+  setLoading(btn, false);
+}
+
+async function viewMeeting(id) {
+  try {
+    const res = await API.get(`api/fbgdsd.php?resource=meetings&id=${id}`);
+    const m   = res.data;
+    const att = m.attendance || [];
+    alert(`Meeting: ${fmtDate(m.meeting_date)}\nTopic: ${m.topic || '—'}\nAttendance (${att.length}):\n${att.map(a => `  - ${a.surname}, ${a.first_name} (${a.art_reg_number})`).join('\n')}`);
+  } catch (e) { toast(e.message, 'error'); }
+}
+</script>
+</body>
+</html>
