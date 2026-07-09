@@ -169,6 +169,152 @@ INSERT IGNORE INTO form_fields (id, section_id, form_id, name, label, field_type
 ('fld00001-0000-0000-0000-000000000013', 'sec00001-0000-0000-0000-000000000005', 'form0001-0000-0000-0000-000000000002', 'outbreak_reported', 'Outbreak Reported?',      'boolean', 0, 0),
 ('fld00001-0000-0000-0000-000000000014', 'sec00001-0000-0000-0000-000000000005', 'form0001-0000-0000-0000-000000000002', 'outbreak_details',  'Outbreak Details',        'textarea', 0, 1);
 
+-- ─── Sioma Government Hospital ───────────────────────────────────────────────
+INSERT IGNORE INTO hospitals (id, name, code, region_id, type, phone, email, is_active) VALUES
+('hosp0001-0000-0000-0000-000000000006', 'Sioma Government Hospital', 'SGH001', 'reg00001-0000-0000-0000-000000000002', 'general', '+260-977-000006', 'sgh@healthplatform.org', 1);
+
+-- ─── Sioma Hospital Admin User ────────────────────────────────────────────────
+INSERT IGNORE INTO users (id, name, email, password_hash, role, hospital_id, is_active) VALUES
+('user0001-0000-0000-0000-000000000002',
+ 'Mary Namakau',
+ 'mary.namakau@siomahospital.org',
+ '$argon2id$v=19$m=65536,t=4,p=1$c29tZXNhbHRoZXJl$8X3gQzAqhAv2sIKiYjH9gI+4Kz5oFzXyJJwpMmIVdVk',
+ 'hospital_admin',
+ 'hosp0001-0000-0000-0000-000000000006',
+ 1);
+
+-- ─── FBG Assessment Form ──────────────────────────────────────────────────────
+INSERT IGNORE INTO forms (id, name, code, description, category, status, version, published_at, created_by) VALUES
+('form0001-0000-0000-0000-000000000004',
+ 'FBG Assessment Report',
+ 'fbg_assessment',
+ 'Family and Beneficiary Group (FBG) Assessment Reporting Sheet for tracking viral load suppression and CD4/TB/Disclosure outcomes for clients on ART.',
+ 'Monthly',
+ 'published',
+ 1,
+ NOW(),
+ 'user0001-0000-0000-0000-000000000001');
+
+-- Sections
+INSERT IGNORE INTO form_sections (id, form_id, title, sort_order) VALUES
+('sec00001-0000-0000-0000-000000000006', 'form0001-0000-0000-0000-000000000004', 'Report Information',           0),
+('sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'Viral Load Tracking Summary',  1),
+('sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'CD4, TB & Disclosure Summary', 2);
+
+-- Section 1: Report Information
+INSERT IGNORE INTO form_fields (id, section_id, form_id, name, label, field_type, is_required, sort_order) VALUES
+('fld00001-0000-0000-0000-000000000015', 'sec00001-0000-0000-0000-000000000006', 'form0001-0000-0000-0000-000000000004', 'facility_name',    'Name of Facility',                    'text',     1, 0),
+('fld00001-0000-0000-0000-000000000016', 'sec00001-0000-0000-0000-000000000006', 'form0001-0000-0000-0000-000000000004', 'reporting_period', 'Reporting Month & Year',              'text',     1, 1),
+('fld00001-0000-0000-0000-000000000017', 'sec00001-0000-0000-0000-000000000006', 'form0001-0000-0000-0000-000000000004', 'prepared_by',      'Name & Designation (Person Preparing)','text',     0, 2);
+
+-- Section 2: Viral Load Tracking Summary
+INSERT IGNORE INTO form_fields (id, section_id, form_id, name, label, field_type, is_required, sort_order) VALUES
+('fld00001-0000-0000-0000-000000000018', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'total_clients_tracked',   'Total Clients in Cohort',                   'number', 1, 0),
+('fld00001-0000-0000-0000-000000000019', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'baseline_suppressed',     'Baseline: Suppressed (<1,000 cp/ml)',        'number', 0, 1),
+('fld00001-0000-0000-0000-000000000020', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'baseline_unsuppressed',   'Baseline: Unsuppressed (≥1,000 cp/ml)',      'number', 0, 2),
+('fld00001-0000-0000-0000-000000000021', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'month6_suppressed',       '6-Month: Suppressed (<1,000 cp/ml)',         'number', 0, 3),
+('fld00001-0000-0000-0000-000000000022', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'month6_unsuppressed',     '6-Month: Unsuppressed (≥1,000 cp/ml)',       'number', 0, 4),
+('fld00001-0000-0000-0000-000000000023', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'month12_suppressed',      '12-Month: Suppressed (<1,000 cp/ml)',        'number', 0, 5),
+('fld00001-0000-0000-0000-000000000024', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'month12_unsuppressed',    '12-Month: Unsuppressed (≥1,000 cp/ml)',      'number', 0, 6),
+('fld00001-0000-0000-0000-000000000025', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'month18_suppressed',      '18-Month: Suppressed (<1,000 cp/ml)',        'number', 0, 7),
+('fld00001-0000-0000-0000-000000000026', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'month18_unsuppressed',    '18-Month: Unsuppressed (≥1,000 cp/ml)',      'number', 0, 8),
+('fld00001-0000-0000-0000-000000000027', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'month24_suppressed',      '24-Month: Suppressed (<1,000 cp/ml)',        'number', 0, 9),
+('fld00001-0000-0000-0000-000000000028', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'month24_unsuppressed',    '24-Month: Unsuppressed (≥1,000 cp/ml)',      'number', 0, 10),
+('fld00001-0000-0000-0000-000000000029', 'sec00001-0000-0000-0000-000000000007', 'form0001-0000-0000-0000-000000000004', 'client_vl_details',       'Client ART Numbers & Individual VL Results', 'textarea',0, 11);
+
+-- Section 3: CD4, TB & Disclosure Summary
+INSERT IGNORE INTO form_fields (id, section_id, form_id, name, label, field_type, is_required, sort_order) VALUES
+('fld00001-0000-0000-0000-000000000030', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'clients_ahd_screened',  'Clients Screened for AHD',                   'number', 0, 0),
+('fld00001-0000-0000-0000-000000000031', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'cd4_above_200',          'Clients with CD4 ≥200 cells/μl',             'number', 0, 1),
+('fld00001-0000-0000-0000-000000000032', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'cd4_below_200',          'Clients with CD4 <200 cells/μl',             'number', 0, 2),
+('fld00001-0000-0000-0000-000000000033', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'tb_screened',            'Clients Screened for TB',                    'number', 0, 3),
+('fld00001-0000-0000-0000-000000000034', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'tb_negative',            'Clients Negative for TB',                    'number', 0, 4),
+('fld00001-0000-0000-0000-000000000035', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'tb_positive',            'Clients Positive for TB',                    'number', 0, 5),
+('fld00001-0000-0000-0000-000000000036', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'tpt_eligible_prev',      'Clients Eligible for TPT (Previous Assessment)','number',0,6),
+('fld00001-0000-0000-0000-000000000037', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'tpt_receiving',          'Clients Currently Receiving TPT',            'number', 0, 7),
+('fld00001-0000-0000-0000-000000000038', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'disclosure_done',        'Clients with Disclosure Done',               'number', 0, 8),
+('fld00001-0000-0000-0000-000000000039', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'index_testing_done',     'Clients with Index Testing Done',            'number', 0, 9),
+('fld00001-0000-0000-0000-000000000040', 'sec00001-0000-0000-0000-000000000008', 'form0001-0000-0000-0000-000000000004', 'index_people_tested',    'Number of People Tested (Index Testing)',     'number', 0, 10);
+
+-- ─── FBG Submissions (3 assessment periods) ───────────────────────────────────
+INSERT IGNORE INTO submissions (id, form_id, hospital_id, submitted_by, status, period_start, period_end, submitted_at, reviewed_by, reviewed_at) VALUES
+('sub00001-0000-0000-0000-000000000001',
+ 'form0001-0000-0000-0000-000000000004',
+ 'hosp0001-0000-0000-0000-000000000006',
+ 'user0001-0000-0000-0000-000000000002',
+ 'approved',
+ '2024-11-01', '2024-11-30',
+ '2024-11-30 10:30:00',
+ 'user0001-0000-0000-0000-000000000001',
+ '2024-12-02 09:00:00'),
+('sub00001-0000-0000-0000-000000000002',
+ 'form0001-0000-0000-0000-000000000004',
+ 'hosp0001-0000-0000-0000-000000000006',
+ 'user0001-0000-0000-0000-000000000002',
+ 'submitted',
+ '2025-04-01', '2025-04-30',
+ '2025-04-30 14:00:00',
+ NULL, NULL),
+('sub00001-0000-0000-0000-000000000003',
+ 'form0001-0000-0000-0000-000000000004',
+ 'hosp0001-0000-0000-0000-000000000006',
+ 'user0001-0000-0000-0000-000000000002',
+ 'draft',
+ '2025-08-01', '2025-08-31',
+ NULL,
+ NULL, NULL);
+
+-- Submission values — November 2024 (Baseline)
+INSERT IGNORE INTO submission_values (id, submission_id, field_id, value_text, value_number) VALUES
+('sv000001-0000-0000-0000-000000000001', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000015', 'Sioma Government Hospital', NULL),
+('sv000001-0000-0000-0000-000000000002', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000016', 'November 2024', NULL),
+('sv000001-0000-0000-0000-000000000003', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000017', 'Mary Namakau — Hospital Admin', NULL),
+('sv000001-0000-0000-0000-000000000004', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000018', NULL, 10),
+('sv000001-0000-0000-0000-000000000005', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000019', NULL, 2),
+('sv000001-0000-0000-0000-000000000006', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000020', NULL, 8),
+('sv000001-0000-0000-0000-000000000007', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000029',
+ 'A01-/000354 F 35 | Baseline: 257,000 Unsuppressed\nA01-/000422 F 28 | Baseline: 45,000 Unsuppressed\nA401-/000081 F 42 | Baseline: TND Suppressed\nA01-/000189 F 52 | Baseline: 12,000 Unsuppressed\nA101-/000267 M 31 | Baseline: 89,500 Unsuppressed\nA01-/000091 F 24 | Baseline: 3,400 Unsuppressed\nA01-/000508 F 60 | Baseline: 22,000 Unsuppressed\nA401-/000143 M 45 | Baseline: 150 Suppressed\nA01-/000376 F 20 | Baseline: 7,200 Unsuppressed\nA101-/000312 F 38 | Baseline: 18,500 Unsuppressed', NULL),
+('sv000001-0000-0000-0000-000000000008', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000030', NULL, 10),
+('sv000001-0000-0000-0000-000000000009', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000031', NULL, 7),
+('sv000001-0000-0000-0000-000000000010', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000032', NULL, 3),
+('sv000001-0000-0000-0000-000000000011', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000033', NULL, 10),
+('sv000001-0000-0000-0000-000000000012', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000034', NULL, 9),
+('sv000001-0000-0000-0000-000000000013', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000035', NULL, 1),
+('sv000001-0000-0000-0000-000000000014', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000037', NULL, 1),
+('sv000001-0000-0000-0000-000000000015', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000038', NULL, 6),
+('sv000001-0000-0000-0000-000000000016', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000039', NULL, 5),
+('sv000001-0000-0000-0000-000000000017', 'sub00001-0000-0000-0000-000000000001', 'fld00001-0000-0000-0000-000000000040', NULL, 12);
+
+-- Submission values — April 2025 (6-Month)
+INSERT IGNORE INTO submission_values (id, submission_id, field_id, value_text, value_number) VALUES
+('sv000001-0000-0000-0000-000000000018', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000015', 'Sioma Government Hospital', NULL),
+('sv000001-0000-0000-0000-000000000019', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000016', 'April 2025', NULL),
+('sv000001-0000-0000-0000-000000000020', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000017', 'Mary Namakau — Hospital Admin', NULL),
+('sv000001-0000-0000-0000-000000000021', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000018', NULL, 10),
+('sv000001-0000-0000-0000-000000000022', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000021', NULL, 4),
+('sv000001-0000-0000-0000-000000000023', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000022', NULL, 3),
+('sv000001-0000-0000-0000-000000000024', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000029',
+ 'A01-/000354 F 35 | 6-Month: 240 Unsuppressed\nA01-/000422 F 28 | 6-Month: TND Suppressed\nA401-/000081 F 42 | 6-Month: 46.5 Suppressed\nA01-/000189 F 52 | 6-Month: <140 Suppressed\nA101-/000267 M 31 | 6-Month: 12,000 Unsuppressed\nA01-/000091 F 24 | 6-Month: 150,000 Unsuppressed\nA01-/000508 F 60 | 6-Month: 455 Suppressed\nA401-/000143 M 45 | 6-Month: No Sample Pending\nA01-/000376 F 20 | 6-Month: Pending Result\nA101-/000312 F 38 | 6-Month: Pending Result', NULL),
+('sv000001-0000-0000-0000-000000000025', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000033', NULL, 10),
+('sv000001-0000-0000-0000-000000000026', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000034', NULL, 9),
+('sv000001-0000-0000-0000-000000000027', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000035', NULL, 1),
+('sv000001-0000-0000-0000-000000000028', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000036', NULL, 3),
+('sv000001-0000-0000-0000-000000000029', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000037', NULL, 3),
+('sv000001-0000-0000-0000-000000000030', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000038', NULL, 8),
+('sv000001-0000-0000-0000-000000000031', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000039', NULL, 7),
+('sv000001-0000-0000-0000-000000000032', 'sub00001-0000-0000-0000-000000000002', 'fld00001-0000-0000-0000-000000000040', NULL, 18);
+
+-- Submission values — August 2025 (12-Month, Draft)
+INSERT IGNORE INTO submission_values (id, submission_id, field_id, value_text, value_number) VALUES
+('sv000001-0000-0000-0000-000000000033', 'sub00001-0000-0000-0000-000000000003', 'fld00001-0000-0000-0000-000000000015', 'Sioma Government Hospital', NULL),
+('sv000001-0000-0000-0000-000000000034', 'sub00001-0000-0000-0000-000000000003', 'fld00001-0000-0000-0000-000000000016', 'August 2025', NULL),
+('sv000001-0000-0000-0000-000000000035', 'sub00001-0000-0000-0000-000000000003', 'fld00001-0000-0000-0000-000000000017', 'Mary Namakau — Hospital Admin', NULL),
+('sv000001-0000-0000-0000-000000000036', 'sub00001-0000-0000-0000-000000000003', 'fld00001-0000-0000-0000-000000000018', NULL, 10),
+('sv000001-0000-0000-0000-000000000037', 'sub00001-0000-0000-0000-000000000003', 'fld00001-0000-0000-0000-000000000023', NULL, 1),
+('sv000001-0000-0000-0000-000000000038', 'sub00001-0000-0000-0000-000000000003', 'fld00001-0000-0000-0000-000000000024', NULL, 1),
+('sv000001-0000-0000-0000-000000000039', 'sub00001-0000-0000-0000-000000000003', 'fld00001-0000-0000-0000-000000000029',
+ 'A01-/000354 F 35 | 12-Month: TND Suppressed\nA01-/000422 F 28 | 12-Month: Pending Result\nA401-/000081 F 42 | 12-Month: Pending Result\nA01-/000189 F 52 | 12-Month: Pending Result\nA101-/000267 M 31 | 12-Month: Pending Result\nA01-/000091 F 24 | 12-Month: Pending Result\nA01-/000508 F 60 | 12-Month: Pending Result\nA401-/000143 M 45 | 12-Month: Unsuppressed 1,240\nA01-/000376 F 20 | 12-Month: Pending Result\nA101-/000312 F 38 | 12-Month: Pending Result', NULL);
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ─── Note on admin password ───────────────────────────────────────────────────
