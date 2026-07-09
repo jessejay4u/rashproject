@@ -16,21 +16,20 @@ async function requireAuth() {
 }
 
 function fillUserUI(user) {
-    const name  = document.getElementById('user-name');
-    const role  = document.getElementById('user-role');
-    const av    = document.getElementById('user-avatar');
-    const avSb  = document.getElementById('sidebar-avatar');
+    const name   = document.getElementById('user-name');
+    const role   = document.getElementById('user-role');
+    const av     = document.getElementById('user-avatar');
+    const avSb   = document.getElementById('sidebar-avatar');
     const nameSb = document.getElementById('sidebar-user-name');
     const roleSb = document.getElementById('sidebar-user-role');
     const initial = (user.name || 'U').charAt(0).toUpperCase();
-    if (name)  name.textContent  = user.name;
-    if (role)  role.textContent  = roleLabel(user.role);
-    if (av)    av.textContent    = initial;
-    if (avSb)  avSb.textContent  = initial;
+    if (name)   name.textContent  = user.name;
+    if (role)   role.textContent  = roleLabel(user.role);
+    if (av)     av.textContent    = initial;
+    if (avSb)   avSb.textContent  = initial;
     if (nameSb) nameSb.textContent = user.name;
     if (roleSb) roleSb.textContent = roleLabel(user.role);
 
-    // Hide admin-only nav items for non-admins
     if (!['super_admin'].includes(user.role)) {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     }
@@ -53,21 +52,36 @@ async function logout() {
     window.location.href = 'index.html';
 }
 
-// ─── Toast notifications ──────────────────────────────────────────────────────
+// ─── Toast notifications (Bootstrap 5) ───────────────────────────────────────
 function toast(msg, type = 'info', duration = 3500) {
     let container = document.getElementById('toast-container');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast-container';
-        container.className = 'toast-container';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
         document.body.appendChild(container);
     }
+    const colorMap = {
+        success: 'text-bg-success',
+        error:   'text-bg-danger',
+        warning: 'text-bg-warning',
+        info:    'text-bg-primary',
+    };
+    const colorCls = colorMap[type] || 'text-bg-primary';
     const el = document.createElement('div');
-    el.className = `toast toast-${type}`;
-    el.textContent = msg;
-    el.onclick = () => el.remove();
+    el.className = `toast align-items-center ${colorCls} border-0`;
+    el.setAttribute('role', 'alert');
+    el.setAttribute('aria-live', 'assertive');
+    el.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body fw-semibold">${esc(msg)}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>`;
     container.appendChild(el);
-    setTimeout(() => el.remove(), duration);
+    const bsToast = new bootstrap.Toast(el, { delay: duration });
+    bsToast.show();
+    el.addEventListener('hidden.bs.toast', () => el.remove());
 }
 
 // ─── Date formatting ──────────────────────────────────────────────────────────
@@ -84,16 +98,28 @@ function fmtDateTime(d) {
 function timeAgo(d) {
     if (!d) return '—';
     const diff = (Date.now() - new Date(d)) / 1000;
-    if (diff < 60)   return 'just now';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
     if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
     return Math.floor(diff / 86400) + 'd ago';
 }
 
-// ─── Badge HTML ───────────────────────────────────────────────────────────────
+// ─── Badge HTML (Bootstrap 5) ─────────────────────────────────────────────────
 function badge(status, label) {
     const text = label || status || '—';
-    return `<span class="badge badge-${(status || '').toLowerCase().replace(/\s+/g, '_')}">${text}</span>`;
+    const map = {
+        draft:     'bg-secondary',
+        submitted: 'bg-primary',
+        approved:  'bg-success',
+        rejected:  'bg-danger',
+        published: 'bg-success',
+        archived:  'bg-secondary',
+        active:    'bg-success',
+        inactive:  'bg-danger',
+    };
+    const s = (status || '').toLowerCase().replace(/\s+/g, '_');
+    const cls = map[s] || 'bg-secondary';
+    return `<span class="badge ${cls}">${esc(text)}</span>`;
 }
 
 // ─── Sidebar toggle ───────────────────────────────────────────────────────────
@@ -113,59 +139,56 @@ function initSidebar() {
 
     // Mark active link
     const page = window.location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('.nav-link').forEach(link => {
+    document.querySelectorAll('.sb-link').forEach(link => {
         if (link.getAttribute('href') === page) link.classList.add('active');
     });
 }
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
+// ─── Pagination (Bootstrap 5) ─────────────────────────────────────────────────
 function renderPagination(containerId, page, pages, total, perPage, onPage) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const infoId = containerId + '-info';
-    let infoEl = document.getElementById(infoId);
-    if (!infoEl) {
-        infoEl = document.createElement('p');
-        infoEl.id = infoId;
-        infoEl.className = 'pagination-info';
-        container.parentNode.insertBefore(infoEl, container);
-    }
-    const start = (page - 1) * perPage + 1;
+    const start = total > 0 ? (page - 1) * perPage + 1 : 0;
     const end   = Math.min(page * perPage, total);
-    infoEl.textContent = total > 0 ? `Showing ${start}–${end} of ${total}` : '0 results';
+    const info  = total > 0 ? `Showing ${start}–${end} of ${total}` : 'No results';
 
-    container.innerHTML = '';
-    if (pages <= 1) return;
+    if (pages <= 1) {
+        container.innerHTML = `<p class="text-muted small text-center mb-0 py-2">${info}</p>`;
+        return;
+    }
 
-    const btn = (label, p, disabled = false) => {
-        const b = document.createElement('button');
-        b.className = 'page-btn' + (p === page ? ' active' : '');
-        b.textContent = label;
-        b.disabled = disabled;
-        if (!disabled) b.onclick = () => onPage(p);
-        container.appendChild(b);
-    };
-
-    btn('‹', page - 1, page === 1);
+    let items = '';
+    items += `<li class="page-item${page === 1 ? ' disabled' : ''}"><a class="page-link" href="#" data-page="${page - 1}"><i class="bi bi-chevron-left"></i></a></li>`;
     for (let i = 1; i <= pages; i++) {
         if (i === 1 || i === pages || (i >= page - 2 && i <= page + 2)) {
-            btn(i, i);
+            items += `<li class="page-item${i === page ? ' active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
         } else if (i === page - 3 || i === page + 3) {
-            const dots = document.createElement('span');
-            dots.textContent = '…';
-            dots.style.cssText = 'padding:0 6px;color:var(--text-m)';
-            container.appendChild(dots);
+            items += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
         }
     }
-    btn('›', page + 1, page === pages);
+    items += `<li class="page-item${page === pages ? ' disabled' : ''}"><a class="page-link" href="#" data-page="${page + 1}"><i class="bi bi-chevron-right"></i></a></li>`;
+
+    container.innerHTML = `
+      <div class="d-flex flex-column align-items-center gap-2 py-3">
+        <p class="text-muted small mb-0">${info}</p>
+        <nav><ul class="pagination pagination-sm mb-0">${items}</ul></nav>
+      </div>`;
+
+    container.querySelectorAll('.page-link[data-page]').forEach(a => {
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            const p = parseInt(a.dataset.page);
+            if (!isNaN(p) && p >= 1 && p <= pages && p !== page) onPage(p);
+        });
+    });
 }
 
-// ─── Loading state helper ─────────────────────────────────────────────────────
+// ─── Loading state helper (Bootstrap spinner) ─────────────────────────────────
 function setLoading(btnEl, loading) {
     if (loading) {
         btnEl._origHTML = btnEl.innerHTML;
-        btnEl.innerHTML = '<span class="spinner"></span>';
+        btnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Loading…';
         btnEl.disabled = true;
     } else {
         btnEl.innerHTML = btnEl._origHTML || btnEl.innerHTML;
@@ -173,21 +196,25 @@ function setLoading(btnEl, loading) {
     }
 }
 
-// ─── Modal helpers ────────────────────────────────────────────────────────────
-function openModal(id)  { document.getElementById(id)?.classList.add('open'); }
-function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
-
-// Close modal on overlay click
-document.addEventListener('click', e => {
-    if (e.target.classList.contains('modal-overlay')) {
-        e.target.classList.remove('open');
-    }
-});
+// ─── Modal helpers (Bootstrap 5) ─────────────────────────────────────────────
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    bootstrap.Modal.getOrCreateInstance(el).show();
+}
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const m = bootstrap.Modal.getInstance(el);
+    if (m) m.hide();
+}
 
 // ─── Escape HTML ─────────────────────────────────────────────────────────────
 function esc(str) {
     if (str == null) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ─── Init on DOM ready ────────────────────────────────────────────────────────

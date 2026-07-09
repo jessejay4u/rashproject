@@ -4,13 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Submissions — Health Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="layout">
+<div class="app-layout">
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">Health<span>+</span></div>
@@ -18,18 +23,19 @@
     </div>
     <div class="sidebar-nav">
       <div class="nav-section">Main</div>
-      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
-      <a href="submissions.html" class="nav-link"><span class="nav-icon">📋</span> Submissions</a>
-      <a href="forms.html"       class="nav-link"><span class="nav-icon">📝</span> Forms</a>
+      <a href="dashboard.html"   class="sb-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="submissions.html" class="sb-link"><i class="bi bi-file-earmark-text"></i> Submissions</a>
+      <a href="forms.html"       class="sb-link"><i class="bi bi-ui-checks-grid"></i> Forms</a>
+      <a href="fbgdsd.html"      class="sb-link"><i class="bi bi-people"></i> FBGDSD</a>
       <div class="nav-section manager-only">Management</div>
-      <a href="hospitals.html"   class="nav-link manager-only"><span class="nav-icon">🏥</span> Hospitals</a>
-      <a href="users.html"       class="nav-link admin-only"><span class="nav-icon">👥</span> Users</a>
-      <a href="reports.html"     class="nav-link manager-only"><span class="nav-icon">📈</span> Reports</a>
+      <a href="hospitals.html"   class="sb-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
+      <a href="users.html"       class="sb-link admin-only"><i class="bi bi-person-lines-fill"></i> Users</a>
+      <a href="reports.html"     class="sb-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
     </div>
     <div class="sidebar-footer">
-      <div class="sidebar-user">
+      <div class="d-flex align-items-center gap-2">
         <div class="avatar" id="sidebar-avatar">U</div>
-        <div class="sidebar-user-info">
+        <div class="overflow-hidden">
           <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
           <div class="sidebar-user-role" id="sidebar-user-role"></div>
         </div>
@@ -37,81 +43,106 @@
     </div>
   </nav>
 
-  <div class="main">
-    <header class="header">
-      <button class="menu-toggle" id="menu-toggle">☰</button>
-      <h1 class="header-title">Submissions</h1>
-      <div class="header-actions">
-        <div class="header-user-info">
-          <div class="header-user-name" id="user-name">Loading…</div>
-          <div class="header-user-role" id="user-role"></div>
+  <div class="app-main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">Submissions</h1>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="d-none d-md-block text-end">
+          <div class="small fw-semibold lh-1" id="user-name">Loading…</div>
+          <div class="text-muted lh-1 mt-1" style="font-size:.72rem" id="user-role"></div>
         </div>
         <div class="avatar" id="user-avatar">U</div>
-        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
       </div>
     </header>
 
-    <div class="content">
+    <div class="app-content">
+
       <!-- List view -->
       <div id="list-view">
-        <div class="page-header">
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
           <div>
-            <h2 class="page-title">Submissions</h2>
-            <p class="page-sub">Track and manage all data submissions</p>
+            <h2 class="h5 fw-bold mb-0">Submissions</h2>
+            <p class="text-muted small mb-0">Track and manage all data submissions</p>
           </div>
-          <button class="btn btn-primary" id="new-btn" onclick="showNewForm()">+ New Submission</button>
+          <button class="btn btn-primary btn-sm" id="new-btn" onclick="showNewForm()">
+            <i class="bi bi-plus-lg me-1"></i>New Submission
+          </button>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <div class="filters">
-              <select id="filter-status" onchange="loadList(1)">
-                <option value="">All Statuses</option>
-                <option value="draft">Draft</option>
-                <option value="submitted">Submitted</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-              <select id="filter-form" onchange="loadList(1)">
-                <option value="">All Forms</option>
-              </select>
-              <input type="date" id="filter-from" onchange="loadList(1)" placeholder="From date">
-              <input type="date" id="filter-to"   onchange="loadList(1)" placeholder="To date">
-              <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+        <div class="card border-0 shadow-sm">
+          <div class="card-header border-bottom py-3">
+            <div class="row g-2 align-items-center">
+              <div class="col-auto">
+                <select class="form-select form-select-sm" id="filter-status" onchange="loadList(1)" style="min-width:140px">
+                  <option value="">All Statuses</option>
+                  <option value="draft">Draft</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <select class="form-select form-select-sm" id="filter-form" onchange="loadList(1)" style="min-width:160px">
+                  <option value="">All Forms</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <input type="date" class="form-control form-control-sm" id="filter-from" onchange="loadList(1)">
+              </div>
+              <div class="col-auto">
+                <input type="date" class="form-control form-control-sm" id="filter-to" onchange="loadList(1)">
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+                  <i class="bi bi-x-circle me-1"></i>Clear
+                </button>
+              </div>
             </div>
           </div>
-          <div class="table-wrap">
-            <table>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
                   <th>Form</th>
                   <th>Hospital</th>
-                  <th class="hide-mobile">Submitted By</th>
+                  <th class="d-none d-md-table-cell">Submitted By</th>
                   <th>Status</th>
-                  <th class="hide-mobile">Period</th>
-                  <th class="hide-mobile">Date</th>
+                  <th class="d-none d-md-table-cell">Period</th>
+                  <th class="d-none d-md-table-cell">Date</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="list-body">
-                <tr><td colspan="7" class="text-center text-muted" style="padding:32px">Loading…</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">
+                  <div class="spinner-border spinner-border-sm" role="status"></div> Loading…
+                </td></tr>
               </tbody>
             </table>
           </div>
-          <div id="list-pagination" class="pagination"></div>
+          <div id="list-pagination"></div>
         </div>
       </div>
 
       <!-- Detail view -->
       <div id="detail-view" style="display:none">
-        <div class="page-header">
+        <div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-2">
           <div>
-            <button class="btn btn-ghost btn-sm" onclick="backToList()">← Back</button>
-            <h2 class="page-title" id="detail-title" style="margin-top:8px">Submission Detail</h2>
+            <button class="btn btn-sm btn-outline-secondary mb-2" onclick="backToList()">
+              <i class="bi bi-arrow-left me-1"></i>Back
+            </button>
+            <h2 class="h5 fw-bold mb-0" id="detail-title">Submission Detail</h2>
           </div>
-          <div id="review-actions" style="display:none;gap:8px" class="d-flex gap-8">
-            <button class="btn btn-success" onclick="reviewSubmission('approved')">✓ Approve</button>
-            <button class="btn btn-danger"  onclick="reviewSubmission('rejected')">✗ Reject</button>
+          <div id="review-actions" style="display:none" class="d-flex gap-2">
+            <button class="btn btn-sm btn-success" onclick="reviewSubmission('approved')">
+              <i class="bi bi-check-lg me-1"></i>Approve
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="reviewSubmission('rejected')">
+              <i class="bi bi-x-lg me-1"></i>Reject
+            </button>
           </div>
         </div>
         <div id="detail-content"></div>
@@ -119,40 +150,44 @@
 
       <!-- New submission view -->
       <div id="new-view" style="display:none">
-        <div class="page-header">
-          <div>
-            <button class="btn btn-ghost btn-sm" onclick="backToList()">← Back</button>
-            <h2 class="page-title" style="margin-top:8px">New Submission</h2>
-          </div>
+        <div class="mb-4">
+          <button class="btn btn-sm btn-outline-secondary mb-2" onclick="backToList()">
+            <i class="bi bi-arrow-left me-1"></i>Back
+          </button>
+          <h2 class="h5 fw-bold mb-0">New Submission</h2>
         </div>
-        <div class="card">
+        <div class="card border-0 shadow-sm">
           <div class="card-body">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Form <span class="req">*</span></label>
-                <select id="new-form-id" onchange="loadFormFields()">
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small">Form <span class="text-danger">*</span></label>
+                <select class="form-select" id="new-form-id" onchange="loadFormFields()">
                   <option value="">— Select Form —</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label>Hospital <span class="req">*</span></label>
-                <select id="new-hospital-id">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small">Hospital <span class="text-danger">*</span></label>
+                <select class="form-select" id="new-hospital-id">
                   <option value="">— Select Hospital —</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label>Period Start</label>
-                <input type="date" id="new-period-start">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small">Period Start</label>
+                <input type="date" class="form-control" id="new-period-start">
               </div>
-              <div class="form-group">
-                <label>Period End</label>
-                <input type="date" id="new-period-end">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small">Period End</label>
+                <input type="date" class="form-control" id="new-period-end">
               </div>
             </div>
             <div id="form-fields-container"></div>
-            <div style="margin-top:16px;display:flex;gap:8px">
-              <button class="btn btn-primary" id="submit-btn" onclick="submitForm('submitted')">Submit</button>
-              <button class="btn btn-ghost"   onclick="submitForm('draft')">Save as Draft</button>
+            <div class="d-flex gap-2 mt-3">
+              <button class="btn btn-primary" id="submit-btn" onclick="submitForm('submitted')">
+                <i class="bi bi-send me-1"></i>Submit
+              </button>
+              <button class="btn btn-outline-secondary" onclick="submitForm('draft')">
+                <i class="bi bi-floppy me-1"></i>Save as Draft
+              </button>
             </div>
           </div>
         </div>
@@ -162,25 +197,28 @@
 </div>
 
 <!-- Review modal -->
-<div class="modal-overlay" id="review-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title" id="review-modal-title">Review Submission</h3>
-      <button class="modal-close" onclick="closeModal('review-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Review Notes (optional)</label>
-        <textarea id="review-notes" rows="4" placeholder="Add notes or feedback…"></textarea>
+<div class="modal fade" id="review-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="review-modal-title">Review Submission</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('review-modal')">Cancel</button>
-      <button class="btn btn-primary" id="review-confirm-btn" onclick="confirmReview()">Confirm</button>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Review Notes (optional)</label>
+          <textarea class="form-control" id="review-notes" rows="4" placeholder="Add notes or feedback…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="review-confirm-btn" onclick="confirmReview()">Confirm</button>
+      </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -192,24 +230,15 @@ let currentUser2 = null;
 (async () => {
   currentUser2 = await requireAuth();
 
-  // Check if opening detail directly
   const params = new URLSearchParams(window.location.search);
-  if (params.get('id')) {
-    loadDetail(params.get('id'));
-    return;
-  }
+  if (params.get('id')) { loadDetail(params.get('id')); return; }
 
-  // Load form options for filter
   API.get('api/forms.php').then(r => {
     const sel = document.getElementById('filter-form');
-    (r.data || []).forEach(f => {
-      sel.innerHTML += `<option value="${esc(f.id)}">${esc(f.name)}</option>`;
-    });
+    (r.data || []).forEach(f => sel.innerHTML += `<option value="${esc(f.id)}">${esc(f.name)}</option>`);
   }).catch(() => {});
 
-  // Populate hospital/form for new submission
   loadNewFormOptions();
-
   loadList(1);
 })();
 
@@ -227,40 +256,43 @@ async function loadList(page) {
   if (to)     url += `&to=${encodeURIComponent(to)}`;
 
   const tbody = document.getElementById('list-body');
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div></td></tr>';
 
   try {
-    const res = await API.get(url);
+    const res  = await API.get(url);
     const rows = res.data || [];
-
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><h3>No submissions found</h3><p>Adjust your filters or create a new submission.</p></div></td></tr>';
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <h3>No submissions found</h3>
+        <p>Adjust your filters or create a new submission.</p>
+      </div></td></tr>`;
     } else {
       tbody.innerHTML = rows.map(r => `
         <tr>
-          <td><strong>${esc(r.form)}</strong></td>
-          <td>${esc(r.hospital)}</td>
-          <td class="hide-mobile text-muted text-sm">${esc(r.submitted_by)}</td>
+          <td><span class="fw-semibold">${esc(r.form)}</span></td>
+          <td class="text-muted small">${esc(r.hospital)}</td>
+          <td class="d-none d-md-table-cell text-muted small">${esc(r.submitted_by)}</td>
           <td>${badge(r.status)}</td>
-          <td class="hide-mobile text-muted text-sm">${r.period_start ? esc(r.period_start) + ' → ' + esc(r.period_end) : '—'}</td>
-          <td class="hide-mobile text-muted text-sm nowrap">${fmtDateTime(r.submitted_at || r.created_at)}</td>
-          <td class="td-actions"><button class="btn btn-outline btn-xs" onclick="loadDetail('${esc(r.id)}')">View</button></td>
-        </tr>
-      `).join('');
+          <td class="d-none d-md-table-cell text-muted small">${r.period_start ? esc(r.period_start) + ' → ' + esc(r.period_end) : '—'}</td>
+          <td class="d-none d-md-table-cell text-muted small">${fmtDateTime(r.submitted_at || r.created_at)}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" onclick="loadDetail('${esc(r.id)}')">View</button>
+          </td>
+        </tr>`).join('');
     }
-
     renderPagination('list-pagination', res.page, res.pages, res.total, res.per_page, loadList);
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:32px">Error: ${esc(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-3">Error: ${esc(e.message)}</td></tr>`;
   }
 }
 
 async function loadDetail(id) {
   currentSubId = id;
-  document.getElementById('list-view').style.display = 'none';
-  document.getElementById('new-view').style.display  = 'none';
+  document.getElementById('list-view').style.display  = 'none';
+  document.getElementById('new-view').style.display   = 'none';
   document.getElementById('detail-view').style.display = '';
-  document.getElementById('detail-content').innerHTML = '<div class="text-center text-muted" style="padding:40px">Loading…</div>';
+  document.getElementById('detail-content').innerHTML = '<div class="text-center text-muted py-5"><div class="spinner-border" role="status"></div></div>';
 
   try {
     const res = await API.get(`api/submissions.php?id=${encodeURIComponent(id)}`);
@@ -271,11 +303,11 @@ async function loadDetail(id) {
     document.getElementById('review-actions').style.display = canReview ? 'flex' : 'none';
 
     document.getElementById('detail-content').innerHTML = `
-      <div class="two-col">
-        <div class="card mb-0">
-          <div class="card-header"><h3 class="card-title">Submission Info</h3></div>
-          <div class="card-body">
-            <div class="detail-list">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold">Submission Info</span></div>
+            <div class="card-body">
               <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${badge(s.status)}</span></div>
               <div class="detail-row"><span class="detail-label">Form</span><span class="detail-value">${esc(s.form_name)}</span></div>
               <div class="detail-row"><span class="detail-label">Hospital</span><span class="detail-value">${esc(s.hospital_name)}</span></div>
@@ -285,26 +317,29 @@ async function loadDetail(id) {
               ${s.reviewed_by ? `
                 <div class="detail-row"><span class="detail-label">Reviewed By</span><span class="detail-value">${esc(s.reviewer_name)}</span></div>
                 <div class="detail-row"><span class="detail-label">Reviewed At</span><span class="detail-value">${fmtDateTime(s.reviewed_at)}</span></div>
-                ${s.review_notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${esc(s.review_notes)}</span></div>` : ''}
-              ` : ''}
+                ${s.review_notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${esc(s.review_notes)}</span></div>` : ''}` : ''}
             </div>
           </div>
         </div>
-        <div class="card mb-0">
-          <div class="card-header"><h3 class="card-title">Field Values</h3></div>
-          <div class="card-body">
-            ${(s.values || []).length === 0 ? '<p class="text-muted text-sm">No field values recorded.</p>' :
-              '<div class="detail-list">' + s.values.map(v => `
-                <div class="detail-row">
-                  <span class="detail-label">${esc(v.label)}</span>
-                  <span class="detail-value">${esc(v.value_text || v.value_number || v.value_date || (v.value_boolean !== null ? (v.value_boolean ? 'Yes' : 'No') : '') || '—')}</span>
-                </div>`).join('') + '</div>'}
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold">Field Values</span></div>
+            <div class="card-body">
+              ${(s.values || []).length === 0
+                ? '<p class="text-muted small">No field values recorded.</p>'
+                : (s.values || []).map(v => `
+                  <div class="detail-row">
+                    <span class="detail-label">${esc(v.label)}</span>
+                    <span class="detail-value">${esc(v.value_text || v.value_number || v.value_date || (v.value_boolean !== null ? (v.value_boolean ? 'Yes' : 'No') : '') || '—')}</span>
+                  </div>`).join('')}
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
   } catch (e) {
-    document.getElementById('detail-content').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error loading submission</h3><p>${esc(e.message)}</p></div>`;
+    document.getElementById('detail-content').innerHTML = `<div class="empty-state">
+      <div class="empty-icon text-warning"><i class="bi bi-exclamation-triangle"></i></div>
+      <h3>Error loading submission</h3><p>${esc(e.message)}</p></div>`;
   }
 }
 
@@ -318,7 +353,8 @@ function backToList() {
 function reviewSubmission(status) {
   pendingReviewStatus = status;
   document.getElementById('review-modal-title').textContent = status === 'approved' ? 'Approve Submission' : 'Reject Submission';
-  document.getElementById('review-confirm-btn').className = 'btn ' + (status === 'approved' ? 'btn-success' : 'btn-danger');
+  const btn = document.getElementById('review-confirm-btn');
+  btn.className = 'btn ' + (status === 'approved' ? 'btn-success' : 'btn-danger');
   document.getElementById('review-notes').value = '';
   openModal('review-modal');
 }
@@ -349,7 +385,6 @@ async function loadNewFormOptions() {
     const fSel = document.getElementById('new-form-id');
     const hSel = document.getElementById('new-hospital-id');
     (formsRes.data || []).forEach(f => fSel.innerHTML += `<option value="${esc(f.id)}">${esc(f.name)}</option>`);
-    // Hospitals: pre-select user's hospital
     (hospsRes.data || []).forEach(h => {
       const sel = currentUser2 && h.id === currentUser2.hospital_id ? ' selected' : '';
       hSel.innerHTML += `<option value="${esc(h.id)}"${sel}>${esc(h.name)}</option>`;
@@ -358,24 +393,25 @@ async function loadNewFormOptions() {
 }
 
 async function loadFormFields() {
-  const formId = document.getElementById('new-form-id').value;
+  const formId    = document.getElementById('new-form-id').value;
   const container = document.getElementById('form-fields-container');
   container.innerHTML = '';
   if (!formId) return;
 
   try {
     const res = await API.get(`api/forms.php?id=${encodeURIComponent(formId)}`);
-    const sections = res.data.sections || [];
-    sections.forEach(section => {
+    (res.data.sections || []).forEach(section => {
       if (section.fields && section.fields.length > 0) {
-        container.innerHTML += `<h4 style="margin:20px 0 12px;font-size:.9rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.05em">${esc(section.title)}</h4>`;
-        container.innerHTML += '<div class="form-grid">' + section.fields.map(f => `
-          <div class="form-group${f.field_type === 'textarea' || f.field_type === 'text_area' ? ' span-2' : ''}">
-            <label>${esc(f.label)}${f.is_required ? '<span class="req">*</span>' : ''}</label>
-            ${renderField(f)}
-            ${f.help_text ? `<div class="form-help">${esc(f.help_text)}</div>` : ''}
-          </div>
-        `).join('') + '</div>';
+        container.innerHTML += `
+          <p class="text-muted small fw-bold text-uppercase letter-spacing-1 mt-4 mb-2">
+            <i class="bi bi-collection me-1"></i>${esc(section.title)}
+          </p>
+          <div class="row g-3">${section.fields.map(f => `
+            <div class="col-md-${f.field_type === 'textarea' || f.field_type === 'text_area' ? '12' : '6'}">
+              <label class="form-label fw-semibold small">${esc(f.label)}${f.is_required ? '<span class="text-danger ms-1">*</span>' : ''}</label>
+              ${renderField(f)}
+              ${f.help_text ? `<div class="form-text">${esc(f.help_text)}</div>` : ''}
+            </div>`).join('')}</div>`;
       }
     });
   } catch (e) {
@@ -387,16 +423,16 @@ function renderField(f) {
   const id  = `field_${esc(f.id)}`;
   const req = f.is_required ? 'required' : '';
   switch (f.field_type) {
-    case 'number': return `<input type="number" id="${id}" ${req} placeholder="${esc(f.placeholder||'')}">`;
-    case 'date':   return `<input type="date" id="${id}" ${req}>`;
+    case 'number':   return `<input type="number" class="form-control" id="${id}" ${req} placeholder="${esc(f.placeholder||'')}">`;
+    case 'date':     return `<input type="date" class="form-control" id="${id}" ${req}>`;
     case 'select': {
-      const opts = (f.options || []).map(o => `<option value="${esc(typeof o === 'object' ? o.value : o)}">${esc(typeof o === 'object' ? o.label : o)}</option>`).join('');
-      return `<select id="${id}" ${req}><option value="">— Select —</option>${opts}</select>`;
+      const opts = (f.options || []).map(o => `<option value="${esc(typeof o==='object'?o.value:o)}">${esc(typeof o==='object'?o.label:o)}</option>`).join('');
+      return `<select class="form-select" id="${id}" ${req}><option value="">— Select —</option>${opts}</select>`;
     }
     case 'textarea':
-    case 'text_area': return `<textarea id="${id}" ${req} rows="3" placeholder="${esc(f.placeholder||'')}"></textarea>`;
-    case 'checkbox': return `<label style="display:flex;align-items:center;gap:8px;font-weight:normal"><input type="checkbox" id="${id}"> ${esc(f.label)}</label>`;
-    default: return `<input type="text" id="${id}" ${req} placeholder="${esc(f.placeholder||'')}">`;
+    case 'text_area': return `<textarea class="form-control" id="${id}" ${req} rows="3" placeholder="${esc(f.placeholder||'')}"></textarea>`;
+    case 'checkbox':  return `<div class="form-check mt-1"><input type="checkbox" class="form-check-input" id="${id}"><label class="form-check-label" for="${id}">${esc(f.label)}</label></div>`;
+    default:          return `<input type="text" class="form-control" id="${id}" ${req} placeholder="${esc(f.placeholder||'')}">`;
   }
 }
 
@@ -408,9 +444,8 @@ function showNewForm() {
 async function submitForm(status) {
   const formId     = document.getElementById('new-form-id').value;
   const hospitalId = document.getElementById('new-hospital-id').value;
-  if (!formId || !hospitalId) { toast('Please select a form and hospital', 'error'); return; }
+  if (!formId || !hospitalId) { toast('Please select a form and hospital', 'warning'); return; }
 
-  // Collect field values
   const values = {};
   document.querySelectorAll('[id^="field_"]').forEach(el => {
     const fieldId = el.id.replace('field_', '');

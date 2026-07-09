@@ -4,29 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hospitals — Health Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="layout">
+<div class="app-layout">
   <nav class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><div class="brand-logo">Health<span>+</span></div><div class="brand-sub">Information Management</div></div>
+    <div class="sidebar-brand">
+      <div class="brand-logo">Health<span>+</span></div>
+      <div class="brand-sub">Information Management</div>
+    </div>
     <div class="sidebar-nav">
       <div class="nav-section">Main</div>
-      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
-      <a href="submissions.html" class="nav-link"><span class="nav-icon">📋</span> Submissions</a>
-      <a href="forms.html"       class="nav-link"><span class="nav-icon">📝</span> Forms</a>
+      <a href="dashboard.html"   class="sb-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="submissions.html" class="sb-link"><i class="bi bi-file-earmark-text"></i> Submissions</a>
+      <a href="forms.html"       class="sb-link"><i class="bi bi-ui-checks-grid"></i> Forms</a>
+      <a href="fbgdsd.html"      class="sb-link"><i class="bi bi-people"></i> FBGDSD</a>
       <div class="nav-section manager-only">Management</div>
-      <a href="hospitals.html"   class="nav-link manager-only"><span class="nav-icon">🏥</span> Hospitals</a>
-      <a href="users.html"       class="nav-link admin-only"><span class="nav-icon">👥</span> Users</a>
-      <a href="reports.html"     class="nav-link manager-only"><span class="nav-icon">📈</span> Reports</a>
+      <a href="hospitals.html"   class="sb-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
+      <a href="users.html"       class="sb-link admin-only"><i class="bi bi-person-lines-fill"></i> Users</a>
+      <a href="reports.html"     class="sb-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
     </div>
     <div class="sidebar-footer">
-      <div class="sidebar-user">
+      <div class="d-flex align-items-center gap-2">
         <div class="avatar" id="sidebar-avatar">U</div>
-        <div class="sidebar-user-info">
+        <div class="overflow-hidden">
           <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
           <div class="sidebar-user-role" id="sidebar-user-role"></div>
         </div>
@@ -34,76 +43,92 @@
     </div>
   </nav>
 
-  <div class="main">
-    <header class="header">
-      <button class="menu-toggle" id="menu-toggle">☰</button>
-      <h1 class="header-title">Hospitals</h1>
-      <div class="header-actions">
-        <div class="header-user-info">
-          <div class="header-user-name" id="user-name">Loading…</div>
-          <div class="header-user-role" id="user-role"></div>
+  <div class="app-main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">Hospitals</h1>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="d-none d-md-block text-end">
+          <div class="small fw-semibold lh-1" id="user-name">Loading…</div>
+          <div class="text-muted lh-1 mt-1" style="font-size:.72rem" id="user-role"></div>
         </div>
         <div class="avatar" id="user-avatar">U</div>
-        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
       </div>
     </header>
 
-    <div class="content">
+    <div class="app-content">
+
+      <!-- List view -->
       <div id="list-view">
-        <div class="page-header">
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
           <div>
-            <h2 class="page-title">Hospital Directory</h2>
-            <p class="page-sub">Manage registered healthcare facilities</p>
+            <h2 class="h5 fw-bold mb-0">Hospital Directory</h2>
+            <p class="text-muted small mb-0">Manage registered healthcare facilities</p>
           </div>
-          <button class="btn btn-primary" id="add-hospital-btn" style="display:none" onclick="openAddModal()">+ Add Hospital</button>
+          <button class="btn btn-primary btn-sm" id="add-hospital-btn" style="display:none" onclick="openAddModal()">
+            <i class="bi bi-plus-lg me-1"></i>Add Hospital
+          </button>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <div class="filters">
-              <select id="filter-region" onchange="loadList(1)">
-                <option value="">All Regions</option>
-              </select>
-              <select id="filter-active" onchange="loadList(1)">
-                <option value="">All Status</option>
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-              <input type="text" id="filter-search" placeholder="Search hospitals…" oninput="debounceLoad()" style="min-width:200px">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header border-bottom py-3">
+            <div class="row g-2 align-items-center">
+              <div class="col-auto">
+                <select class="form-select form-select-sm" id="filter-region" onchange="loadList(1)" style="min-width:150px">
+                  <option value="">All Regions</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <select class="form-select form-select-sm" id="filter-active" onchange="loadList(1)">
+                  <option value="">All Status</option>
+                  <option value="1">Active</option>
+                  <option value="0">Inactive</option>
+                </select>
+              </div>
+              <div class="col">
+                <input type="text" class="form-control form-control-sm" id="filter-search" placeholder="Search hospitals…" oninput="debounceLoad()">
+              </div>
             </div>
           </div>
-          <div class="table-wrap">
-            <table>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
                   <th>Hospital Name</th>
-                  <th class="hide-mobile">Code</th>
-                  <th class="hide-mobile">Region</th>
-                  <th class="hide-mobile">Type</th>
+                  <th class="d-none d-md-table-cell">Code</th>
+                  <th class="d-none d-md-table-cell">Region</th>
+                  <th class="d-none d-md-table-cell">Type</th>
                   <th>Status</th>
-                  <th class="hide-mobile">Beds</th>
+                  <th class="d-none d-md-table-cell">Beds</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="list-body">
-                <tr><td colspan="7" class="text-center text-muted" style="padding:32px">Loading…</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">
+                  <div class="spinner-border spinner-border-sm" role="status"></div> Loading…
+                </td></tr>
               </tbody>
             </table>
           </div>
-          <div id="list-pagination" class="pagination"></div>
+          <div id="list-pagination"></div>
         </div>
       </div>
 
       <!-- Detail view -->
       <div id="detail-view" style="display:none">
-        <div class="page-header">
+        <div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-2">
           <div>
-            <button class="btn btn-ghost btn-sm" onclick="backToList()">← Back</button>
-            <h2 class="page-title" id="detail-title" style="margin-top:8px"></h2>
+            <button class="btn btn-sm btn-outline-secondary mb-2" onclick="backToList()">
+              <i class="bi bi-arrow-left me-1"></i>Back
+            </button>
+            <h2 class="h5 fw-bold mb-0" id="detail-title"></h2>
           </div>
-          <div class="d-flex gap-8">
-            <button class="btn btn-outline" id="edit-btn" style="display:none" onclick="openEditModal()">Edit</button>
-          </div>
+          <button class="btn btn-sm btn-outline-primary" id="edit-btn" style="display:none" onclick="openEditModal()">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </button>
         </div>
         <div id="detail-content"></div>
       </div>
@@ -112,141 +137,151 @@
 </div>
 
 <!-- Add Hospital Modal -->
-<div class="modal-overlay" id="add-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">Add Hospital</h3>
-      <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Hospital Name <span class="req">*</span></label>
-          <input type="text" id="add-name" placeholder="e.g. General Hospital">
-        </div>
-        <div class="form-group">
-          <label>Hospital Code <span class="req">*</span></label>
-          <input type="text" id="add-code" placeholder="e.g. GH001">
-        </div>
-        <div class="form-group">
-          <label>Region <span class="req">*</span></label>
-          <select id="add-region"></select>
-        </div>
-        <div class="form-group">
-          <label>Type</label>
-          <select id="add-type">
-            <option value="">Select type…</option>
-            <option value="general">General</option>
-            <option value="specialized">Specialized</option>
-            <option value="clinic">Clinic</option>
-            <option value="dispensary">Dispensary</option>
-            <option value="health_center">Health Center</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Bed Count</label>
-          <input type="number" id="add-beds" placeholder="0" min="0">
-        </div>
-        <div class="form-group">
-          <label>Phone</label>
-          <input type="tel" id="add-phone" placeholder="+1234567890">
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Email</label>
-          <input type="email" id="add-email" placeholder="hospital@example.com">
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Address</label>
-          <textarea id="add-address" rows="2" placeholder="Street address…"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Latitude</label>
-          <input type="number" id="add-lat" placeholder="0.000000" step="0.000001">
-        </div>
-        <div class="form-group">
-          <label>Longitude</label>
-          <input type="number" id="add-lon" placeholder="0.000000" step="0.000001">
+<div class="modal fade" id="add-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-hospital me-2 text-primary"></i>Add Hospital</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Hospital Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="add-name" placeholder="e.g. General Hospital">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Hospital Code <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="add-code" placeholder="e.g. GH001">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Region <span class="text-danger">*</span></label>
+            <select class="form-select" id="add-region"></select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Type</label>
+            <select class="form-select" id="add-type">
+              <option value="">Select type…</option>
+              <option value="general">General</option>
+              <option value="specialized">Specialized</option>
+              <option value="clinic">Clinic</option>
+              <option value="dispensary">Dispensary</option>
+              <option value="health_center">Health Center</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Bed Count</label>
+            <input type="number" class="form-control" id="add-beds" placeholder="0" min="0">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Phone</label>
+            <input type="tel" class="form-control" id="add-phone" placeholder="+1234567890">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Email</label>
+            <input type="email" class="form-control" id="add-email" placeholder="hospital@example.com">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Address</label>
+            <textarea class="form-control" id="add-address" rows="2" placeholder="Street address…"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Latitude</label>
+            <input type="number" class="form-control" id="add-lat" placeholder="0.000000" step="0.000001">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Longitude</label>
+            <input type="number" class="form-control" id="add-lon" placeholder="0.000000" step="0.000001">
+          </div>
         </div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('add-modal')">Cancel</button>
-      <button class="btn btn-primary" id="add-submit-btn" onclick="submitAdd()">Add Hospital</button>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="add-submit-btn" onclick="submitAdd()">
+          <i class="bi bi-plus-lg me-1"></i>Add Hospital
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Edit Hospital Modal -->
-<div class="modal-overlay" id="edit-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">Edit Hospital</h3>
-      <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="edit-id">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Hospital Name <span class="req">*</span></label>
-          <input type="text" id="edit-name">
-        </div>
-        <div class="form-group">
-          <label>Hospital Code <span class="req">*</span></label>
-          <input type="text" id="edit-code">
-        </div>
-        <div class="form-group">
-          <label>Region <span class="req">*</span></label>
-          <select id="edit-region"></select>
-        </div>
-        <div class="form-group">
-          <label>Type</label>
-          <select id="edit-type">
-            <option value="">Select type…</option>
-            <option value="general">General</option>
-            <option value="specialized">Specialized</option>
-            <option value="clinic">Clinic</option>
-            <option value="dispensary">Dispensary</option>
-            <option value="health_center">Health Center</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Bed Count</label>
-          <input type="number" id="edit-beds" min="0">
-        </div>
-        <div class="form-group">
-          <label>Phone</label>
-          <input type="tel" id="edit-phone">
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Email</label>
-          <input type="email" id="edit-email">
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Address</label>
-          <textarea id="edit-address" rows="2"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Latitude</label>
-          <input type="number" id="edit-lat" step="0.000001">
-        </div>
-        <div class="form-group">
-          <label>Longitude</label>
-          <input type="number" id="edit-lon" step="0.000001">
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" id="edit-active"> Active
-          </label>
+<div class="modal fade" id="edit-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil me-2 text-primary"></i>Edit Hospital</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-id">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Hospital Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="edit-name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Hospital Code <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="edit-code">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Region <span class="text-danger">*</span></label>
+            <select class="form-select" id="edit-region"></select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Type</label>
+            <select class="form-select" id="edit-type">
+              <option value="">Select type…</option>
+              <option value="general">General</option>
+              <option value="specialized">Specialized</option>
+              <option value="clinic">Clinic</option>
+              <option value="dispensary">Dispensary</option>
+              <option value="health_center">Health Center</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Bed Count</label>
+            <input type="number" class="form-control" id="edit-beds" min="0">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Phone</label>
+            <input type="tel" class="form-control" id="edit-phone">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Email</label>
+            <input type="email" class="form-control" id="edit-email">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Address</label>
+            <textarea class="form-control" id="edit-address" rows="2"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Latitude</label>
+            <input type="number" class="form-control" id="edit-lat" step="0.000001">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Longitude</label>
+            <input type="number" class="form-control" id="edit-lon" step="0.000001">
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="edit-active">
+              <label class="form-check-label fw-semibold small" for="edit-active">Active</label>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('edit-modal')">Cancel</button>
-      <button class="btn btn-primary" id="edit-submit-btn" onclick="submitEdit()">Save Changes</button>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="edit-submit-btn" onclick="submitEdit()">
+          <i class="bi bi-floppy me-1"></i>Save Changes
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -270,11 +305,11 @@ function debounceLoad() {
 
 async function loadRegions() {
   try {
-    const res = await API.get('api/regions.php');
+    const res  = await API.get('api/regions.php');
     const opts = (res.data || []).map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('');
     document.getElementById('filter-region').innerHTML = '<option value="">All Regions</option>' + opts;
-    document.getElementById('add-region').innerHTML   = '<option value="">Select region…</option>' + opts;
-    document.getElementById('edit-region').innerHTML  = '<option value="">Select region…</option>' + opts;
+    document.getElementById('add-region').innerHTML    = '<option value="">Select region…</option>' + opts;
+    document.getElementById('edit-region').innerHTML   = '<option value="">Select region…</option>' + opts;
   } catch {}
 }
 
@@ -288,36 +323,41 @@ async function loadList(page) {
   if (search) url += `&search=${encodeURIComponent(search)}`;
 
   const tbody = document.getElementById('list-body');
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div></td></tr>';
 
   try {
     const res  = await API.get(url);
     const rows = res.data || [];
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🏥</div><h3>No hospitals found</h3></div></td></tr>';
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-hospital"></i></div>
+        <h3>No hospitals found</h3></div></td></tr>`;
     } else {
       tbody.innerHTML = rows.map(r => `
         <tr>
-          <td><strong>${esc(r.name)}</strong></td>
-          <td class="hide-mobile text-muted text-sm">${esc(r.code)}</td>
-          <td class="hide-mobile text-muted text-sm">${esc(r.region_name || '—')}</td>
-          <td class="hide-mobile">${r.type ? `<span class="badge badge-submitted">${esc(r.type)}</span>` : '—'}</td>
-          <td>${r.is_active ? '<span class="badge badge-approved">Active</span>' : '<span class="badge badge-rejected">Inactive</span>'}</td>
-          <td class="hide-mobile text-muted text-sm">${r.bed_count || '—'}</td>
-          <td class="td-actions"><button class="btn btn-outline btn-xs" onclick="loadDetail('${esc(r.id)}')">View</button></td>
-        </tr>
-      `).join('');
+          <td class="fw-semibold">${esc(r.name)}</td>
+          <td class="d-none d-md-table-cell text-muted small">${esc(r.code)}</td>
+          <td class="d-none d-md-table-cell text-muted small">${esc(r.region_name || '—')}</td>
+          <td class="d-none d-md-table-cell">
+            ${r.type ? `<span class="badge bg-light text-dark border">${esc(r.type)}</span>` : '—'}
+          </td>
+          <td>${r.is_active ? badge('active','Active') : badge('inactive','Inactive')}</td>
+          <td class="d-none d-md-table-cell text-muted small">${r.bed_count || '—'}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" onclick="loadDetail('${esc(r.id)}')">View</button>
+          </td>
+        </tr>`).join('');
     }
     renderPagination('list-pagination', res.page, res.pages, res.total, res.per_page, loadList);
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Error: ${esc(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-3">Error: ${esc(e.message)}</td></tr>`;
   }
 }
 
 async function loadDetail(id) {
   document.getElementById('list-view').style.display   = 'none';
   document.getElementById('detail-view').style.display = '';
-  document.getElementById('detail-content').innerHTML  = '<div class="text-center text-muted" style="padding:40px">Loading…</div>';
+  document.getElementById('detail-content').innerHTML  = '<div class="text-center text-muted py-5"><div class="spinner-border" role="status"></div></div>';
 
   try {
     const res = await API.get(`api/hospitals.php?id=${encodeURIComponent(id)}`);
@@ -329,34 +369,35 @@ async function loadDetail(id) {
     }
 
     document.getElementById('detail-content').innerHTML = `
-      <div class="two-col">
-        <div class="card mb-0">
-          <div class="card-header"><h3 class="card-title">Hospital Details</h3></div>
-          <div class="card-body">
-            <div class="detail-list">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold">Hospital Details</span></div>
+            <div class="card-body">
               <div class="detail-row"><span class="detail-label">Code</span><span class="detail-value"><code>${esc(currentHospital.code)}</code></span></div>
-              <div class="detail-row"><span class="detail-label">Region</span><span class="detail-value">${esc(currentHospital.region_name || '—')}</span></div>
-              <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${currentHospital.type ? `<span class="badge badge-submitted">${esc(currentHospital.type)}</span>` : '—'}</span></div>
-              <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${currentHospital.is_active ? '<span class="badge badge-approved">Active</span>' : '<span class="badge badge-rejected">Inactive</span>'}</span></div>
-              <div class="detail-row"><span class="detail-label">Beds</span><span class="detail-value">${currentHospital.bed_count || '—'}</span></div>
+              <div class="detail-row"><span class="detail-label">Region</span><span class="detail-value">${esc(currentHospital.region_name||'—')}</span></div>
+              <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${currentHospital.type?`<span class="badge bg-light text-dark border">${esc(currentHospital.type)}</span>`:'—'}</span></div>
+              <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${currentHospital.is_active?badge('active','Active'):badge('inactive','Inactive')}</span></div>
+              <div class="detail-row"><span class="detail-label">Beds</span><span class="detail-value">${currentHospital.bed_count||'—'}</span></div>
             </div>
           </div>
         </div>
-        <div class="card mb-0">
-          <div class="card-header"><h3 class="card-title">Contact</h3></div>
-          <div class="card-body">
-            <div class="detail-list">
-              <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${esc(currentHospital.phone || '—')}</span></div>
-              <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${esc(currentHospital.email || '—')}</span></div>
-              <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${esc(currentHospital.address || '—')}</span></div>
-              ${currentHospital.latitude ? `<div class="detail-row"><span class="detail-label">Coordinates</span><span class="detail-value">${esc(currentHospital.latitude)}, ${esc(currentHospital.longitude)}</span></div>` : ''}
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold">Contact</span></div>
+            <div class="card-body">
+              <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${esc(currentHospital.phone||'—')}</span></div>
+              <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${esc(currentHospital.email||'—')}</span></div>
+              <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${esc(currentHospital.address||'—')}</span></div>
+              ${currentHospital.latitude?`<div class="detail-row"><span class="detail-label">Coordinates</span><span class="detail-value">${esc(currentHospital.latitude)}, ${esc(currentHospital.longitude)}</span></div>`:''}
             </div>
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
   } catch (e) {
-    document.getElementById('detail-content').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error</h3><p>${esc(e.message)}</p></div>`;
+    document.getElementById('detail-content').innerHTML = `<div class="empty-state">
+      <div class="empty-icon text-warning"><i class="bi bi-exclamation-triangle"></i></div>
+      <h3>Error</h3><p>${esc(e.message)}</p></div>`;
   }
 }
 
@@ -368,10 +409,8 @@ function backToList() {
 
 function openAddModal() {
   ['add-name','add-code','add-phone','add-email','add-address'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('add-beds').value = '';
-  document.getElementById('add-lat').value = '';
-  document.getElementById('add-lon').value = '';
-  document.getElementById('add-type').value = '';
+  ['add-beds','add-lat','add-lon'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('add-type').value   = '';
   document.getElementById('add-region').value = '';
   openModal('add-modal');
 }

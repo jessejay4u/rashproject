@@ -4,29 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forms — Health Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="layout">
+<div class="app-layout">
   <nav class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><div class="brand-logo">Health<span>+</span></div><div class="brand-sub">Information Management</div></div>
+    <div class="sidebar-brand">
+      <div class="brand-logo">Health<span>+</span></div>
+      <div class="brand-sub">Information Management</div>
+    </div>
     <div class="sidebar-nav">
       <div class="nav-section">Main</div>
-      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
-      <a href="submissions.html" class="nav-link"><span class="nav-icon">📋</span> Submissions</a>
-      <a href="forms.html"       class="nav-link"><span class="nav-icon">📝</span> Forms</a>
+      <a href="dashboard.html"   class="sb-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="submissions.html" class="sb-link"><i class="bi bi-file-earmark-text"></i> Submissions</a>
+      <a href="forms.html"       class="sb-link"><i class="bi bi-ui-checks-grid"></i> Forms</a>
+      <a href="fbgdsd.html"      class="sb-link"><i class="bi bi-people"></i> FBGDSD</a>
       <div class="nav-section manager-only">Management</div>
-      <a href="hospitals.html"   class="nav-link manager-only"><span class="nav-icon">🏥</span> Hospitals</a>
-      <a href="users.html"       class="nav-link admin-only"><span class="nav-icon">👥</span> Users</a>
-      <a href="reports.html"     class="nav-link manager-only"><span class="nav-icon">📈</span> Reports</a>
+      <a href="hospitals.html"   class="sb-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
+      <a href="users.html"       class="sb-link admin-only"><i class="bi bi-person-lines-fill"></i> Users</a>
+      <a href="reports.html"     class="sb-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
     </div>
     <div class="sidebar-footer">
-      <div class="sidebar-user">
+      <div class="d-flex align-items-center gap-2">
         <div class="avatar" id="sidebar-avatar">U</div>
-        <div class="sidebar-user-info">
+        <div class="overflow-hidden">
           <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
           <div class="sidebar-user-role" id="sidebar-user-role"></div>
         </div>
@@ -34,72 +43,86 @@
     </div>
   </nav>
 
-  <div class="main">
-    <header class="header">
-      <button class="menu-toggle" id="menu-toggle">☰</button>
-      <h1 class="header-title">Forms</h1>
-      <div class="header-actions">
-        <div class="header-user-info">
-          <div class="header-user-name" id="user-name">Loading…</div>
-          <div class="header-user-role" id="user-role"></div>
+  <div class="app-main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">Forms</h1>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="d-none d-md-block text-end">
+          <div class="small fw-semibold lh-1" id="user-name">Loading…</div>
+          <div class="text-muted lh-1 mt-1" style="font-size:.72rem" id="user-role"></div>
         </div>
         <div class="avatar" id="user-avatar">U</div>
-        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
       </div>
     </header>
 
-    <div class="content">
+    <div class="app-content">
+
+      <!-- List view -->
       <div id="list-view">
-        <div class="page-header">
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
           <div>
-            <h2 class="page-title">Data Collection Forms</h2>
-            <p class="page-sub">Manage forms used for data submission</p>
+            <h2 class="h5 fw-bold mb-0">Data Collection Forms</h2>
+            <p class="text-muted small mb-0">Manage forms used for data submission</p>
           </div>
-          <button class="btn btn-primary admin-only" style="display:none" onclick="openModal('new-form-modal')">+ New Form</button>
+          <button class="btn btn-primary btn-sm admin-only" style="display:none" onclick="openModal('new-form-modal')">
+            <i class="bi bi-plus-lg me-1"></i>New Form
+          </button>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <div class="filters">
-              <select id="filter-status" onchange="loadList(1)">
-                <option value="">All Statuses</option>
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-                <option value="archived">Archived</option>
-              </select>
-              <input type="text" id="filter-search" placeholder="Search forms…" oninput="debounceLoad()" style="min-width:200px">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header border-bottom py-3">
+            <div class="row g-2 align-items-center">
+              <div class="col-auto">
+                <select class="form-select form-select-sm" id="filter-status" onchange="loadList(1)" style="min-width:150px">
+                  <option value="">All Statuses</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <div class="col">
+                <input type="text" class="form-control form-control-sm" id="filter-search" placeholder="Search forms…" oninput="debounceLoad()">
+              </div>
             </div>
           </div>
-          <div class="table-wrap">
-            <table>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th class="hide-mobile">Category</th>
+                  <th class="d-none d-md-table-cell">Category</th>
                   <th>Status</th>
-                  <th class="hide-mobile">Fields</th>
-                  <th class="hide-mobile">Submissions</th>
-                  <th class="hide-mobile">Published</th>
+                  <th class="d-none d-md-table-cell">Fields</th>
+                  <th class="d-none d-md-table-cell">Submissions</th>
+                  <th class="d-none d-md-table-cell">Published</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="list-body">
-                <tr><td colspan="7" class="text-center text-muted" style="padding:32px">Loading…</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">
+                  <div class="spinner-border spinner-border-sm" role="status"></div> Loading…
+                </td></tr>
               </tbody>
             </table>
           </div>
-          <div id="list-pagination" class="pagination"></div>
+          <div id="list-pagination"></div>
         </div>
       </div>
 
       <!-- Form detail -->
       <div id="detail-view" style="display:none">
-        <div class="page-header">
+        <div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-2">
           <div>
-            <button class="btn btn-ghost btn-sm" onclick="backToList()">← Back</button>
-            <h2 class="page-title" id="detail-title" style="margin-top:8px"></h2>
+            <button class="btn btn-sm btn-outline-secondary mb-2" onclick="backToList()">
+              <i class="bi bi-arrow-left me-1"></i>Back
+            </button>
+            <h2 class="h5 fw-bold mb-0" id="detail-title"></h2>
           </div>
-          <div class="d-flex gap-8" id="form-actions"></div>
+          <div class="d-flex gap-2" id="form-actions"></div>
         </div>
         <div id="detail-content"></div>
       </div>
@@ -108,38 +131,41 @@
 </div>
 
 <!-- New Form Modal -->
-<div class="modal-overlay" id="new-form-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">Create New Form</h3>
-      <button class="modal-close" onclick="closeModal('new-form-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Form Name <span class="req">*</span></label>
-        <input type="text" id="new-name" placeholder="e.g. Monthly Hospital Report">
+<div class="modal fade" id="new-form-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Form</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="form-group">
-        <label>Form Code <span class="req">*</span></label>
-        <input type="text" id="new-code" placeholder="e.g. monthly_report">
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Form Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="new-name" placeholder="e.g. Monthly Hospital Report">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Form Code <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="new-code" placeholder="e.g. monthly_report">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Category</label>
+          <input type="text" class="form-control" id="new-category" placeholder="e.g. Monthly, Quarterly">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Description</label>
+          <textarea class="form-control" id="new-desc" rows="3" placeholder="Optional description…"></textarea>
+        </div>
+        <p class="text-muted small mb-0">After creating, add sections and fields via the form detail page.</p>
       </div>
-      <div class="form-group">
-        <label>Category</label>
-        <input type="text" id="new-category" placeholder="e.g. Monthly, Quarterly">
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="create-form-btn" onclick="createForm()">Create Form</button>
       </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea id="new-desc" rows="3" placeholder="Optional description…"></textarea>
-      </div>
-      <p class="text-muted text-sm">After creating, add sections and fields via the form detail page.</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('new-form-modal')">Cancel</button>
-      <button class="btn btn-primary" id="create-form-btn" onclick="createForm()">Create Form</button>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -164,36 +190,44 @@ async function loadList(page) {
   if (search) url += `&search=${encodeURIComponent(search)}`;
 
   const tbody = document.getElementById('list-body');
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div></td></tr>';
 
   try {
-    const res = await API.get(url);
+    const res  = await API.get(url);
     const rows = res.data || [];
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📝</div><h3>No forms found</h3></div></td></tr>';
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-ui-checks-grid"></i></div>
+        <h3>No forms found</h3></div></td></tr>`;
     } else {
       tbody.innerHTML = rows.map(r => `
         <tr>
-          <td><strong>${esc(r.name)}</strong><br><span class="text-muted text-sm">${esc(r.code)}</span></td>
-          <td class="hide-mobile">${r.category ? `<span class="badge badge-submitted">${esc(r.category)}</span>` : '—'}</td>
+          <td>
+            <span class="fw-semibold">${esc(r.name)}</span><br>
+            <span class="text-muted" style="font-size:.75rem">${esc(r.code)}</span>
+          </td>
+          <td class="d-none d-md-table-cell">
+            ${r.category ? `<span class="badge bg-light text-dark border">${esc(r.category)}</span>` : '—'}
+          </td>
           <td>${badge(r.status)}</td>
-          <td class="hide-mobile text-muted text-sm">${r.field_count}</td>
-          <td class="hide-mobile text-muted text-sm">${r.submission_count}</td>
-          <td class="hide-mobile text-muted text-sm">${fmtDate(r.published_at)}</td>
-          <td class="td-actions"><button class="btn btn-outline btn-xs" onclick="loadDetail('${esc(r.id)}')">View</button></td>
-        </tr>
-      `).join('');
+          <td class="d-none d-md-table-cell text-muted small">${r.field_count}</td>
+          <td class="d-none d-md-table-cell text-muted small">${r.submission_count}</td>
+          <td class="d-none d-md-table-cell text-muted small">${fmtDate(r.published_at)}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" onclick="loadDetail('${esc(r.id)}')">View</button>
+          </td>
+        </tr>`).join('');
     }
     renderPagination('list-pagination', res.page, res.pages, res.total, res.per_page, loadList);
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Error: ${esc(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-3">Error: ${esc(e.message)}</td></tr>`;
   }
 }
 
 async function loadDetail(id) {
   document.getElementById('list-view').style.display   = 'none';
   document.getElementById('detail-view').style.display = '';
-  document.getElementById('detail-content').innerHTML  = '<div class="text-center text-muted" style="padding:40px">Loading…</div>';
+  document.getElementById('detail-content').innerHTML  = '<div class="text-center text-muted py-5"><div class="spinner-border" role="status"></div></div>';
   document.getElementById('form-actions').innerHTML    = '';
 
   try {
@@ -201,47 +235,48 @@ async function loadDetail(id) {
     const form = res.data;
     document.getElementById('detail-title').textContent = form.name;
 
-    // Admin actions
     const actions = document.getElementById('form-actions');
     if (['super_admin','regional_admin'].includes(currentUser2?.role)) {
       if (form.status === 'draft') {
-        actions.innerHTML += `<button class="btn btn-success" onclick="publishForm('${esc(id)}')">Publish</button>`;
+        actions.innerHTML += `<button class="btn btn-sm btn-success" onclick="publishForm('${esc(id)}')"><i class="bi bi-check2-circle me-1"></i>Publish</button>`;
       }
       if (form.status === 'published') {
-        actions.innerHTML += `<button class="btn btn-ghost" onclick="archiveForm('${esc(id)}')">Archive</button>`;
+        actions.innerHTML += `<button class="btn btn-sm btn-outline-secondary" onclick="archiveForm('${esc(id)}')"><i class="bi bi-archive me-1"></i>Archive</button>`;
       }
-      actions.innerHTML += `<a href="submissions.html" class="btn btn-primary">+ Submit Data</a>`;
+      actions.innerHTML += `<a href="submissions.html" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Submit Data</a>`;
     }
 
-    let sectionsHTML = '';
-    (form.sections || []).forEach(s => {
-      sectionsHTML += `<div class="card mb-0" style="margin-bottom:16px">
-        <div class="card-header"><h3 class="card-title">${esc(s.title)}</h3></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Required</th></tr></thead>
+    let sectionsHTML = (form.sections || []).map(s => `
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header border-bottom py-3">
+          <span class="fw-semibold"><i class="bi bi-collection me-2 text-primary"></i>${esc(s.title)}</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr>
+              <th>Field Name</th><th>Label</th><th>Type</th><th>Required</th>
+            </tr></thead>
             <tbody>
               ${(s.fields||[]).length === 0
-                ? '<tr><td colspan="4" class="text-muted text-sm" style="padding:16px">No fields in this section</td></tr>'
+                ? '<tr><td colspan="4" class="text-muted small py-3">No fields in this section</td></tr>'
                 : (s.fields||[]).map(f => `
-                    <tr>
-                      <td class="text-muted text-sm">${esc(f.name)}</td>
-                      <td><strong>${esc(f.label)}</strong></td>
-                      <td><span class="badge badge-submitted">${esc(f.field_type)}</span></td>
-                      <td>${f.is_required ? '✅' : '—'}</td>
-                    </tr>`).join('')}
+                  <tr>
+                    <td class="text-muted small"><code>${esc(f.name)}</code></td>
+                    <td class="fw-semibold small">${esc(f.label)}</td>
+                    <td><span class="badge bg-light text-dark border">${esc(f.field_type)}</span></td>
+                    <td>${f.is_required ? '<span class="badge bg-success">Yes</span>' : '<span class="text-muted">—</span>'}</td>
+                  </tr>`).join('')}
             </tbody>
           </table>
         </div>
-      </div>`;
-    });
+      </div>`).join('');
 
     document.getElementById('detail-content').innerHTML = `
-      <div class="two-col" style="margin-bottom:16px">
-        <div class="card mb-0">
-          <div class="card-header"><h3 class="card-title">Form Details</h3></div>
-          <div class="card-body">
-            <div class="detail-list">
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold">Form Details</span></div>
+            <div class="card-body">
               <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${badge(form.status)}</span></div>
               <div class="detail-row"><span class="detail-label">Code</span><span class="detail-value"><code>${esc(form.code)}</code></span></div>
               <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">${esc(form.category||'—')}</span></div>
@@ -252,21 +287,22 @@ async function loadDetail(id) {
             </div>
           </div>
         </div>
-        <div class="card mb-0">
-          <div class="card-header"><h3 class="card-title">Summary</h3></div>
-          <div class="card-body">
-            <div class="detail-list">
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold">Summary</span></div>
+            <div class="card-body">
               <div class="detail-row"><span class="detail-label">Sections</span><span class="detail-value fw-bold">${(form.sections||[]).length}</span></div>
               <div class="detail-row"><span class="detail-label">Total Fields</span><span class="detail-value fw-bold">${(form.sections||[]).reduce((n,s)=>n+(s.fields||[]).length,0)}</span></div>
-              <div class="detail-row"><span class="detail-label">Is Recurring</span><span class="detail-value">${form.is_recurring ? 'Yes' : 'No'}</span></div>
+              <div class="detail-row"><span class="detail-label">Is Recurring</span><span class="detail-value">${form.is_recurring?'Yes':'No'}</span></div>
             </div>
           </div>
         </div>
       </div>
-      ${sectionsHTML}
-    `;
+      ${sectionsHTML}`;
   } catch (e) {
-    document.getElementById('detail-content').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error</h3><p>${esc(e.message)}</p></div>`;
+    document.getElementById('detail-content').innerHTML = `<div class="empty-state">
+      <div class="empty-icon text-warning"><i class="bi bi-exclamation-triangle"></i></div>
+      <h3>Error</h3><p>${esc(e.message)}</p></div>`;
   }
 }
 

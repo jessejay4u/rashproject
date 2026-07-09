@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reports — Health Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </head>
@@ -11,23 +16,27 @@
 
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="layout">
+<div class="app-layout">
   <nav class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><div class="brand-logo">Health<span>+</span></div><div class="brand-sub">Information Management</div></div>
+    <div class="sidebar-brand">
+      <div class="brand-logo">Health<span>+</span></div>
+      <div class="brand-sub">Information Management</div>
+    </div>
     <div class="sidebar-nav">
       <div class="nav-section">Main</div>
-      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
-      <a href="submissions.html" class="nav-link"><span class="nav-icon">📋</span> Submissions</a>
-      <a href="forms.html"       class="nav-link"><span class="nav-icon">📝</span> Forms</a>
+      <a href="dashboard.html"   class="sb-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="submissions.html" class="sb-link"><i class="bi bi-file-earmark-text"></i> Submissions</a>
+      <a href="forms.html"       class="sb-link"><i class="bi bi-ui-checks-grid"></i> Forms</a>
+      <a href="fbgdsd.html"      class="sb-link"><i class="bi bi-people"></i> FBGDSD</a>
       <div class="nav-section manager-only">Management</div>
-      <a href="hospitals.html"   class="nav-link manager-only"><span class="nav-icon">🏥</span> Hospitals</a>
-      <a href="users.html"       class="nav-link admin-only"><span class="nav-icon">👥</span> Users</a>
-      <a href="reports.html"     class="nav-link manager-only"><span class="nav-icon">📈</span> Reports</a>
+      <a href="hospitals.html"   class="sb-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
+      <a href="users.html"       class="sb-link admin-only"><i class="bi bi-person-lines-fill"></i> Users</a>
+      <a href="reports.html"     class="sb-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
     </div>
     <div class="sidebar-footer">
-      <div class="sidebar-user">
+      <div class="d-flex align-items-center gap-2">
         <div class="avatar" id="sidebar-avatar">U</div>
-        <div class="sidebar-user-info">
+        <div class="overflow-hidden">
           <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
           <div class="sidebar-user-role" id="sidebar-user-role"></div>
         </div>
@@ -35,42 +44,44 @@
     </div>
   </nav>
 
-  <div class="main">
-    <header class="header">
-      <button class="menu-toggle" id="menu-toggle">☰</button>
-      <h1 class="header-title">Reports</h1>
-      <div class="header-actions">
-        <div class="header-user-info">
-          <div class="header-user-name" id="user-name">Loading…</div>
-          <div class="header-user-role" id="user-role"></div>
+  <div class="app-main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">Reports</h1>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="d-none d-md-block text-end">
+          <div class="small fw-semibold lh-1" id="user-name">Loading…</div>
+          <div class="text-muted lh-1 mt-1" style="font-size:.72rem" id="user-role"></div>
         </div>
         <div class="avatar" id="user-avatar">U</div>
-        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
       </div>
     </header>
 
-    <div class="content">
-      <div class="page-header">
-        <div>
-          <h2 class="page-title">Reports & Analytics</h2>
-          <p class="page-sub">Export data and view submission analytics</p>
-        </div>
+    <div class="app-content">
+      <div class="mb-4">
+        <h2 class="h5 fw-bold mb-0">Reports &amp; Analytics</h2>
+        <p class="text-muted small mb-0">Export data and view submission analytics</p>
       </div>
 
       <!-- Export Card -->
-      <div class="card" style="margin-bottom:24px">
-        <div class="card-header"><h3 class="card-title">Export Submissions (CSV)</h3></div>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header border-bottom py-3">
+          <span class="fw-semibold"><i class="bi bi-download text-primary me-2"></i>Export Submissions (CSV)</span>
+        </div>
         <div class="card-body">
-          <div class="form-grid" style="align-items:end">
-            <div class="form-group">
-              <label>Form</label>
-              <select id="exp-form">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4 col-lg-2">
+              <label class="form-label fw-semibold small">Form</label>
+              <select class="form-select form-select-sm" id="exp-form">
                 <option value="">All Forms</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Status</label>
-              <select id="exp-status">
+            <div class="col-md-4 col-lg-2">
+              <label class="form-label fw-semibold small">Status</label>
+              <select class="form-select form-select-sm" id="exp-status">
                 <option value="">All Statuses</option>
                 <option value="draft">Draft</option>
                 <option value="submitted">Submitted</option>
@@ -78,72 +89,84 @@
                 <option value="rejected">Rejected</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Date From</label>
-              <input type="date" id="exp-from">
+            <div class="col-md-4 col-lg-2">
+              <label class="form-label fw-semibold small">Date From</label>
+              <input type="date" class="form-control form-control-sm" id="exp-from">
             </div>
-            <div class="form-group">
-              <label>Date To</label>
-              <input type="date" id="exp-to">
+            <div class="col-md-4 col-lg-2">
+              <label class="form-label fw-semibold small">Date To</label>
+              <input type="date" class="form-control form-control-sm" id="exp-to">
             </div>
-            <div class="form-group">
-              <label>Hospital</label>
-              <select id="exp-hospital">
+            <div class="col-md-4 col-lg-2">
+              <label class="form-label fw-semibold small">Hospital</label>
+              <select class="form-select form-select-sm" id="exp-hospital">
                 <option value="">All Hospitals</option>
               </select>
             </div>
-            <div class="form-group">
-              <button class="btn btn-primary w-full" onclick="exportCSV()" id="export-btn">
-                ⬇ Download CSV
+            <div class="col-md-4 col-lg-2">
+              <button class="btn btn-primary btn-sm w-100" onclick="exportCSV()" id="export-btn">
+                <i class="bi bi-download me-1"></i>Download CSV
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Summary Stats -->
-      <div class="two-col">
-        <div class="card">
-          <div class="card-header"><h3 class="card-title">Submissions by Status</h3></div>
-          <div class="card-body" style="height:260px;position:relative">
-            <canvas id="status-chart"></canvas>
+      <!-- Charts -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3">
+              <span class="fw-semibold"><i class="bi bi-pie-chart-fill text-primary me-2"></i>By Status</span>
+            </div>
+            <div class="card-body" style="height:260px;position:relative">
+              <canvas id="status-chart"></canvas>
+            </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-header"><h3 class="card-title">Submissions by Form</h3></div>
-          <div class="card-body" style="height:260px;position:relative">
-            <canvas id="form-chart"></canvas>
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3">
+              <span class="fw-semibold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>By Form</span>
+            </div>
+            <div class="card-body" style="height:260px;position:relative">
+              <canvas id="form-chart"></canvas>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Trend -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Submission Trend (Last 30 Days)</h3>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header border-bottom py-3">
+          <span class="fw-semibold"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Submission Trend — Last 30 Days</span>
         </div>
         <div class="card-body" style="height:240px;position:relative">
           <canvas id="trend-chart"></canvas>
         </div>
       </div>
 
-      <!-- Top Hospitals Table -->
-      <div class="card">
-        <div class="card-header"><h3 class="card-title">Submissions by Hospital</h3></div>
-        <div class="table-wrap">
-          <table>
+      <!-- Hospital Table -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header border-bottom py-3">
+          <span class="fw-semibold"><i class="bi bi-hospital text-primary me-2"></i>Submissions by Hospital</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>
                 <th>#</th>
                 <th>Hospital</th>
                 <th>Region</th>
-                <th>Total Submissions</th>
+                <th>Total</th>
                 <th>Approved</th>
                 <th>Pending</th>
               </tr>
             </thead>
             <tbody id="hospital-table">
-              <tr><td colspan="6" class="text-center text-muted" style="padding:32px">Loading…</td></tr>
+              <tr><td colspan="6" class="text-center text-muted py-4">
+                <div class="spinner-border spinner-border-sm" role="status"></div> Loading…
+              </td></tr>
             </tbody>
           </table>
         </div>
@@ -152,6 +175,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -182,9 +206,8 @@ async function loadCharts() {
     const res = await API.get('api/dashboard.php');
     dashData = res.data;
 
-    // Status doughnut
     const byStatus = dashData.byStatus || [];
-    const statusColors = { draft:'#94a3b8', submitted:'#3b82f6', approved:'#22c55e', rejected:'#ef4444' };
+    const statusColors = { draft:'#94a3b8', submitted:'#2563eb', approved:'#22c55e', rejected:'#ef4444' };
     new Chart(document.getElementById('status-chart'), {
       type: 'doughnut',
       data: {
@@ -194,7 +217,6 @@ async function loadCharts() {
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
     });
 
-    // Form bar chart
     const byForm = dashData.byForm || [];
     new Chart(document.getElementById('form-chart'), {
       type: 'bar',
@@ -205,7 +227,6 @@ async function loadCharts() {
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
     });
 
-    // Trend bar chart
     const trendData = dashData.trend || [];
     new Chart(document.getElementById('trend-chart'), {
       type: 'bar',
@@ -216,22 +237,20 @@ async function loadCharts() {
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
     });
 
-    // Hospital table
     const byHosp = dashData.byHospital || [];
     const tbody  = document.getElementById('hospital-table');
     if (byHosp.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:24px">No data</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No data yet</td></tr>';
     } else {
       tbody.innerHTML = byHosp.map((r, i) => `
         <tr>
-          <td class="text-muted text-sm">${i + 1}</td>
-          <td><strong>${esc(r.hospital_name || '—')}</strong></td>
-          <td class="text-muted text-sm">${esc(r.region_name || '—')}</td>
-          <td><strong>${r.total}</strong></td>
-          <td><span class="badge badge-approved">${r.approved || 0}</span></td>
-          <td><span class="badge badge-submitted">${r.pending || 0}</span></td>
-        </tr>
-      `).join('');
+          <td class="text-muted small">${i + 1}</td>
+          <td class="fw-semibold">${esc(r.hospital_name || '—')}</td>
+          <td class="text-muted small">${esc(r.region_name || '—')}</td>
+          <td class="fw-bold">${r.total}</td>
+          <td>${badge('approved', r.approved || 0)}</td>
+          <td>${badge('submitted', r.pending || 0)}</td>
+        </tr>`).join('');
     }
   } catch (e) {
     toast('Failed to load report data: ' + e.message, 'error');
@@ -254,7 +273,7 @@ function exportCSV() {
 
   const a = document.createElement('a');
   a.href = _apiRoot + '/' + url;
-  a.download = `submissions_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `submissions_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
