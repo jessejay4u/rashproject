@@ -93,8 +93,10 @@
           </select>
         </div>
         <div class="col-auto">
-          <label for="filter-period-end" class="form-label small text-muted mb-0 me-1 d-none d-sm-inline">As of</label>
-          <input type="month" class="form-control form-control-sm d-inline-block" id="filter-period-end" style="min-width:160px" onchange="loadDashboard()" title="Shows the 6 months ending this month">
+          <div class="input-group input-group-sm" style="min-width:200px">
+            <span class="input-group-text">As of</span>
+            <input type="month" class="form-control" id="filter-period-end" onchange="loadDashboard()" title="Shows the 6 months ending this month">
+          </div>
         </div>
         <div class="col-auto">
           <button class="btn btn-outline-secondary btn-sm" onclick="clearPeriodFilter()" title="Clear date filter"><i class="bi bi-x-circle"></i></button>
