@@ -51,26 +51,46 @@ function fbgAssertHospitalInScope(PDO $db, array $user, ?string $hospitalId): st
 // ─── Dashboard aggregation ──────────────────────────────────────────────────
 if (qp('resource') === 'dashboard') {
     $scope = fbgScope($user);
-    $hid = qp('hospital_id');
+    $hid   = qp('hospital_id');
+    $month = qp('month') ? (int)qp('month') : null;
+    $year  = qp('year')  ? (int)qp('year')  : null;
 
-    // Latest submission per patient (most recent reporting period), scoped by role/hospital
     $innerScopeSql = str_replace('h.region_id', 'hh.region_id', $scope['sql']);
     $innerScopeSql = str_replace('f.hospital_id', 'ff.hospital_id', $innerScopeSql);
-    $latestSql = "
-        SELECT f.* FROM fbg_assessments f
-        INNER JOIN (
-            SELECT ff.hospital_id, ff.art_number,
-                   MAX(ff.reporting_year * 100 + ff.reporting_month) AS maxperiod
-            FROM fbg_assessments ff
-            JOIN hospitals hh ON hh.id = ff.hospital_id
-            WHERE ff.is_active = 1 AND $innerScopeSql" . ($hid ? ' AND ff.hospital_id = :fhid' : '') . "
-            GROUP BY ff.hospital_id, ff.art_number
-        ) latest ON latest.hospital_id = f.hospital_id AND latest.art_number = f.art_number
-                 AND (f.reporting_year * 100 + f.reporting_month) = latest.maxperiod
-        WHERE f.is_active = 1
-    ";
+    $params = array_merge($scope['params'], $hid ? ['fhid' => $hid] : []);
+
+    if ($month && $year) {
+        // Period-scoped snapshot: exactly the assessments recorded for that reporting month/year
+        // (the unique key on hospital_id+art_number+year+month already guarantees one row per patient).
+        $latestSql = "
+            SELECT f.* FROM fbg_assessments f
+            JOIN hospitals hh ON hh.id = f.hospital_id
+            WHERE f.is_active = 1 AND $innerScopeSql
+              AND f.reporting_month = :fmonth AND f.reporting_year = :fyear
+              " . ($hid ? 'AND f.hospital_id = :fhid' : '') . "
+        ";
+        $params['fmonth'] = $month;
+        $params['fyear']  = $year;
+    } else {
+        // No period selected (or year-only): latest submission per patient, optionally bounded to that year.
+        $yearFilter = $year ? 'AND ff.reporting_year = :fyear' : '';
+        if ($year) $params['fyear'] = $year;
+        $latestSql = "
+            SELECT f.* FROM fbg_assessments f
+            INNER JOIN (
+                SELECT ff.hospital_id, ff.art_number,
+                       MAX(ff.reporting_year * 100 + ff.reporting_month) AS maxperiod
+                FROM fbg_assessments ff
+                JOIN hospitals hh ON hh.id = ff.hospital_id
+                WHERE ff.is_active = 1 AND $innerScopeSql $yearFilter" . ($hid ? ' AND ff.hospital_id = :fhid' : '') . "
+                GROUP BY ff.hospital_id, ff.art_number
+            ) latest ON latest.hospital_id = f.hospital_id AND latest.art_number = f.art_number
+                     AND (f.reporting_year * 100 + f.reporting_month) = latest.maxperiod
+            WHERE f.is_active = 1
+        ";
+    }
     $stmt = $db->prepare($latestSql);
-    $stmt->execute(array_merge($scope['params'], $hid ? ['fhid' => $hid] : []));
+    $stmt->execute($params);
     $latest = $stmt->fetchAll();
 
     $total = count($latest);

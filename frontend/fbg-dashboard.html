@@ -89,6 +89,13 @@
           <select class="form-select form-select-sm manager-only" id="filter-hospital" style="min-width:180px" onchange="loadDashboard()">
             <option value="">All Facilities</option>
           </select>
+          <select class="form-select form-select-sm" id="filter-month" style="min-width:140px" onchange="loadDashboard()">
+            <option value="">Any Month</option>
+          </select>
+          <select class="form-select form-select-sm" id="filter-year" style="min-width:110px" onchange="loadDashboard()">
+            <option value="">Any Year</option>
+          </select>
+          <button class="btn btn-outline-secondary btn-sm" onclick="clearPeriodFilter()" title="Clear month/year"><i class="bi bi-x-circle"></i></button>
           <button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</button>
           <button class="btn btn-danger btn-sm" onclick="window.print()"><i class="bi bi-file-earmark-pdf me-1"></i>Export PDF</button>
         </div>
@@ -204,9 +211,12 @@ const PALETTE = ['#2563eb','#ef4444','#22c55e','#f59e0b','#7c3aed','#0ea5e9'];
 let charts = {};
 let dashData = null;
 
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
 (async () => {
   const user = await requireAuth();
   await loadHospitalFilter();
+  populateMonthYear();
   if (!['super_admin','regional_admin','hospital_admin'].includes(user.role)) {
     document.getElementById('facility-row').style.display = 'none';
   }
@@ -221,26 +231,55 @@ async function loadHospitalFilter() {
   } catch {}
 }
 
+function populateMonthYear() {
+  document.getElementById('filter-month').innerHTML =
+    '<option value="">Any Month</option>' + MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+
+  const curYear = new Date().getFullYear();
+  const years = [];
+  for (let y = curYear + 1; y >= curYear - 5; y--) years.push(y);
+  document.getElementById('filter-year').innerHTML =
+    '<option value="">Any Year</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+}
+
+function clearPeriodFilter() {
+  document.getElementById('filter-month').value = '';
+  document.getElementById('filter-year').value = '';
+  loadDashboard();
+}
+
 function destroyCharts() {
   Object.values(charts).forEach(c => c && c.destroy());
   charts = {};
 }
 
 async function loadDashboard() {
-  const hid = document.getElementById('filter-hospital').value;
-  let url = 'api/fbg.php?resource=dashboard';
-  if (hid) url += `&hospital_id=${encodeURIComponent(hid)}`;
+  const hid   = document.getElementById('filter-hospital').value;
+  const month = document.getElementById('filter-month').value;
+  const year  = document.getElementById('filter-year').value;
+
+  const params = new URLSearchParams({ resource: 'dashboard' });
+  if (hid)   params.set('hospital_id', hid);
+  if (month) params.set('month', month);
+  if (year)  params.set('year', year);
 
   try {
-    const res = await API.get(url);
+    const res = await API.get('api/fbg.php?' + params.toString());
     dashData = res.data;
   } catch (e) {
     toast('Failed to load FBG dashboard: ' + e.message, 'error');
     return;
   }
 
-  document.getElementById('scope-label').textContent =
-    new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + ' · Patient snapshot (most recent assessment per patient)';
+  let periodLabel;
+  if (month && year) {
+    periodLabel = `${MONTHS[month - 1]} ${year} · Assessments recorded for this period`;
+  } else if (year) {
+    periodLabel = `${year} · Most recent assessment per patient within ${year}`;
+  } else {
+    periodLabel = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + ' · Patient snapshot (most recent assessment per patient, all time)';
+  }
+  document.getElementById('scope-label').textContent = periodLabel;
 
   renderStats(dashData.stats);
   renderTrend(dashData.trend);
