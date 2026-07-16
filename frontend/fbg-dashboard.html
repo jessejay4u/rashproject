@@ -79,24 +79,36 @@
 
     <div class="app-content">
 
-      <!-- Page header / filters -->
-      <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-          <h2 class="h5 fw-bold mb-0">FBG Assessment Dashboard</h2>
-          <p class="text-muted small mb-0" id="scope-label">Loading…</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2" id="export-buttons">
+      <!-- Page header -->
+      <div class="mb-3">
+        <h2 class="h5 fw-bold mb-0">FBG Assessment Dashboard</h2>
+        <p class="text-muted small mb-0" id="scope-label">Loading…</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="row g-2 align-items-center mb-4" id="export-buttons">
+        <div class="col-auto">
           <select class="form-select form-select-sm manager-only" id="filter-hospital" style="min-width:180px" onchange="loadDashboard()">
             <option value="">All Facilities</option>
           </select>
+        </div>
+        <div class="col-auto">
           <select class="form-select form-select-sm" id="filter-month" style="min-width:140px" onchange="loadDashboard()">
             <option value="">Any Month</option>
           </select>
+        </div>
+        <div class="col-auto">
           <select class="form-select form-select-sm" id="filter-year" style="min-width:110px" onchange="loadDashboard()">
             <option value="">Any Year</option>
           </select>
+        </div>
+        <div class="col-auto">
           <button class="btn btn-outline-secondary btn-sm" onclick="clearPeriodFilter()" title="Clear month/year"><i class="bi bi-x-circle"></i></button>
+        </div>
+        <div class="col-auto">
           <button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</button>
+        </div>
+        <div class="col-auto">
           <button class="btn btn-danger btn-sm" onclick="window.print()"><i class="bi bi-file-earmark-pdf me-1"></i>Export PDF</button>
         </div>
       </div>
