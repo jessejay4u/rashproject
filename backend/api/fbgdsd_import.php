@@ -9,7 +9,7 @@ require_once __DIR__ . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST only', 405);
 $user = auth();
-need($user, 'create_submissions');
+need($user, 'submissions.create');
 
 $hospitalId = $_POST['hospital_id'] ?? null;
 if (!$hospitalId) fail('hospital_id is required');
@@ -35,12 +35,15 @@ function read_xlsx(string $path): array {
         }
     }
 
-    // Sheet relationship map
+    // Sheet relationship map. Target is normally relative to xl/ (e.g. "worksheets/sheet1.xml"),
+    // but some writers emit a zip-root-absolute path (e.g. "/xl/worksheets/sheet1.xml") — handle both.
     $sheetMap = [];
     if ($relsXml = $z->getFromName('xl/_rels/workbook.xml.rels')) {
         $rels = new SimpleXMLElement($relsXml);
         foreach ($rels->Relationship as $rel) {
-            $sheetMap[(string)$rel['Id']] = 'xl/' . (string)$rel['Target'];
+            $target = (string)$rel['Target'];
+            $path   = str_starts_with($target, '/') ? ltrim($target, '/') : 'xl/' . $target;
+            $sheetMap[(string)$rel['Id']] = $path;
         }
     }
 
@@ -62,6 +65,7 @@ function read_xlsx(string $path): array {
             $ws->registerXPathNamespace('x', $ns);
             $rows = [];
             foreach ($ws->xpath('//x:row') as $row) {
+                $row->registerXPathNamespace('x', $ns);
                 $maxCol = 0;
                 $cells  = [];
                 foreach ($row->xpath('x:c') as $cell) {
@@ -71,6 +75,7 @@ function read_xlsx(string $path): array {
                     $v     = (string)$cell->v;
                     if ($type === 's') $v = $strings[(int)$v] ?? '';
                     elseif ($type === 'b') $v = $v ? 'TRUE' : 'FALSE';
+                    elseif ($type === 'inlineStr' || $type === 'str') $v = isset($cell->is->t) ? (string)$cell->is->t : $v;
                     $cells[$col] = $v;
                     if ($col > $maxCol) $maxCol = $col;
                 }

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Register — Health Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .dropzone {
+      border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px 20px;
+      text-align: center; cursor: pointer; transition: all .15s; background: #f8fafc;
+    }
+    .dropzone:hover, .dropzone.dragover { border-color: #2563eb; background: #eff6ff; }
+    .dropzone i { font-size: 2.5rem; color: #94a3b8; }
+    .dropzone.dragover i { color: #2563eb; }
+    .file-chip {
+      display: inline-flex; align-items: center; gap: 8px; background: #eff6ff;
+      border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 14px; font-size: .85rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="app-layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Health<span>+</span></div>
+      <div class="brand-sub">Information Management</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"     class="sb-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="submissions.html"   class="sb-link"><i class="bi bi-file-earmark-text"></i> Submissions</a>
+      <a href="forms.html"         class="sb-link"><i class="bi bi-ui-checks-grid"></i> Forms</a>
+      <a href="fbgdsd.html"        class="sb-link"><i class="bi bi-people"></i> FBGDSD Groups</a>
+      <a href="fbgdsd_import.html" class="sb-link"><i class="bi bi-file-earmark-arrow-down"></i> Import Register</a>
+      <div class="nav-section">FBG Assessment</div>
+      <a href="fbg-assessment.html" class="sb-link"><i class="bi bi-clipboard2-pulse"></i> FBG Assessment</a>
+      <a href="fbg-dashboard.html"  class="sb-link"><i class="bi bi-graph-up-arrow"></i> FBG Dashboard</a>
+      <div class="nav-section manager-only">Management</div>
+      <a href="hospitals.html"     class="sb-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
+      <a href="users.html"         class="sb-link admin-only"><i class="bi bi-person-lines-fill"></i> Users</a>
+      <a href="reports.html"       class="sb-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="d-flex align-items-center gap-2">
+        <div class="avatar" id="sidebar-avatar">U</div>
+        <div class="overflow-hidden">
+          <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
+          <div class="sidebar-user-role" id="sidebar-user-role"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">Import Register</h1>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="d-none d-md-block text-end">
+          <div class="small fw-semibold lh-1" id="user-name">Loading…</div>
+          <div class="text-muted lh-1 mt-1" style="font-size:.72rem" id="user-role"></div>
+        </div>
+        <div class="avatar" id="user-avatar">U</div>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
+      </div>
+    </header>
+
+    <div class="app-content">
+      <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+          <button class="btn btn-sm btn-outline-secondary mb-2" onclick="window.location.href='fbgdsd.html'">
+            <i class="bi bi-arrow-left me-1"></i>Back to FBGDSD Groups
+          </button>
+          <h2 class="h5 fw-bold mb-0">Import FBGDSD Register</h2>
+          <p class="text-muted small mb-0">Upload a completed FBGDSD Register (.xlsx) to bulk-import a group, its members, and a meeting record</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header border-bottom py-3">
+              <span class="fw-semibold"><i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>Upload Register</span>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">Facility <span class="text-danger">*</span></label>
+                <select class="form-select" id="import-hospital"></select>
+              </div>
+
+              <label class="form-label fw-semibold small">Register File <span class="text-danger">*</span></label>
+              <div class="dropzone mb-2" id="dropzone">
+                <i class="bi bi-cloud-arrow-up d-block mb-2"></i>
+                <div class="fw-semibold">Click to browse or drag a file here</div>
+                <div class="text-muted small">.xlsx files only</div>
+              </div>
+              <input type="file" id="file-input" accept=".xlsx" class="d-none">
+              <div id="file-chip-holder" class="mb-3"></div>
+
+              <div class="alert alert-light border small mb-3">
+                <i class="bi bi-info-circle me-1"></i>
+                The file must contain a sheet named <code>FBGDSD REGISTER</code> with the standard header rows
+                (Date, Lead Nurse, Topic, District, Facility, Region) and a patient data table with an
+                <code>ART Registration Number</code> column.
+              </div>
+
+              <button class="btn btn-primary" id="import-btn" onclick="submitImport()" disabled>
+                <i class="bi bi-upload me-1"></i>Import Register
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm h-100" id="result-card" style="display:none">
+            <div class="card-header border-bottom py-3">
+              <span class="fw-semibold"><i class="bi bi-check-circle text-success me-2"></i>Import Result</span>
+            </div>
+            <div class="card-body" id="result-body"></div>
+          </div>
+          <div class="card border-0 shadow-sm h-100" id="placeholder-card">
+            <div class="card-body">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+                <h3>No import yet</h3>
+                <p class="mb-0">Choose a facility and upload a register file to see results here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+let selectedFile = null;
+
+(async () => {
+  await requireAuth();
+  await loadHospitals();
+})();
+
+async function loadHospitals() {
+  try {
+    const res = await API.get('api/hospitals.php?per_page=200');
+    const opts = (res.data || []).map(h => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('');
+    document.getElementById('import-hospital').innerHTML = '<option value="">Select facility…</option>' + opts;
+  } catch (e) {
+    toast('Failed to load facilities: ' + e.message, 'error');
+  }
+}
+
+const dropzone  = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files.length) setFile(fileInput.files[0]); });
+
+function setFile(file) {
+  if (!file.name.toLowerCase().endsWith('.xlsx')) {
+    toast('Only .xlsx files are supported', 'error');
+    return;
+  }
+  selectedFile = file;
+  document.getElementById('file-chip-holder').innerHTML = `
+    <span class="file-chip">
+      <i class="bi bi-file-earmark-excel text-success"></i>
+      ${esc(file.name)}
+      <button type="button" class="btn-close btn-close-sm ms-1" style="font-size:.65rem" onclick="clearFile()"></button>
+    </span>`;
+  updateImportBtn();
+}
+
+function clearFile() {
+  selectedFile = null;
+  fileInput.value = '';
+  document.getElementById('file-chip-holder').innerHTML = '';
+  updateImportBtn();
+}
+
+document.getElementById('import-hospital').addEventListener('change', updateImportBtn);
+function updateImportBtn() {
+  const hid = document.getElementById('import-hospital').value;
+  document.getElementById('import-btn').disabled = !(hid && selectedFile);
+}
+
+async function submitImport() {
+  const btn = document.getElementById('import-btn');
+  const hid = document.getElementById('import-hospital').value;
+  if (!hid || !selectedFile) return;
+
+  setLoading(btn, true);
+  try {
+    const fd = new FormData();
+    fd.append('hospital_id', hid);
+    fd.append('file', selectedFile);
+
+    const res = await fetch(_apiRoot + '/api/fbgdsd_import.php', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: fd,
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json || json.success === false) {
+      throw new Error((json && json.error) || `Import failed (${res.status})`);
+    }
+
+    const d = json.data;
+    document.getElementById('placeholder-card').style.display = 'none';
+    const card = document.getElementById('result-card');
+    card.style.display = '';
+    document.getElementById('result-body').innerHTML = `
+      <div class="detail-row"><span class="detail-label">Group</span><span class="detail-value fw-semibold">${esc(d.group_name)}</span></div>
+      <div class="detail-row"><span class="detail-label">Meeting Date</span><span class="detail-value">${esc(d.meeting_date || '—')}</span></div>
+      <div class="detail-row"><span class="detail-label">Imported</span><span class="detail-value fw-bold text-success">${d.imported}</span></div>
+      <div class="detail-row"><span class="detail-label">Skipped</span><span class="detail-value fw-bold ${d.skipped > 0 ? 'text-warning' : ''}">${d.skipped}</span></div>
+      <a href="fbgdsd.html" class="btn btn-primary btn-sm mt-3"><i class="bi bi-people me-1"></i>View Group</a>`;
+    toast(json.message || 'Import complete', 'success');
+    clearFile();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading(btn, false);
+}
+</script>
+</body>
+</html>

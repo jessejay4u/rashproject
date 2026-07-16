@@ -17,11 +17,11 @@ VALUES (
     'published',
     1,
     NOW(),
-    'user0001-0000-0000-0000-000000000001'
+    (SELECT u.id FROM users u JOIN roles r ON r.id = u.role_id WHERE r.name = 'super_admin' ORDER BY u.created_at LIMIT 1)
 );
 
 -- ─── Sections ─────────────────────────────────────────────────────────────────
-INSERT IGNORE INTO form_sections (id, form_id, title, description, sort_order) VALUES
+INSERT IGNORE INTO form_sections (id, form_id, title, description, order_index) VALUES
 ('fbgs0001-0000-0000-0000-000000000001', 'fbgd0001-0000-0000-0000-000000000001',
  'Meeting Information',
  'Details of the group meeting session',
@@ -65,7 +65,7 @@ INSERT IGNORE INTO form_sections (id, form_id, title, description, sort_order) V
 
 -- ─── Section 1: Meeting Information ──────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000001',
@@ -113,7 +113,7 @@ VALUES
 
 -- ─── Section 2: Patient Details ───────────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000007',
@@ -170,7 +170,7 @@ VALUES
 
 -- ─── Section 3: Baseline Data ─────────────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000014',
@@ -199,7 +199,7 @@ VALUES
 
 -- ─── Section 4: Disclosure ────────────────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000017',
@@ -218,7 +218,7 @@ VALUES
 
 -- ─── Section 5: Adherence Support / EAC ──────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000019',
@@ -237,7 +237,7 @@ VALUES
 
 -- ─── Section 6: Viral Load ────────────────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000021',
@@ -256,7 +256,7 @@ VALUES
 
 -- ─── Section 7: AHD Screening ────────────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000023',
@@ -276,7 +276,7 @@ VALUES
 
 -- ─── Section 8: TB Screening ──────────────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000025',
@@ -296,7 +296,7 @@ VALUES
 
 -- ─── Section 9: TPT ───────────────────────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000027',
@@ -315,7 +315,7 @@ VALUES
 
 -- ─── Section 10: Index Client Testing ────────────────────────────────────────
 INSERT IGNORE INTO form_fields
-    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, sort_order)
+    (id, section_id, form_id, name, label, field_type, is_required, options, help_text, order_index)
 VALUES
 (
     'fbgf0001-0000-0000-0000-000000000029',

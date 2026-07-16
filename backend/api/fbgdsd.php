@@ -13,7 +13,7 @@ if (qp('resource') === 'targets') {
         ok($rows);
     }
     if ($method === 'POST') {
-        need($user, 'create_submissions');
+        need($user, 'submissions.create');
         $b = body();
         $s = $db->prepare("INSERT INTO fbgdsd_targets (id,hospital_id,year,total_groups,beneficiaries_per_group,meetings_per_group)
                            VALUES (:id,:hid,:yr,:tg,:bpg,:mpg)
@@ -40,7 +40,7 @@ if (qp('resource') === 'members') {
         ok($rows->fetchAll());
     }
     if ($method === 'POST') {
-        need($user, 'create_submissions');
+        need($user, 'submissions.create');
         $b = body();
         $mid = uid();
         $s = $db->prepare("INSERT INTO fbgdsd_members
@@ -81,7 +81,7 @@ if (qp('resource') === 'members') {
         ok(['id' => $mid], 'Member saved');
     }
     if ($method === 'DELETE' && $id) {
-        need($user, 'edit_submissions');
+        need($user, 'submissions.edit');
         $db->prepare("UPDATE fbgdsd_members SET is_active=0 WHERE id=:id")->execute(['id' => $id]);
         ok(null, 'Member removed');
     }
@@ -114,7 +114,7 @@ if (qp('resource') === 'meetings') {
         ok($rows->fetchAll());
     }
     if ($method === 'POST') {
-        need($user, 'create_submissions');
+        need($user, 'submissions.create');
         $b = body();
         $mid = uid();
         $s = $db->prepare("INSERT INTO fbgdsd_meetings (id,group_id,hospital_id,meeting_date,topic,notes,created_by)
@@ -182,7 +182,7 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
-    need($user, 'create_submissions');
+    need($user, 'submissions.create');
     $b = body();
     if (empty($b['group_name']) || empty($b['hospital_id'])) fail('group_name and hospital_id are required');
     $gid = uid();
@@ -197,7 +197,7 @@ if ($method === 'POST') {
 }
 
 if (($method === 'PUT' || $method === 'PATCH') && $id) {
-    need($user, 'edit_submissions');
+    need($user, 'submissions.edit');
     $b = body();
     $s = $db->prepare("UPDATE fbgdsd_groups SET group_name=:name,lead_nurse=:nurse,district=:district,region=:region,
                        is_active=:active,updated_at=NOW() WHERE id=:id");
