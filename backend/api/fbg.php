@@ -30,6 +30,24 @@ function fbgLatestViralLoad(array $r): ?string {
     return null;
 }
 
+// data_entry/hospital_admin are pinned to their own hospital; regional_admin must stay within their region.
+// Returns the hospital_id to actually use, or fails the request with 403 if the requested hospital is out of scope.
+function fbgAssertHospitalInScope(PDO $db, array $user, ?string $hospitalId): string {
+    if (in_array($user['role'], ['data_entry', 'hospital_admin'], true)) {
+        return $user['hospital_id'];
+    }
+    if ($user['role'] === 'regional_admin') {
+        if (!$hospitalId) fail('hospital_id is required');
+        $s = $db->prepare('SELECT region_id FROM hospitals WHERE id = :id');
+        $s->execute(['id' => $hospitalId]);
+        $region = $s->fetchColumn();
+        if ($region === false || $region !== $user['region_id']) fail('Access denied for this facility', 403);
+        return $hospitalId;
+    }
+    if (!$hospitalId) fail('hospital_id is required');
+    return $hospitalId;
+}
+
 // ─── Dashboard aggregation ──────────────────────────────────────────────────
 if (qp('resource') === 'dashboard') {
     $scope = fbgScope($user);
@@ -210,8 +228,8 @@ if ($method === 'GET') {
     if ($id) {
         $s = $db->prepare("SELECT f.*, h.name AS hospital_name FROM fbg_assessments f
                            JOIN hospitals h ON h.id = f.hospital_id
-                           WHERE f.id = :id AND f.is_active = 1");
-        $s->execute(['id' => $id]);
+                           WHERE f.id = :id AND f.is_active = 1 AND {$scope['sql']}");
+        $s->execute(array_merge(['id' => $id], $scope['params']));
         $row = $s->fetch();
         if (!$row) fail('Assessment not found', 404);
         ok($row);
@@ -280,11 +298,12 @@ function fbgUpsertParams(array $b, ?string $userId): array {
 }
 
 if ($method === 'POST') {
-    need($user, 'create_submissions');
+    need($user, 'submissions.create');
     $b = body();
-    if (empty($b['hospital_id']) || empty($b['art_number']) || empty($b['reporting_month']) || empty($b['reporting_year'])) {
+    if (empty($b['art_number']) || empty($b['reporting_month']) || empty($b['reporting_year'])) {
         fail('hospital_id, art_number, reporting_month and reporting_year are required');
     }
+    $b['hospital_id'] = fbgAssertHospitalInScope($db, $user, $b['hospital_id'] ?? null);
     $fid = uid();
     $p   = fbgUpsertParams($b, $user['id']);
     $p['id'] = $fid;
@@ -323,9 +342,17 @@ if ($method === 'POST') {
 }
 
 if (($method === 'PUT' || $method === 'PATCH') && $id) {
-    need($user, 'edit_submissions');
+    need($user, 'submissions.edit');
+    $scope = fbgScope($user);
+    $exists = $db->prepare("SELECT f.id FROM fbg_assessments f JOIN hospitals h ON h.id = f.hospital_id
+                            WHERE f.id = :id AND f.is_active = 1 AND {$scope['sql']}");
+    $exists->execute(array_merge(['id' => $id], $scope['params']));
+    if (!$exists->fetch()) fail('Assessment not found', 404);
+
     $b = body();
+    $b['hospital_id'] = fbgAssertHospitalInScope($db, $user, $b['hospital_id'] ?? null);
     $p = fbgUpsertParams($b, $user['id']);
+    unset($p['by']); // created_by is not modified on edit
     $p['id'] = $id;
 
     $s = $db->prepare("UPDATE fbg_assessments SET
@@ -347,7 +374,13 @@ if (($method === 'PUT' || $method === 'PATCH') && $id) {
 }
 
 if ($method === 'DELETE' && $id) {
-    need($user, 'edit_submissions');
+    need($user, 'submissions.edit');
+    $scope = fbgScope($user);
+    $exists = $db->prepare("SELECT f.id FROM fbg_assessments f JOIN hospitals h ON h.id = f.hospital_id
+                            WHERE f.id = :id AND f.is_active = 1 AND {$scope['sql']}");
+    $exists->execute(array_merge(['id' => $id], $scope['params']));
+    if (!$exists->fetch()) fail('Assessment not found', 404);
+
     $db->prepare("UPDATE fbg_assessments SET is_active=0 WHERE id=:id")->execute(['id' => $id]);
     ok(null, 'Assessment removed');
 }

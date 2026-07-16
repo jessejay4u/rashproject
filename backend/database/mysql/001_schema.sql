@@ -71,7 +71,7 @@ CREATE TABLE role_permissions (
     PRIMARY KEY (role_id, permission_id),
     CONSTRAINT fk_rp_role FOREIGN KEY (role_id)       REFERENCES roles(id)       ON DELETE CASCADE,
     CONSTRAINT fk_rp_perm FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE users (
     id                    CHAR(36)     NOT NULL,
@@ -122,7 +122,7 @@ CREATE TABLE refresh_tokens (
     KEY idx_rt_user    (user_id),
     KEY idx_rt_expires (expires_at),
     CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE password_resets (
     id         CHAR(36)     NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE password_resets (
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_pr_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE forms (
     id              CHAR(36)     NOT NULL,
@@ -231,7 +231,7 @@ CREATE TABLE submissions (
     CONSTRAINT fk_sub_hospital FOREIGN KEY (hospital_id)  REFERENCES hospitals(id)  ON DELETE RESTRICT,
     CONSTRAINT fk_sub_user     FOREIGN KEY (submitted_by) REFERENCES users(id)      ON DELETE RESTRICT,
     CONSTRAINT fk_sub_reviewer FOREIGN KEY (reviewed_by)  REFERENCES users(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE submission_values (
     id            CHAR(36)       NOT NULL,
@@ -250,7 +250,7 @@ CREATE TABLE submission_values (
     KEY idx_sv_name       (field_name),
     CONSTRAINT fk_sv_sub   FOREIGN KEY (submission_id) REFERENCES submissions(id)  ON DELETE CASCADE,
     CONSTRAINT fk_sv_field FOREIGN KEY (field_id)      REFERENCES form_fields(id) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE submission_attachments (
     id            CHAR(36)     NOT NULL,
@@ -268,7 +268,7 @@ CREATE TABLE submission_attachments (
     KEY idx_sa_submission (submission_id),
     CONSTRAINT fk_sa_sub   FOREIGN KEY (submission_id) REFERENCES submissions(id)  ON DELETE CASCADE,
     CONSTRAINT fk_sa_field FOREIGN KEY (field_id)      REFERENCES form_fields(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE audit_logs (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
@@ -288,7 +288,7 @@ CREATE TABLE audit_logs (
     KEY idx_audit_action  (action),
     KEY idx_audit_entity  (entity_type, entity_id),
     KEY idx_audit_created (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE notifications (
     id         CHAR(36)     NOT NULL,
@@ -344,7 +344,7 @@ CREATE TABLE indicator_values (
     KEY idx_iv_indicator (indicator_id),
     KEY idx_iv_hospital  (hospital_id),
     KEY idx_iv_period    (period_start, period_end)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE reports (
     id           CHAR(36)    NOT NULL,
@@ -376,6 +376,6 @@ CREATE TABLE job_batches (
     cancelled_at DATETIME,
     finished_at  DATETIME,
     PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS=1;
