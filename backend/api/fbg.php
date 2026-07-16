@@ -51,15 +51,37 @@ function fbgAssertHospitalInScope(PDO $db, array $user, ?string $hospitalId): st
 // ─── Dashboard aggregation ──────────────────────────────────────────────────
 if (qp('resource') === 'dashboard') {
     $scope = fbgScope($user);
-    $hid   = qp('hospital_id');
-    $month = qp('month') ? (int)qp('month') : null;
-    $year  = qp('year')  ? (int)qp('year')  : null;
+    $hid       = qp('hospital_id');
+    $month     = qp('month') ? (int)qp('month') : null;
+    $year      = qp('year')  ? (int)qp('year')  : null;
+    $periodEnd = qp('period_end'); // "YYYY-MM" — trailing 6-month window ending this month
 
     $innerScopeSql = str_replace('h.region_id', 'hh.region_id', $scope['sql']);
     $innerScopeSql = str_replace('f.hospital_id', 'ff.hospital_id', $innerScopeSql);
     $params = array_merge($scope['params'], $hid ? ['fhid' => $hid] : []);
 
-    if ($month && $year) {
+    if ($periodEnd && preg_match('/^(\d{4})-(\d{2})$/', $periodEnd, $pm)) {
+        // 6-month window: latest submission per patient within [end-5mo, end], scoped like the year-only branch.
+        $endYear = (int)$pm[1]; $endMonth = (int)$pm[2];
+        $startMonth = $endMonth - 5; $startYear = $endYear;
+        while ($startMonth <= 0) { $startMonth += 12; $startYear--; }
+        $params['pstart'] = $startYear * 100 + $startMonth;
+        $params['pend']   = $endYear * 100 + $endMonth;
+        $rangeFilter = 'AND (ff.reporting_year * 100 + ff.reporting_month) BETWEEN :pstart AND :pend';
+        $latestSql = "
+            SELECT f.* FROM fbg_assessments f
+            INNER JOIN (
+                SELECT ff.hospital_id, ff.art_number,
+                       MAX(ff.reporting_year * 100 + ff.reporting_month) AS maxperiod
+                FROM fbg_assessments ff
+                JOIN hospitals hh ON hh.id = ff.hospital_id
+                WHERE ff.is_active = 1 AND $innerScopeSql $rangeFilter" . ($hid ? ' AND ff.hospital_id = :fhid' : '') . "
+                GROUP BY ff.hospital_id, ff.art_number
+            ) latest ON latest.hospital_id = f.hospital_id AND latest.art_number = f.art_number
+                     AND (f.reporting_year * 100 + f.reporting_month) = latest.maxperiod
+            WHERE f.is_active = 1
+        ";
+    } elseif ($month && $year) {
         // Period-scoped snapshot: exactly the assessments recorded for that reporting month/year
         // (the unique key on hospital_id+art_number+year+month already guarantees one row per patient).
         $latestSql = "

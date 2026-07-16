@@ -93,17 +93,11 @@
           </select>
         </div>
         <div class="col-auto">
-          <select class="form-select form-select-sm" id="filter-month" style="min-width:140px" onchange="loadDashboard()">
-            <option value="">Any Month</option>
-          </select>
+          <label for="filter-period-end" class="form-label small text-muted mb-0 me-1 d-none d-sm-inline">As of</label>
+          <input type="month" class="form-control form-control-sm d-inline-block" id="filter-period-end" style="min-width:160px" onchange="loadDashboard()" title="Shows the 6 months ending this month">
         </div>
         <div class="col-auto">
-          <select class="form-select form-select-sm" id="filter-year" style="min-width:110px" onchange="loadDashboard()">
-            <option value="">Any Year</option>
-          </select>
-        </div>
-        <div class="col-auto">
-          <button class="btn btn-outline-secondary btn-sm" onclick="clearPeriodFilter()" title="Clear month/year"><i class="bi bi-x-circle"></i></button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="clearPeriodFilter()" title="Clear date filter"><i class="bi bi-x-circle"></i></button>
         </div>
         <div class="col-auto">
           <button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</button>
@@ -228,7 +222,6 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 (async () => {
   const user = await requireAuth();
   await loadHospitalFilter();
-  populateMonthYear();
   if (!['super_admin','regional_admin','hospital_admin'].includes(user.role)) {
     document.getElementById('facility-row').style.display = 'none';
   }
@@ -243,21 +236,14 @@ async function loadHospitalFilter() {
   } catch {}
 }
 
-function populateMonthYear() {
-  document.getElementById('filter-month').innerHTML =
-    '<option value="">Any Month</option>' + MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
-
-  const curYear = new Date().getFullYear();
-  const years = [];
-  for (let y = curYear + 1; y >= curYear - 5; y--) years.push(y);
-  document.getElementById('filter-year').innerHTML =
-    '<option value="">Any Year</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+function clearPeriodFilter() {
+  document.getElementById('filter-period-end').value = '';
+  loadDashboard();
 }
 
-function clearPeriodFilter() {
-  document.getElementById('filter-month').value = '';
-  document.getElementById('filter-year').value = '';
-  loadDashboard();
+function addMonths(year, month, delta) {
+  const total = (year * 12 + (month - 1)) + delta;
+  return { year: Math.floor(total / 12), month: (total % 12) + 1 };
 }
 
 function destroyCharts() {
@@ -266,14 +252,12 @@ function destroyCharts() {
 }
 
 async function loadDashboard() {
-  const hid   = document.getElementById('filter-hospital').value;
-  const month = document.getElementById('filter-month').value;
-  const year  = document.getElementById('filter-year').value;
+  const hid        = document.getElementById('filter-hospital').value;
+  const periodEnd  = document.getElementById('filter-period-end').value; // "YYYY-MM" or ""
 
   const params = new URLSearchParams({ resource: 'dashboard' });
-  if (hid)   params.set('hospital_id', hid);
-  if (month) params.set('month', month);
-  if (year)  params.set('year', year);
+  if (hid)       params.set('hospital_id', hid);
+  if (periodEnd) params.set('period_end', periodEnd);
 
   try {
     const res = await API.get('api/fbg.php?' + params.toString());
@@ -284,10 +268,10 @@ async function loadDashboard() {
   }
 
   let periodLabel;
-  if (month && year) {
-    periodLabel = `${MONTHS[month - 1]} ${year} · Assessments recorded for this period`;
-  } else if (year) {
-    periodLabel = `${year} · Most recent assessment per patient within ${year}`;
+  if (periodEnd) {
+    const [y, m] = periodEnd.split('-').map(Number);
+    const start = addMonths(y, m, -5);
+    periodLabel = `${MONTHS[start.month - 1]} ${start.year} – ${MONTHS[m - 1]} ${y} · Most recent assessment per patient in this 6-month window`;
   } else {
     periodLabel = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + ' · Patient snapshot (most recent assessment per patient, all time)';
   }
