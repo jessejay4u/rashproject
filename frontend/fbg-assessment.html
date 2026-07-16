@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FBG Assessment — Health Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .period-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; height:100%; }
+    .period-card h6 { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#475569; margin-bottom:10px; }
+    .status-suppressed { color:#16a34a; font-weight:600; }
+    .status-unsuppressed { color:#dc2626; font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="app-layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Health<span>+</span></div>
+      <div class="brand-sub">Information Management</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"     class="sb-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="submissions.html"   class="sb-link"><i class="bi bi-file-earmark-text"></i> Submissions</a>
+      <a href="forms.html"         class="sb-link"><i class="bi bi-ui-checks-grid"></i> Forms</a>
+      <a href="fbgdsd.html"        class="sb-link"><i class="bi bi-people"></i> FBGDSD</a>
+      <div class="nav-section">FBG Assessment</div>
+      <a href="fbg-assessment.html" class="sb-link"><i class="bi bi-clipboard2-pulse"></i> FBG Assessment</a>
+      <a href="fbg-dashboard.html"  class="sb-link"><i class="bi bi-graph-up-arrow"></i> FBG Dashboard</a>
+      <div class="nav-section manager-only">Management</div>
+      <a href="hospitals.html"     class="sb-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
+      <a href="users.html"         class="sb-link admin-only"><i class="bi bi-person-lines-fill"></i> Users</a>
+      <a href="reports.html"       class="sb-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="d-flex align-items-center gap-2">
+        <div class="avatar" id="sidebar-avatar">U</div>
+        <div class="overflow-hidden">
+          <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
+          <div class="sidebar-user-role" id="sidebar-user-role"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">FBG Assessment</h1>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="d-none d-md-block text-end">
+          <div class="small fw-semibold lh-1" id="user-name">Loading…</div>
+          <div class="text-muted lh-1 mt-1" style="font-size:.72rem" id="user-role"></div>
+        </div>
+        <div class="avatar" id="user-avatar">U</div>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
+      </div>
+    </header>
+
+    <div class="app-content">
+
+      <!-- List View -->
+      <div id="list-view">
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="h5 fw-bold mb-0">FBG Assessment Sheet</h2>
+            <p class="text-muted small mb-0">Viral load &amp; clinical monitoring for patients on ART</p>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="fbg-dashboard.html" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-graph-up-arrow me-1"></i>View Dashboard
+            </a>
+            <button class="btn btn-primary btn-sm" onclick="newAssessment()">
+              <i class="bi bi-plus-lg me-1"></i>New Assessment
+            </button>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-header border-bottom py-3">
+            <div class="row g-2">
+              <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" id="filter-hospital" onchange="loadList(1)">
+                  <option value="">All Facilities</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <select class="form-select form-select-sm" id="filter-month" onchange="loadList(1)">
+                  <option value="">Any Month</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <select class="form-select form-select-sm" id="filter-year" onchange="loadList(1)">
+                  <option value="">Any Year</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-5">
+                <input type="text" class="form-control form-control-sm" id="filter-search" placeholder="Search ART number…" oninput="debounceLoad()">
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>ART Number</th>
+                  <th class="d-none d-md-table-cell">Facility</th>
+                  <th class="d-none d-md-table-cell">Period</th>
+                  <th>Gender / Age</th>
+                  <th>Latest VL Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="list-body">
+                <tr><td colspan="6" class="text-center text-muted py-4">
+                  <div class="spinner-border spinner-border-sm" role="status"></div> Loading…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="list-pagination" class="px-3 py-2 border-top"></div>
+        </div>
+      </div>
+
+      <!-- Assessment Form View -->
+      <div id="form-view" style="display:none">
+        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+          <div>
+            <button class="btn btn-sm btn-outline-secondary mb-2" onclick="backToList()">
+              <i class="bi bi-arrow-left me-1"></i>Back
+            </button>
+            <h2 class="h5 fw-bold mb-0" id="form-title">New FBG Assessment</h2>
+          </div>
+          <button class="btn btn-primary btn-sm" id="save-btn" onclick="saveAssessment()">
+            <i class="bi bi-check2-circle me-1"></i>Save Assessment
+          </button>
+        </div>
+
+        <!-- Header Information -->
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header border-bottom py-3">
+            <span class="fw-semibold"><i class="bi bi-hospital text-primary me-2"></i>Facility Information</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small">Name of Facility <span class="text-danger">*</span></label>
+                <select class="form-select" id="f-hospital"></select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold small">Reporting Month <span class="text-danger">*</span></label>
+                <select class="form-select" id="f-month"></select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold small">Reporting Year <span class="text-danger">*</span></label>
+                <select class="form-select" id="f-year"></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Patient Identification -->
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header border-bottom py-3">
+            <span class="fw-semibold"><i class="bi bi-person-badge text-primary me-2"></i>Patient Information</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">ART Number <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="f-art" placeholder="e.g. ART000342">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">Gender</label>
+                <select class="form-select" id="f-gender">
+                  <option value="">—</option>
+                  <option value="M">Male</option>
+                  <option value="F">Female</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">Age</label>
+                <input type="number" class="form-control" id="f-age" min="0" max="120">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Viral Load Monitoring -->
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header border-bottom py-3">
+            <span class="fw-semibold"><i class="bi bi-activity text-primary me-2"></i>Section 1 — Viral Load Monitoring</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3" id="vl-periods">
+              <!-- Generated by JS: Baseline, 6, 12, 18, 24 months -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Clinical Monitoring -->
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header border-bottom py-3">
+            <span class="fw-semibold"><i class="bi bi-clipboard2-pulse text-primary me-2"></i>Section 2 — Clinical Monitoring</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-md-4">
+                <h6 class="text-uppercase small fw-bold text-muted mb-2">CD4 Count</h6>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="f-ahd"><label class="form-check-label small" for="f-ahd">Screened for AHD</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="f-cd4a"><label class="form-check-label small" for="f-cd4a">CD4 above 200</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="f-cd4b"><label class="form-check-label small" for="f-cd4b">CD4 below 200</label></div>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-uppercase small fw-bold text-muted mb-2">Tuberculosis (TB)</h6>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="f-tbs"><label class="form-check-label small" for="f-tbs">Screened for TB</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="f-tbn"><label class="form-check-label small" for="f-tbn">Negative for TB</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="f-tbp"><label class="form-check-label small" for="f-tbp">Positive for TB</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="f-tpte"><label class="form-check-label small" for="f-tpte">Eligible for TPT at previous assessment</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="f-tptp"><label class="form-check-label small" for="f-tptp">Receiving TPT</label></div>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-uppercase small fw-bold text-muted mb-2">Disclosure &amp; Index Testing</h6>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="f-disc"><label class="form-check-label small" for="f-disc">Disclosure done</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="f-idx"><label class="form-check-label small" for="f-idx">Index testing done</label></div>
+                <label class="form-label fw-semibold small mt-1">Number of people tested</label>
+                <input type="number" class="form-control form-control-sm" id="f-ntest" min="0" style="max-width:140px">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Authentication -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header border-bottom py-3">
+            <span class="fw-semibold"><i class="bi bi-pen text-primary me-2"></i>Authentication</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">Name of Officer</label>
+                <input type="text" class="form-control" id="f-pname">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">Designation</label>
+                <input type="text" class="form-control" id="f-pdesig">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">Signature</label>
+                <input type="text" class="form-control" id="f-psign" placeholder="Type full name to sign">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const PERIODS = [
+  { key: 'baseline', label: 'Baseline' },
+  { key: 'vl6',       label: '6 Months' },
+  { key: 'vl12',      label: '12 Months' },
+  { key: 'vl18',      label: '18 Months' },
+  { key: 'vl24',      label: '24 Months' },
+];
+
+let searchTimer, editingId = null;
+
+(async () => {
+  await requireAuth();
+  await loadHospitals();
+  populateMonthYear();
+  buildPeriodInputs();
+  loadList(1);
+})();
+
+function debounceLoad() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadList(1), 400);
+}
+
+async function loadHospitals() {
+  try {
+    const res = await API.get('api/hospitals.php?per_page=200');
+    const opts = (res.data || []).map(h => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('');
+    document.getElementById('filter-hospital').innerHTML = '<option value="">All Facilities</option>' + opts;
+    document.getElementById('f-hospital').innerHTML = '<option value="">Select facility…</option>' + opts;
+  } catch {}
+}
+
+function populateMonthYear() {
+  const monthSel = document.getElementById('f-month');
+  const filterMonthSel = document.getElementById('filter-month');
+  monthSel.innerHTML = MONTHS.map((m, i) => `<option value="${i+1}">${m}</option>`).join('');
+  filterMonthSel.innerHTML = '<option value="">Any Month</option>' + MONTHS.map((m, i) => `<option value="${i+1}">${m}</option>`).join('');
+
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const years = [];
+  for (let y = curYear + 1; y >= curYear - 5; y--) years.push(y);
+  document.getElementById('f-year').innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+  document.getElementById('filter-year').innerHTML = '<option value="">Any Year</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+  monthSel.value = now.getMonth() + 1;
+  document.getElementById('f-year').value = curYear;
+}
+
+function buildPeriodInputs() {
+  document.getElementById('vl-periods').innerHTML = PERIODS.map(p => `
+    <div class="col-md-4" style="flex:1 1 220px">
+      <div class="period-card">
+        <h6>${p.label}</h6>
+        <label class="form-label small mb-1">Viral Load (cp/mL)</label>
+        <input type="text" class="form-control form-control-sm mb-2" id="f-${p.key}-vl" placeholder="e.g. 850">
+        <label class="form-label small mb-1">Status</label>
+        <select class="form-select form-select-sm" id="f-${p.key}-st">
+          <option value="">—</option>
+          <option value="suppressed">Suppressed</option>
+          <option value="unsuppressed">Unsuppressed</option>
+        </select>
+      </div>
+    </div>`).join('');
+}
+
+async function loadList(page) {
+  const params = new URLSearchParams({ page });
+  const hid = document.getElementById('filter-hospital').value;
+  const month = document.getElementById('filter-month').value;
+  const year = document.getElementById('filter-year').value;
+  const search = document.getElementById('filter-search').value;
+  if (hid) params.set('hospital_id', hid);
+  if (month) params.set('month', month);
+  if (year) params.set('year', year);
+  if (search) params.set('search', search);
+
+  const tbody = document.getElementById('list-body');
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div></td></tr>';
+
+  try {
+    const res = await API.get(`api/fbg.php?${params.toString()}`);
+    const rows = res.data || [];
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+        <h3>No assessments yet</h3><p class="mb-0">Create the first FBG assessment to get started.</p></div></td></tr>`;
+    } else {
+      tbody.innerHTML = rows.map(r => {
+        const status = r.vl24_status || r.vl18_status || r.vl12_status || r.vl6_status || r.baseline_status;
+        const statusHtml = status
+          ? `<span class="badge ${status === 'suppressed' ? 'bg-success' : 'bg-danger'}">${status === 'suppressed' ? 'Suppressed' : 'Unsuppressed'}</span>`
+          : '<span class="text-muted">—</span>';
+        return `
+        <tr>
+          <td class="fw-semibold">${esc(r.art_number)}</td>
+          <td class="d-none d-md-table-cell text-muted small">${esc(r.hospital_name)}</td>
+          <td class="d-none d-md-table-cell text-muted small">${MONTHS[r.reporting_month-1]} ${r.reporting_year}</td>
+          <td class="text-muted small">${esc(r.gender || '—')} / ${r.age || '—'}</td>
+          <td>${statusHtml}</td>
+          <td class="text-end"><button class="btn btn-outline-primary btn-sm" onclick="editAssessment('${esc(r.id)}')">Edit</button></td>
+        </tr>`;
+      }).join('');
+    }
+    renderPagination('list-pagination', res.page, res.pages, res.total, res.per_page, loadList);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function newAssessment() {
+  editingId = null;
+  document.getElementById('form-title').textContent = 'New FBG Assessment';
+  clearForm();
+  showFormView();
+}
+
+async function editAssessment(id) {
+  try {
+    const res = await API.get(`api/fbg.php?id=${id}`);
+    const a = res.data;
+    editingId = id;
+    document.getElementById('form-title').textContent = `Edit Assessment — ${a.art_number}`;
+    fillForm(a);
+    showFormView();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function clearForm() {
+  ['f-hospital','f-art','f-gender','f-age','f-pname','f-pdesig','f-psign'].forEach(id => document.getElementById(id).value = '');
+  ['f-ahd','f-cd4a','f-cd4b','f-tbs','f-tbn','f-tbp','f-tpte','f-tptp','f-disc','f-idx'].forEach(id => document.getElementById(id).checked = false);
+  document.getElementById('f-ntest').value = 0;
+  PERIODS.forEach(p => { document.getElementById(`f-${p.key}-vl`).value = ''; document.getElementById(`f-${p.key}-st`).value = ''; });
+  const now = new Date();
+  document.getElementById('f-month').value = now.getMonth() + 1;
+  document.getElementById('f-year').value = now.getFullYear();
+}
+
+function fillForm(a) {
+  document.getElementById('f-hospital').value = a.hospital_id;
+  document.getElementById('f-month').value = a.reporting_month;
+  document.getElementById('f-year').value = a.reporting_year;
+  document.getElementById('f-art').value = a.art_number;
+  document.getElementById('f-gender').value = a.gender || '';
+  document.getElementById('f-age').value = a.age || '';
+  PERIODS.forEach(p => {
+    document.getElementById(`f-${p.key}-vl`).value = a[`${p.key}_viral_load`] || '';
+    document.getElementById(`f-${p.key}-st`).value = a[`${p.key}_status`] || '';
+  });
+  document.getElementById('f-ahd').checked = !!parseInt(a.screened_for_ahd);
+  document.getElementById('f-cd4a').checked = !!parseInt(a.cd4_above_200);
+  document.getElementById('f-cd4b').checked = !!parseInt(a.cd4_below_200);
+  document.getElementById('f-tbs').checked = !!parseInt(a.screened_for_tb);
+  document.getElementById('f-tbn').checked = !!parseInt(a.negative_for_tb);
+  document.getElementById('f-tbp').checked = !!parseInt(a.positive_for_tb);
+  document.getElementById('f-tpte').checked = !!parseInt(a.eligible_tpt_previous);
+  document.getElementById('f-tptp').checked = !!parseInt(a.receiving_tpt);
+  document.getElementById('f-disc').checked = !!parseInt(a.disclosure_done);
+  document.getElementById('f-idx').checked = !!parseInt(a.index_testing_done);
+  document.getElementById('f-ntest').value = a.number_tested || 0;
+  document.getElementById('f-pname').value = a.prepared_by_name || '';
+  document.getElementById('f-pdesig').value = a.prepared_by_designation || '';
+  document.getElementById('f-psign').value = a.prepared_by_signature || '';
+}
+
+function showFormView() {
+  document.getElementById('list-view').style.display = 'none';
+  document.getElementById('form-view').style.display = '';
+}
+function backToList() {
+  document.getElementById('list-view').style.display = '';
+  document.getElementById('form-view').style.display = 'none';
+  loadList(1);
+}
+
+function buildPayload() {
+  const payload = {
+    hospital_id: document.getElementById('f-hospital').value,
+    reporting_month: document.getElementById('f-month').value,
+    reporting_year: document.getElementById('f-year').value,
+    art_number: document.getElementById('f-art').value.trim(),
+    gender: document.getElementById('f-gender').value,
+    age: document.getElementById('f-age').value,
+    screened_for_ahd: document.getElementById('f-ahd').checked ? 1 : 0,
+    cd4_above_200: document.getElementById('f-cd4a').checked ? 1 : 0,
+    cd4_below_200: document.getElementById('f-cd4b').checked ? 1 : 0,
+    screened_for_tb: document.getElementById('f-tbs').checked ? 1 : 0,
+    negative_for_tb: document.getElementById('f-tbn').checked ? 1 : 0,
+    positive_for_tb: document.getElementById('f-tbp').checked ? 1 : 0,
+    eligible_tpt_previous: document.getElementById('f-tpte').checked ? 1 : 0,
+    receiving_tpt: document.getElementById('f-tptp').checked ? 1 : 0,
+    disclosure_done: document.getElementById('f-disc').checked ? 1 : 0,
+    index_testing_done: document.getElementById('f-idx').checked ? 1 : 0,
+    number_tested: document.getElementById('f-ntest').value || 0,
+    prepared_by_name: document.getElementById('f-pname').value,
+    prepared_by_designation: document.getElementById('f-pdesig').value,
+    prepared_by_signature: document.getElementById('f-psign').value,
+  };
+  PERIODS.forEach(p => {
+    payload[`${p.key}_viral_load`] = document.getElementById(`f-${p.key}-vl`).value;
+    payload[`${p.key}_status`] = document.getElementById(`f-${p.key}-st`).value;
+  });
+  return payload;
+}
+
+async function saveAssessment() {
+  const btn = document.getElementById('save-btn');
+  const payload = buildPayload();
+  if (!payload.hospital_id || !payload.art_number || !payload.reporting_month || !payload.reporting_year) {
+    toast('Facility, ART number, reporting month and year are required', 'error');
+    return;
+  }
+  setLoading(btn, true);
+  try {
+    if (editingId) {
+      await API.put(`api/fbg.php?id=${editingId}`, payload);
+      toast('Assessment updated', 'success');
+    } else {
+      await API.post('api/fbg.php', payload);
+      toast('Assessment saved', 'success');
+    }
+    backToList();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading(btn, false);
+}
+</script>
+</body>
+</html>

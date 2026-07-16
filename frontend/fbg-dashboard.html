@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FBG Dashboard — Health Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    .t-green { color:#16a34a; } .t-red { color:#dc2626; } .t-amber { color:#d97706; }
+    .kv-table td:first-child { color:#64748b; font-size:.82rem; }
+    .kv-table td:last-child { text-align:right; font-weight:700; }
+    .kv-table td { padding:9px 0; border-bottom:1px solid #f1f5f9; }
+    .kv-table tr:last-child td { border-bottom:none; }
+    thead.danger th { background:#fdeaed !important; color:#8a2233 !important; }
+    @media print {
+      .sidebar, .topbar, .menu-toggle, #export-buttons { display:none !important; }
+      .app-main { margin-left:0 !important; }
+      .card { box-shadow:none !important; border:1px solid #e2e8f0 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="app-layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Health<span>+</span></div>
+      <div class="brand-sub">Information Management</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"     class="sb-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="submissions.html"   class="sb-link"><i class="bi bi-file-earmark-text"></i> Submissions</a>
+      <a href="forms.html"         class="sb-link"><i class="bi bi-ui-checks-grid"></i> Forms</a>
+      <a href="fbgdsd.html"        class="sb-link"><i class="bi bi-people"></i> FBGDSD</a>
+      <div class="nav-section">FBG Assessment</div>
+      <a href="fbg-assessment.html" class="sb-link"><i class="bi bi-clipboard2-pulse"></i> FBG Assessment</a>
+      <a href="fbg-dashboard.html"  class="sb-link"><i class="bi bi-graph-up-arrow"></i> FBG Dashboard</a>
+      <div class="nav-section manager-only">Management</div>
+      <a href="hospitals.html"     class="sb-link manager-only"><i class="bi bi-hospital"></i> Hospitals</a>
+      <a href="users.html"         class="sb-link admin-only"><i class="bi bi-person-lines-fill"></i> Users</a>
+      <a href="reports.html"       class="sb-link manager-only"><i class="bi bi-bar-chart-line"></i> Reports</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="d-flex align-items-center gap-2">
+        <div class="avatar" id="sidebar-avatar">U</div>
+        <div class="overflow-hidden">
+          <div class="sidebar-user-name" id="sidebar-user-name">Loading…</div>
+          <div class="sidebar-user-role" id="sidebar-user-role"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle"><i class="bi bi-list"></i></button>
+      <h1 class="topbar-title">FBG Assessment Dashboard</h1>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="d-none d-md-block text-end">
+          <div class="small fw-semibold lh-1" id="user-name">Loading…</div>
+          <div class="text-muted lh-1 mt-1" style="font-size:.72rem" id="user-role"></div>
+        </div>
+        <div class="avatar" id="user-avatar">U</div>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
+      </div>
+    </header>
+
+    <div class="app-content">
+
+      <!-- Page header / filters -->
+      <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+          <h2 class="h5 fw-bold mb-0">FBG Assessment Dashboard</h2>
+          <p class="text-muted small mb-0" id="scope-label">Loading…</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2" id="export-buttons">
+          <select class="form-select form-select-sm manager-only" id="filter-hospital" style="min-width:180px" onchange="loadDashboard()">
+            <option value="">All Facilities</option>
+          </select>
+          <button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</button>
+          <button class="btn btn-danger btn-sm" onclick="window.print()"><i class="bi bi-file-earmark-pdf me-1"></i>Export PDF</button>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="row g-3 mb-4" id="stats-grid">
+        <div class="col-12"><div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div> Loading stats…</div></div>
+      </div>
+
+      <!-- Viral Suppression Trend + Current Status -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-graph-up text-primary me-2"></i>Viral Suppression Trend</span></div>
+            <div class="card-body" style="height:280px;position:relative"><canvas id="trend-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-pie-chart-fill text-primary me-2"></i>Current Viral Status</span></div>
+            <div class="card-body" style="height:280px;position:relative"><canvas id="status-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CD4 + TB -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-droplet-half text-primary me-2"></i>CD4 Distribution</span></div>
+            <div class="card-body" style="height:260px;position:relative"><canvas id="cd4-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-lungs text-primary me-2"></i>TB Screening</span></div>
+            <div class="card-body" style="height:260px;position:relative"><canvas id="tb-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gender + Age -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-gender-ambiguous text-primary me-2"></i>Gender Distribution</span></div>
+            <div class="card-body" style="height:260px;position:relative"><canvas id="gender-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Age Distribution</span></div>
+            <div class="card-body" style="height:260px;position:relative"><canvas id="age-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly performance by facility -->
+      <div class="row g-4 mb-4 manager-only" id="facility-row">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-building text-primary me-2"></i>Monthly Performance by Facility</span></div>
+            <div class="card-body" style="height:300px;position:relative"><canvas id="facility-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patients requiring attention -->
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Patients Requiring Immediate Attention</span></div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="danger"><tr>
+                  <th>ART Number</th><th>Viral Load</th><th>Status</th><th>TB</th><th>CD4</th><th>Follow-up</th>
+                </tr></thead>
+                <tbody id="attention-body">
+                  <tr><td colspan="6" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Disclosure & Index Testing + Due for Viral Load -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-shield-check text-primary me-2"></i>Disclosure &amp; Index Testing</span></div>
+            <div class="card-body"><table class="table kv-table mb-0" id="disclosure-table"></table></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header border-bottom py-3"><span class="fw-semibold"><i class="bi bi-calendar-check text-primary me-2"></i>Patients Due for Viral Load</span></div>
+            <div class="card-body"><table class="table kv-table mb-0" id="due-table"></table></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+const PALETTE = ['#2563eb','#ef4444','#22c55e','#f59e0b','#7c3aed','#0ea5e9'];
+let charts = {};
+let dashData = null;
+
+(async () => {
+  const user = await requireAuth();
+  await loadHospitalFilter();
+  if (!['super_admin','regional_admin','hospital_admin'].includes(user.role)) {
+    document.getElementById('facility-row').style.display = 'none';
+  }
+  loadDashboard();
+})();
+
+async function loadHospitalFilter() {
+  try {
+    const res = await API.get('api/hospitals.php?per_page=200');
+    const opts = (res.data || []).map(h => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('');
+    document.getElementById('filter-hospital').innerHTML = '<option value="">All Facilities</option>' + opts;
+  } catch {}
+}
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => c && c.destroy());
+  charts = {};
+}
+
+async function loadDashboard() {
+  const hid = document.getElementById('filter-hospital').value;
+  let url = 'api/fbg.php?resource=dashboard';
+  if (hid) url += `&hospital_id=${encodeURIComponent(hid)}`;
+
+  try {
+    const res = await API.get(url);
+    dashData = res.data;
+  } catch (e) {
+    toast('Failed to load FBG dashboard: ' + e.message, 'error');
+    return;
+  }
+
+  document.getElementById('scope-label').textContent =
+    new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + ' · Patient snapshot (most recent assessment per patient)';
+
+  renderStats(dashData.stats);
+  renderTrend(dashData.trend);
+  renderStatusDonut(dashData.viral_status);
+  renderCD4(dashData.cd4);
+  renderTB(dashData.tb);
+  renderGender(dashData.gender);
+  renderAge(dashData.age);
+  renderFacility(dashData.by_facility);
+  renderAttention(dashData.attention);
+  renderDisclosure(dashData.disclosure);
+  renderDue(dashData.due_by_period);
+}
+
+function renderStats(s) {
+  const cards = [
+    { label: 'Total Patients',      value: s.total_patients,        icon: 'bi-people-fill',        bg: 'bg-primary bg-opacity-10', color: 'text-primary' },
+    { label: 'Viral Suppression',   value: s.suppression_pct + '%', icon: 'bi-graph-up-arrow',      bg: 'bg-success bg-opacity-10', color: 'text-success', valueClass: 't-green' },
+    { label: 'Unsuppressed',        value: s.unsuppressed,          icon: 'bi-exclamation-circle',  bg: 'bg-danger bg-opacity-10',  color: 'text-danger',  valueClass: 't-red' },
+    { label: 'Due Follow-up',       value: s.due_followup,          icon: 'bi-hourglass-split',     bg: 'bg-warning bg-opacity-10', color: 'text-warning', valueClass: 't-amber' },
+    { label: 'Facilities',          value: s.facilities,            icon: 'bi-hospital-fill',       bg: 'bg-info bg-opacity-10',    color: 'text-info' },
+  ];
+  document.getElementById('stats-grid').innerHTML = cards.map(c => `
+    <div class="col-6 col-xl">
+      <div class="stat-card">
+        <div class="d-flex align-items-start gap-3">
+          <div class="stat-icon-box ${c.bg}"><i class="bi ${c.icon} ${c.color}"></i></div>
+          <div>
+            <div class="stat-value ${c.valueClass || ''}">${c.value ?? 0}</div>
+            <div class="stat-label">${c.label}</div>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderTrend(trend) {
+  charts.trend?.destroy();
+  charts.trend = new Chart(document.getElementById('trend-chart'), {
+    type: 'line',
+    data: {
+      labels: trend.map(t => t.period),
+      datasets: [{
+        label: 'Suppression %', data: trend.map(t => t.suppression_pct),
+        borderColor: PALETTE[0], backgroundColor: 'rgba(37,99,235,.12)',
+        fill: true, tension: .35, pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: PALETTE[0], pointBorderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+    },
+  });
+}
+
+function renderStatusDonut(vs) {
+  charts.status?.destroy();
+  charts.status = new Chart(document.getElementById('status-chart'), {
+    type: 'doughnut',
+    data: { labels: ['Suppressed', 'Unsuppressed'], datasets: [{ data: [vs.suppressed, vs.unsuppressed], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+  });
+}
+
+function renderCD4(cd4) {
+  charts.cd4?.destroy();
+  charts.cd4 = new Chart(document.getElementById('cd4-chart'), {
+    type: 'bar',
+    data: { labels: ['Above 200', 'Below 200'], datasets: [{ data: [cd4.above_200, cd4.below_200], backgroundColor: ['#22c55e', '#ef4444'], borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+  });
+}
+
+function renderTB(tb) {
+  charts.tb?.destroy();
+  charts.tb = new Chart(document.getElementById('tb-chart'), {
+    type: 'bar',
+    data: { labels: ['Negative', 'Positive', 'Receiving TPT'], datasets: [{ data: [tb.negative, tb.positive, tb.receiving_tpt], backgroundColor: ['#22c55e', '#ef4444', '#2563eb'], borderRadius: 6 }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } },
+  });
+}
+
+function renderGender(g) {
+  charts.gender?.destroy();
+  charts.gender = new Chart(document.getElementById('gender-chart'), {
+    type: 'doughnut',
+    data: { labels: ['Male', 'Female'], datasets: [{ data: [g.male, g.female], backgroundColor: [PALETTE[0], '#ec4899'], borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+  });
+}
+
+function renderAge(age) {
+  charts.age?.destroy();
+  const labels = Object.keys(age);
+  charts.age = new Chart(document.getElementById('age-chart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: labels.map(l => age[l]), backgroundColor: PALETTE[0], borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+  });
+}
+
+function renderFacility(rows) {
+  charts.facility?.destroy();
+  if (!rows || !rows.length) {
+    document.getElementById('facility-row').querySelector('.card-body').innerHTML = '<p class="text-muted small text-center py-5 mb-0">No facility data yet</p>';
+    return;
+  }
+  charts.facility = new Chart(document.getElementById('facility-chart'), {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.hospital_name),
+      datasets: [{ label: 'Suppression %', data: rows.map(r => r.suppression_pct), backgroundColor: PALETTE[0], borderRadius: 6 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y}% (${rows[ctx.dataIndex].total} patients)` } } },
+      scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }, x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 0 } } },
+    },
+  });
+}
+
+function renderAttention(rows) {
+  const tbody = document.getElementById('attention-body');
+  if (!rows || !rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No patients currently flagged — great work!</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="fw-semibold">${esc(r.art_number)}</td>
+      <td>${r.viral_load != null ? esc(r.viral_load) : '—'}</td>
+      <td>${r.status === 'unsuppressed' ? '<span class="badge bg-danger">Unsuppressed</span>' : (r.status === 'suppressed' ? '<span class="badge bg-success">Suppressed</span>' : '<span class="text-muted">—</span>')}</td>
+      <td>${esc(r.tb)}</td>
+      <td>${esc(r.cd4)}</td>
+      <td>${r.follow_up_due ? '<span class="badge bg-warning text-dark">Due</span>' : '—'}</td>
+    </tr>`).join('');
+}
+
+function renderDisclosure(d) {
+  document.getElementById('disclosure-table').innerHTML = `
+    <tr><td>Disclosure Completed</td><td>${d.disclosure_done_pct}%</td></tr>
+    <tr><td>Index Testing Completed</td><td>${d.index_testing_done_pct}%</td></tr>
+    <tr><td>People Tested</td><td>${d.people_tested}</td></tr>`;
+}
+
+function renderDue(due) {
+  document.getElementById('due-table').innerHTML = Object.entries(due).map(([label, count]) =>
+    `<tr><td>${esc(label)}</td><td>${count}</td></tr>`).join('');
+}
+
+// ─── Export Excel (CSV) ───────────────────────────────────────────────────────
+function exportExcel() {
+  if (!dashData) return;
+  const rows = [
+    ['FBG Assessment Dashboard'],
+    [],
+    ['Summary'],
+    ['Total Patients', dashData.stats.total_patients],
+    ['Viral Suppression %', dashData.stats.suppression_pct],
+    ['Unsuppressed', dashData.stats.unsuppressed],
+    ['Due Follow-up', dashData.stats.due_followup],
+    [],
+    ['Viral Suppression Trend'],
+    ['Period', 'Suppression %'],
+    ...dashData.trend.map(t => [t.period, t.suppression_pct]),
+    [],
+    ['Current Viral Status'],
+    ['Suppressed', dashData.viral_status.suppressed], ['Unsuppressed', dashData.viral_status.unsuppressed],
+    [],
+    ['CD4 Distribution'],
+    ['Above 200', dashData.cd4.above_200], ['Below 200', dashData.cd4.below_200],
+    [],
+    ['TB Screening'],
+    ['Negative', dashData.tb.negative], ['Positive', dashData.tb.positive], ['Receiving TPT', dashData.tb.receiving_tpt],
+    [],
+    ['Gender Distribution'],
+    ['Male', dashData.gender.male], ['Female', dashData.gender.female],
+    [],
+    ['Age Distribution'],
+    ...Object.entries(dashData.age),
+    [],
+    ['Patients Requiring Immediate Attention'],
+    ['ART Number', 'Viral Load', 'Status', 'TB', 'CD4', 'Follow-up Due'],
+    ...dashData.attention.map(a => [a.art_number, a.viral_load ?? '', a.status ?? '', a.tb, a.cd4, a.follow_up_due ? 'Yes' : 'No']),
+    [],
+    ['Disclosure & Index Testing'],
+    ['Disclosure Completed %', dashData.disclosure.disclosure_done_pct],
+    ['Index Testing Completed %', dashData.disclosure.index_testing_done_pct],
+    ['People Tested', dashData.disclosure.people_tested],
+    [],
+    ['Patients Due for Viral Load'],
+    ...Object.entries(dashData.due_by_period),
+  ];
+  const csv = rows.map(r => r.map(c => {
+    c = String(c ?? ''); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c;
+  }).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `FBG_Dashboard_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
