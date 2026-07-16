@@ -72,7 +72,7 @@
             <h2 class="h5 fw-bold mb-0">Data Collection Forms</h2>
             <p class="text-muted small mb-0">Manage forms used for data submission</p>
           </div>
-          <button class="btn btn-primary btn-sm admin-only" style="display:none" onclick="openModal('new-form-modal')">
+          <button class="btn btn-primary btn-sm admin-only" onclick="openModal('new-form-modal')">
             <i class="bi bi-plus-lg me-1"></i>New Form
           </button>
         </div>
@@ -323,6 +323,7 @@ async function loadDetail(id) {
 function backToList() {
   document.getElementById('list-view').style.display   = '';
   document.getElementById('detail-view').style.display = 'none';
+  loadList(1);
 }
 
 async function createForm() {
