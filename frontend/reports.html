@@ -73,7 +73,7 @@
       <!-- Export Card -->
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header border-bottom py-3">
-          <span class="fw-semibold"><i class="bi bi-download text-primary me-2"></i>Export Submissions (CSV)</span>
+          <span class="fw-semibold"><i class="bi bi-download text-primary me-2"></i>Export Submissions</span>
         </div>
         <div class="card-body">
           <div class="row g-3 align-items-end">
@@ -107,13 +107,43 @@
                 <option value="">All Hospitals</option>
               </select>
             </div>
-            <div class="col-md-4 col-lg-2">
-              <button class="btn btn-primary btn-sm w-100" onclick="exportCSV()" id="export-btn">
-                <i class="bi bi-download me-1"></i>Download CSV
-              </button>
-            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <button class="btn btn-outline-secondary btn-sm" onclick="loadPreview(1)" id="preview-btn">
+              <i class="bi bi-eye me-1"></i>Load Data
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="exportCSV()" id="export-csv-btn">
+              <i class="bi bi-filetype-csv me-1"></i>Download CSV
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="exportExcel()" id="export-xlsx-btn">
+              <i class="bi bi-file-earmark-excel me-1"></i>Download Excel (with Charts)
+            </button>
           </div>
         </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="card border-0 shadow-sm mb-4" id="preview-card" style="display:none">
+        <div class="card-header border-bottom py-3 d-flex align-items-center justify-content-between">
+          <span class="fw-semibold"><i class="bi bi-table text-primary me-2"></i>Preview</span>
+          <span class="text-muted small" id="preview-count"></span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Form</th>
+                <th>Hospital</th>
+                <th class="d-none d-md-table-cell">Region</th>
+                <th class="d-none d-md-table-cell">Submitted By</th>
+                <th>Status</th>
+                <th class="d-none d-md-table-cell">Submitted</th>
+              </tr>
+            </thead>
+            <tbody id="preview-body"></tbody>
+          </table>
+        </div>
+        <div id="preview-pagination"></div>
       </div>
 
       <!-- Charts -->
@@ -261,26 +291,78 @@ async function loadCharts() {
   }
 }
 
-function exportCSV() {
+function buildFilterParams() {
+  const params = new URLSearchParams();
   const form     = document.getElementById('exp-form').value;
   const status   = document.getElementById('exp-status').value;
   const from     = document.getElementById('exp-from').value;
   const to       = document.getElementById('exp-to').value;
   const hospital = document.getElementById('exp-hospital').value;
 
-  let url = 'api/reports.php?export=csv';
-  if (form)     url += `&form_id=${encodeURIComponent(form)}`;
-  if (status)   url += `&status=${encodeURIComponent(status)}`;
-  if (from)     url += `&date_from=${encodeURIComponent(from)}`;
-  if (to)       url += `&date_to=${encodeURIComponent(to)}`;
-  if (hospital) url += `&hospital_id=${encodeURIComponent(hospital)}`;
+  if (form)     params.set('form_id', form);
+  if (status)   params.set('status', status);
+  if (from)     params.set('from', from);
+  if (to)       params.set('to', to);
+  if (hospital) params.set('hospital_id', hospital);
+  return params;
+}
 
+function downloadWithFilters(exportType, extension) {
+  const params = buildFilterParams();
+  params.set('export', exportType);
   const a = document.createElement('a');
-  a.href = _apiRoot + '/' + url;
-  a.download = `submissions_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.href = _apiRoot + '/api/reports.php?' + params.toString();
+  a.download = `submissions_${new Date().toISOString().slice(0, 10)}.${extension}`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+function exportCSV() {
+  downloadWithFilters('csv', 'csv');
+}
+
+function exportExcel() {
+  downloadWithFilters('xlsx', 'xlsx');
+}
+
+async function loadPreview(page) {
+  const btn = document.getElementById('preview-btn');
+  setLoading(btn, true);
+  const card = document.getElementById('preview-card');
+  card.style.display = '';
+  const tbody = document.getElementById('preview-body');
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div></td></tr>';
+
+  try {
+    const params = buildFilterParams();
+    params.set('resource', 'preview');
+    params.set('page', page);
+    const res = await API.get('api/reports.php?' + params.toString());
+    const rows = res.data || [];
+
+    document.getElementById('preview-count').textContent = `${res.total} matching submission${res.total === 1 ? '' : 's'}`;
+
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+        <h3>No submissions match these filters</h3></div></td></tr>`;
+    } else {
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td class="fw-semibold">${esc(r.form)}</td>
+          <td class="text-muted small">${esc(r.hospital)}</td>
+          <td class="d-none d-md-table-cell text-muted small">${esc(r.region)}</td>
+          <td class="d-none d-md-table-cell text-muted small">${esc(r.submitted_by)}</td>
+          <td>${badge(r.status)}</td>
+          <td class="d-none d-md-table-cell text-muted small">${fmtDateTime(r.submitted_at)}</td>
+        </tr>`).join('');
+    }
+    renderPagination('preview-pagination', res.page, res.pages, res.total, res.per_page, loadPreview);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Error: ${esc(e.message)}</td></tr>`;
+  }
+  setLoading(btn, false);
 }
 </script>
 </body>
