@@ -10,7 +10,7 @@ $action = qp('action');
 // ── GET single ────────────────────────────────────────────────────────────────
 if ($method === 'GET' && $id) {
     $stmt = $db->prepare("
-        SELECT s.*, f.name AS form_name, h.name AS hospital_name,
+        SELECT s.*, f.name AS form_name, h.name AS hospital_name, h.region_id AS hospital_region_id,
                u.name AS submitted_by_name, rv.name AS reviewer_name
         FROM submissions s
         JOIN forms f ON f.id = s.form_id
@@ -22,6 +22,9 @@ if ($method === 'GET' && $id) {
     $stmt->execute(['id' => $id]);
     $sub = $stmt->fetch();
     if (!$sub) fail('Submission not found', 404);
+    if ($user['role'] === 'regional_admin' && $sub['hospital_region_id'] !== $user['region_id']) fail('Submission not found', 404);
+    if ($user['role'] === 'hospital_admin' && $sub['hospital_id'] !== $user['hospital_id']) fail('Submission not found', 404);
+    if ($user['role'] === 'data_entry' && $sub['submitted_by'] !== $user['id']) fail('Submission not found', 404);
 
     $vals = $db->prepare("
         SELECT sv.*, ff.label, ff.field_type
@@ -96,6 +99,13 @@ if ($method === 'POST' && $action === 'review' && $id) {
     $b      = body();
     $status = $b['status'] ?? '';
     if (!in_array($status, ['approved', 'rejected'], true)) fail('Status must be approved or rejected');
+
+    if ($user['role'] === 'regional_admin') {
+        $chk = $db->prepare('SELECT h.region_id FROM submissions s JOIN hospitals h ON h.id = s.hospital_id WHERE s.id = :id');
+        $chk->execute(['id' => $id]);
+        $region = $chk->fetchColumn();
+        if ($region === false || $region !== $user['region_id']) fail('Submission not found', 404);
+    }
 
     $db->prepare("
         UPDATE submissions

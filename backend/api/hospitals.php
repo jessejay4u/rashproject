@@ -20,6 +20,8 @@ if ($method === 'GET' && $id) {
     $stmt->execute(['id' => $id]);
     $h = $stmt->fetch();
     if (!$h) fail('Hospital not found', 404);
+    if ($user['role'] === 'regional_admin' && $h['region_id'] !== $user['region_id']) fail('Hospital not found', 404);
+    if (in_array($user['role'], ['data_entry', 'hospital_admin'], true) && $h['id'] !== $user['hospital_id']) fail('Hospital not found', 404);
     ok($h);
 }
 
@@ -103,6 +105,12 @@ if ($method === 'POST') {
 // ── PUT/PATCH update ──────────────────────────────────────────────────────────
 if (($method === 'PUT' || $method === 'PATCH') && $id) {
     need($user, 'hospitals.edit');
+    if ($user['role'] === 'regional_admin') {
+        $chk = $db->prepare('SELECT region_id FROM hospitals WHERE id = :id');
+        $chk->execute(['id' => $id]);
+        $region = $chk->fetchColumn();
+        if ($region === false || $region !== $user['region_id']) fail('Hospital not found', 404);
+    }
     $b = body();
 
     $fields  = ['name', 'type', 'level', 'address', 'phone', 'email', 'latitude', 'longitude', 'capacity_beds', 'is_active'];

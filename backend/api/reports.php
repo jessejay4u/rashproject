@@ -19,8 +19,9 @@ if (qp('to'))          { $where[] = 's.submitted_at <= :to';         $params['to
 if (qp('status'))      { $where[] = 's.status = :status';            $params['status']      = qp('status'); }
 
 // Scope
-if ($user['role'] === 'data_entry')     { $where[] = 's.submitted_by = :uid'; $params['uid'] = $user['id']; }
-if ($user['role'] === 'hospital_admin') { $where[] = 's.hospital_id = :hid';  $params['hid'] = $user['hospital_id']; }
+if ($user['role'] === 'data_entry')      { $where[] = 's.submitted_by = :uid'; $params['uid'] = $user['id']; }
+if ($user['role'] === 'hospital_admin')  { $where[] = 's.hospital_id = :hid';  $params['hid'] = $user['hospital_id']; }
+if ($user['role'] === 'regional_admin')  { $where[] = 'h.region_id = :rid';   $params['rid'] = $user['region_id']; }
 
 $w = implode(' AND ', $where);
 

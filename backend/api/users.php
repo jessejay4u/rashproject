@@ -12,8 +12,8 @@ if ($method === 'GET' && $id) {
     $stmt = $db->prepare("
         SELECT u.id, u.name, u.email, u.phone, u.is_active, u.mfa_enabled,
                u.last_login_at, u.created_at, u.must_change_password, u.failed_login_attempts,
-               u.role_id, r.name AS role, r.display_name AS role_display,
-               h.name AS hospital_name, reg.name AS region_name
+               u.role_id, u.hospital_id, u.region_id, r.name AS role, r.display_name AS role_display,
+               h.name AS hospital_name, h.region_id AS hospital_region_id, reg.name AS region_name
         FROM users u
         JOIN roles r ON r.id = u.role_id
         LEFT JOIN hospitals h ON h.id = u.hospital_id
@@ -23,6 +23,10 @@ if ($method === 'GET' && $id) {
     $stmt->execute(['id' => $id]);
     $u = $stmt->fetch();
     if (!$u) fail('User not found', 404);
+    if ($user['role'] === 'regional_admin') {
+        $inRegion = $u['region_id'] === $user['region_id'] || $u['hospital_region_id'] === $user['region_id'];
+        if (!$inRegion) fail('User not found', 404);
+    }
     ok($u);
 }
 
