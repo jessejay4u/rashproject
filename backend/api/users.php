@@ -5,6 +5,23 @@ $user   = auth();
 $db     = db();
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = qp('id');
+$action = qp('action');
+
+// ── POST reset password (generates a new temporary password) ──────────────────
+if ($method === 'POST' && $action === 'reset_password' && $id) {
+    need($user, 'users.edit');
+    $exists = $db->prepare('SELECT id FROM users WHERE id = :id');
+    $exists->execute(['id' => $id]);
+    if (!$exists->fetch()) fail('User not found', 404);
+
+    $tempPass = generateTempPassword();
+    $hash     = password_hash($tempPass, PASSWORD_ARGON2ID, ['memory_cost' => 65536, 'time_cost' => 4, 'threads' => 1]);
+
+    $db->prepare('UPDATE users SET password_hash = :hash, must_change_password = 1, updated_at = NOW() WHERE id = :id')
+       ->execute(['hash' => $hash, 'id' => $id]);
+
+    ok(['temp_password' => $tempPass], 'Password reset. Share the new temporary password with them.');
+}
 
 // ── GET single ────────────────────────────────────────────────────────────────
 if ($method === 'GET' && $id) {

@@ -24,18 +24,22 @@ const API = {
             throw new Error('Network error — check your connection');
         }
 
-        if (res.status === 401) {
-            if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
-                window.location.href = 'index.html';
-            }
-            throw new Error('Session expired');
-        }
-
         let json;
         try {
             json = await res.json();
         } catch {
             throw new Error('Invalid server response');
+        }
+
+        if (res.status === 401) {
+            const onLoginPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
+            if (!onLoginPage) {
+                window.location.href = 'index.html';
+                throw new Error('Session expired');
+            }
+            // On the login page itself, a 401 is a failed login attempt, not an expired
+            // session — surface the backend's actual message (e.g. "Invalid email or password").
+            throw new Error(json.error || 'Invalid email or password');
         }
 
         if (!res.ok) throw new Error(json.error || `Request failed (${res.status})`);

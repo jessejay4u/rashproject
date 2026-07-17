@@ -130,7 +130,7 @@
   style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#15803d;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
   <div>
     <i class="bi bi-key-fill me-2"></i>
-    <strong>User created!</strong> Temporary password:
+    <strong id="temp-pass-label">User created!</strong> Temporary password:
     <code id="temp-pass-code" style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:4px;font-size:.95em"></code>
     <span class="ms-2 opacity-75" style="font-size:.85em">(copy this — it won't be shown again)</span>
   </div>
@@ -228,8 +228,11 @@
             <select class="form-select" id="edit-region"><option value="">None</option></select>
           </div>
           <div class="col-12">
-            <label class="form-label fw-semibold small">New Password <span class="text-muted fw-normal">(leave blank to keep current)</span></label>
-            <input type="password" class="form-control" id="edit-password" placeholder="Leave blank to keep current">
+            <label class="form-label fw-semibold small d-block">Password</label>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="reset-password-btn" onclick="resetPassword()">
+              <i class="bi bi-key me-1"></i>Generate New Password
+            </button>
+            <div class="small text-muted mt-1">Generates a new temporary password and shows it once — the user must change it on next login.</div>
           </div>
           <div class="col-12">
             <div class="form-check">
@@ -378,6 +381,7 @@ async function submitAdd() {
 
     if (res.data?.temp_password) {
       const banner = document.getElementById('temp-pass-banner');
+      document.getElementById('temp-pass-label').textContent = 'User created!';
       document.getElementById('temp-pass-code').textContent = res.data.temp_password;
       banner.classList.remove('d-none');
       banner.style.display = 'flex';
@@ -399,8 +403,26 @@ function openEditModalById(user) {
   document.getElementById('edit-region').value   = user.region_id   || '';
   document.getElementById('edit-phone').value    = user.phone       || '';
   document.getElementById('edit-active').checked = !!user.is_active;
-  document.getElementById('edit-password').value = '';
   openModal('edit-modal');
+}
+
+async function resetPassword() {
+  const id   = document.getElementById('edit-id').value;
+  const name = document.getElementById('edit-name').value;
+  if (!confirm(`Generate a new temporary password for "${name}"? Their current password will stop working immediately.`)) return;
+  const btn = document.getElementById('reset-password-btn');
+  setLoading(btn, true);
+  try {
+    const res = await API.post(`api/users.php?id=${encodeURIComponent(id)}&action=reset_password`);
+    const banner = document.getElementById('temp-pass-banner');
+    document.getElementById('temp-pass-label').textContent = 'Password reset!';
+    document.getElementById('temp-pass-code').textContent = res.data.temp_password;
+    banner.classList.remove('d-none');
+    banner.style.display = 'flex';
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading(btn, false);
 }
 
 async function submitEdit() {
@@ -417,8 +439,6 @@ async function submitEdit() {
       phone:       document.getElementById('edit-phone').value,
       is_active:   document.getElementById('edit-active').checked ? 1 : 0,
     };
-    const pw = document.getElementById('edit-password').value;
-    if (pw) payload.password = pw;
 
     await API.put(`api/users.php?id=${encodeURIComponent(id)}`, payload);
     toast('User updated', 'success');
