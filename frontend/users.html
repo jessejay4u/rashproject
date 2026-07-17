@@ -228,11 +228,14 @@
             <select class="form-select" id="edit-region"><option value="">None</option></select>
           </div>
           <div class="col-12">
-            <label class="form-label fw-semibold small d-block">Password</label>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="reset-password-btn" onclick="resetPassword()">
-              <i class="bi bi-key me-1"></i>Generate New Password
-            </button>
-            <div class="small text-muted mt-1">Generates a new temporary password and shows it once — the user must change it on next login.</div>
+            <label class="form-label fw-semibold small">New Password <span class="text-muted fw-normal">(leave blank to keep current)</span></label>
+            <div class="input-group">
+              <input type="text" class="form-control font-monospace" id="edit-password" placeholder="Leave blank to keep current" autocomplete="new-password">
+              <button type="button" class="btn btn-outline-secondary" id="generate-password-btn" onclick="generatePassword()" title="Generate a random password">
+                <i class="bi bi-key me-1"></i>Generate
+              </button>
+            </div>
+            <div class="small text-muted mt-1">Type a password of your choice, or click Generate for a random one. Applies when you save.</div>
           </div>
           <div class="col-12">
             <div class="form-check">
@@ -403,26 +406,18 @@ function openEditModalById(user) {
   document.getElementById('edit-region').value   = user.region_id   || '';
   document.getElementById('edit-phone').value    = user.phone       || '';
   document.getElementById('edit-active').checked = !!user.is_active;
+  document.getElementById('edit-password').value = '';
   openModal('edit-modal');
 }
 
-async function resetPassword() {
-  const id   = document.getElementById('edit-id').value;
-  const name = document.getElementById('edit-name').value;
-  if (!confirm(`Generate a new temporary password for "${name}"? Their current password will stop working immediately.`)) return;
-  const btn = document.getElementById('reset-password-btn');
-  setLoading(btn, true);
-  try {
-    const res = await API.post(`api/users.php?id=${encodeURIComponent(id)}&action=reset_password`);
-    const banner = document.getElementById('temp-pass-banner');
-    document.getElementById('temp-pass-label').textContent = 'Password reset!';
-    document.getElementById('temp-pass-code').textContent = res.data.temp_password;
-    banner.classList.remove('d-none');
-    banner.style.display = 'flex';
-  } catch (e) {
-    toast(e.message, 'error');
-  }
-  setLoading(btn, false);
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+  let pass = '';
+  const bytes = new Uint32Array(12);
+  crypto.getRandomValues(bytes);
+  for (let i = 0; i < 12; i++) pass += chars[bytes[i] % chars.length];
+  document.getElementById('edit-password').value = pass;
+  document.getElementById('edit-password').type = 'text';
 }
 
 async function submitEdit() {
@@ -439,9 +434,11 @@ async function submitEdit() {
       phone:       document.getElementById('edit-phone').value,
       is_active:   document.getElementById('edit-active').checked ? 1 : 0,
     };
+    const pw = document.getElementById('edit-password').value.trim();
+    if (pw) payload.password = pw;
 
     await API.put(`api/users.php?id=${encodeURIComponent(id)}`, payload);
-    toast('User updated', 'success');
+    toast(pw ? 'User updated and password changed' : 'User updated', 'success');
     closeModal('edit-modal');
     loadList(1);
   } catch (e) {
