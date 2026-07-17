@@ -62,11 +62,12 @@ if ($method === 'GET') {
     $stmt = $db->prepare("
         SELECT u.id, u.name, u.email, u.phone, u.is_active, u.last_login_at, u.created_at,
                u.role_id, r.name AS role, r.display_name AS role_display,
-               h.name AS hospital_name, reg.name AS region_name
+               h.name AS hospital_name, COALESCE(reg.name, hreg.name) AS region_name
         FROM users u
         JOIN roles r ON r.id = u.role_id
         LEFT JOIN hospitals h ON h.id = u.hospital_id
-        LEFT JOIN regions reg ON reg.id = u.region_id
+        LEFT JOIN regions reg  ON reg.id  = u.region_id
+        LEFT JOIN regions hreg ON hreg.id = h.region_id
         WHERE $w
         ORDER BY u.name
         LIMIT :limit OFFSET :offset

@@ -107,13 +107,14 @@
                 <th class="d-none d-md-table-cell">Email</th>
                 <th>Role</th>
                 <th class="d-none d-md-table-cell">Hospital</th>
+                <th class="d-none d-md-table-cell">Region</th>
                 <th>Status</th>
                 <th class="d-none d-md-table-cell">Joined</th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="list-body">
-              <tr><td colspan="7" class="text-center text-muted py-4">
+              <tr><td colspan="8" class="text-center text-muted py-4">
                 <div class="spinner-border spinner-border-sm" role="status"></div> Loading…
               </td></tr>
             </tbody>
@@ -324,7 +325,7 @@ async function loadList(page) {
     const res  = await API.get(url);
     const rows = res.data || [];
     if (rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">
         <div class="empty-icon"><i class="bi bi-people"></i></div>
         <h3>No users found</h3></div></td></tr>`;
     } else {
@@ -339,6 +340,7 @@ async function loadList(page) {
           <td class="d-none d-md-table-cell text-muted small">${esc(r.email)}</td>
           <td><span class="badge badge-role-${esc(r.role)}">${esc(roleLabel(r.role))}</span></td>
           <td class="d-none d-md-table-cell text-muted small">${esc(r.hospital_name||'—')}</td>
+          <td class="d-none d-md-table-cell text-muted small">${esc(r.region_name||'—')}</td>
           <td>${r.is_active ? badge('active','Active') : badge('inactive','Inactive')}</td>
           <td class="d-none d-md-table-cell text-muted small">${fmtDate(r.created_at)}</td>
           <td class="text-end">
@@ -350,7 +352,7 @@ async function loadList(page) {
     }
     renderPagination('list-pagination', res.page, res.pages, res.total, res.per_page, loadList);
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-3">Error: ${esc(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-3">Error: ${esc(e.message)}</td></tr>`;
   }
 }
 
