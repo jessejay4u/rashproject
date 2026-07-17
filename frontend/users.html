@@ -162,11 +162,6 @@
             <label class="form-label fw-semibold small">Role <span class="text-danger">*</span></label>
             <select class="form-select" id="add-role">
               <option value="">Select role…</option>
-              <option value="super_admin">Super Admin</option>
-              <option value="regional_admin">Regional Admin</option>
-              <option value="hospital_admin">Hospital Admin</option>
-              <option value="data_entry">Data Entry</option>
-              <option value="viewer">Viewer</option>
             </select>
           </div>
           <div class="col-md-6">
@@ -218,11 +213,6 @@
           <div class="col-md-6">
             <label class="form-label fw-semibold small">Role <span class="text-danger">*</span></label>
             <select class="form-select" id="edit-role">
-              <option value="super_admin">Super Admin</option>
-              <option value="regional_admin">Regional Admin</option>
-              <option value="hospital_admin">Hospital Admin</option>
-              <option value="data_entry">Data Entry</option>
-              <option value="viewer">Viewer</option>
             </select>
           </div>
           <div class="col-md-6">
@@ -276,7 +266,7 @@ let currentUser2;
     window.location.href = 'dashboard.html';
     return;
   }
-  await Promise.all([loadHospitals(), loadRegions()]);
+  await Promise.all([loadHospitals(), loadRegions(), loadRoles()]);
   loadList(1);
 })();
 
@@ -300,6 +290,15 @@ async function loadRegions() {
     const opts = (res.data || []).map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('');
     document.getElementById('add-region').innerHTML  = '<option value="">None</option>' + opts;
     document.getElementById('edit-region').innerHTML = '<option value="">None</option>' + opts;
+  } catch {}
+}
+
+async function loadRoles() {
+  try {
+    const res  = await API.get('api/roles.php');
+    const opts = (res.data || []).map(r => `<option value="${esc(r.id)}">${esc(r.display_name)}</option>`).join('');
+    document.getElementById('add-role').innerHTML  = '<option value="">Select role…</option>' + opts;
+    document.getElementById('edit-role').innerHTML = opts;
   } catch {}
 }
 
@@ -369,7 +368,7 @@ async function submitAdd() {
     const res = await API.post('api/users.php', {
       name:        document.getElementById('add-name').value,
       email:       document.getElementById('add-email').value,
-      role:        document.getElementById('add-role').value,
+      role_id:     document.getElementById('add-role').value,
       hospital_id: document.getElementById('add-hospital').value || null,
       region_id:   document.getElementById('add-region').value   || null,
       phone:       document.getElementById('add-phone').value,
@@ -395,7 +394,7 @@ function openEditModalById(user) {
   document.getElementById('edit-id').value       = user.id;
   document.getElementById('edit-name').value     = user.name;
   document.getElementById('edit-email').value    = user.email;
-  document.getElementById('edit-role').value     = user.role;
+  document.getElementById('edit-role').value     = user.role_id;
   document.getElementById('edit-hospital').value = user.hospital_id || '';
   document.getElementById('edit-region').value   = user.region_id   || '';
   document.getElementById('edit-phone').value    = user.phone       || '';
@@ -412,7 +411,7 @@ async function submitEdit() {
     const payload = {
       name:        document.getElementById('edit-name').value,
       email:       document.getElementById('edit-email').value,
-      role:        document.getElementById('edit-role').value,
+      role_id:     document.getElementById('edit-role').value,
       hospital_id: document.getElementById('edit-hospital').value || null,
       region_id:   document.getElementById('edit-region').value   || null,
       phone:       document.getElementById('edit-phone').value,

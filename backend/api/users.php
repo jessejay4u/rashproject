@@ -12,7 +12,7 @@ if ($method === 'GET' && $id) {
     $stmt = $db->prepare("
         SELECT u.id, u.name, u.email, u.phone, u.is_active, u.mfa_enabled,
                u.last_login_at, u.created_at, u.must_change_password, u.failed_login_attempts,
-               r.name AS role, r.display_name AS role_display,
+               u.role_id, r.name AS role, r.display_name AS role_display,
                h.name AS hospital_name, reg.name AS region_name
         FROM users u
         JOIN roles r ON r.id = u.role_id
@@ -57,7 +57,7 @@ if ($method === 'GET') {
 
     $stmt = $db->prepare("
         SELECT u.id, u.name, u.email, u.phone, u.is_active, u.last_login_at, u.created_at,
-               r.name AS role, r.display_name AS role_display,
+               u.role_id, r.name AS role, r.display_name AS role_display,
                h.name AS hospital_name, reg.name AS region_name
         FROM users u
         JOIN roles r ON r.id = u.role_id
