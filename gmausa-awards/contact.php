@@ -40,8 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="col-lg-5">
         <h2 class="gma-section-title fs-4 mb-3">Reach GMA-USA</h2>
         <ul class="list-unstyled text-secondary">
+          <?php if ($addr = setting('contact_address')): ?>
+            <li class="mb-3"><i class="bi bi-geo-alt-fill text-warning me-2"></i><?= e($addr) ?></li>
+          <?php endif; ?>
           <?php if ($email = setting('contact_email')): ?>
             <li class="mb-3"><i class="bi bi-envelope-fill text-warning me-2"></i><a href="mailto:<?= e($email) ?>"><?= e($email) ?></a></li>
+          <?php endif; ?>
+          <?php if ($phone = setting('contact_phone')): ?>
+            <li class="mb-3"><i class="bi bi-telephone-fill text-warning me-2"></i><a href="tel:<?= e(preg_replace('/[^0-9+]/', '', $phone)) ?>"><?= e($phone) ?></a></li>
           <?php endif; ?>
           <?php if ($fb = setting('facebook_url')): ?>
             <li class="mb-3"><i class="bi bi-facebook text-warning me-2"></i><a href="<?= e($fb) ?>" target="_blank" rel="noopener">Facebook</a></li>

@@ -1,41 +1,54 @@
 # GMA-USA Website & Admin Dashboard
 
-A static-feel, database-backed website for **Ghana Music Awards USA (GMA-USA)**,
-built with HTML/CSS/JavaScript, Bootstrap 5 (vendored locally), PHP, and MySQL.
+A database-backed website for **Ghana Music Awards USA (GMA-USA)**, built
+with HTML/CSS/JavaScript, Bootstrap 5 (vendored locally), PHP, and MySQL.
 The page layout/UX pattern (sticky nav, ticker bar, hero, news grid, category
 pills, footer columns) follows the same conventions as major awards-show sites
 like grammy.com, but all branding (name, colors, copy) is GMA-USA's own —
 Grammy's trademarked logo/visual identity is intentionally **not** reproduced.
 
+## Content source
+
+Site structure and copy are drawn from **"GMAUSA.ORG Website Content
+Documentation"** — a page-by-page audit of the real gmausa.org site (17
+internal pages) supplied by the site owner. Real, sourced content includes:
+the site's navigation structure, the full Categories & Definitions list (17
+US-based + 14 Ghana-based categories with definitions, including two
+documented inconsistencies reproduced as published), the Team and Board
+roster, Life Patrons bios, the Charity program description, Entry
+Procedures text, and real contact details (address, email, phone).
+
+**Not yet migrated** (embedded as images on the original site, not text):
+historical nominee/winner names for 2021–2025, gallery photos, video
+embeds, and patron/team photos. These areas render "coming soon — upload
+via the admin dashboard" states rather than fabricated content.
+
 ## What's included
 
-- **Public site**: Home, About, Categories, Nominees, News (+ single article
-  view), Contact, and Submit-a-Nomination pages. Fully responsive (mobile,
-  tablet, desktop).
-- **Admin dashboard** (`/admin`): single-admin login, and CRUD screens for
-  News Articles (with image upload), Latest Updates (the scrolling ticker),
-  Award Categories, Nominees, a Media Library, plus read views for Contact
-  Messages and Nomination Submissions, and a Site Settings page (hero copy,
-  about text, contact/social links, admin password change).
-- **MySQL schema** (`database/schema.sql`) with seed data.
+**Public site** (fully responsive — mobile, tablet, desktop):
+- Home, About Us, Team, Life Patrons, Categories & Definitions, Entry
+  Procedures, Nominees & Winners (by year, incl. combined "2022 & 2023"),
+  Gallery (5 photo groups), Videos, Charity, Accreditation (real form
+  fields: passport/ID details + photo uploads), News, Contact,
+  Nomination form (respects an open/closed toggle), and a footer
+  newsletter signup.
+- Nav mirrors the real site's structure: Home / Gallery / Accreditation /
+  Videos / Nomination / Entry & Categories (dropdown) / About GMA-USA
+  (dropdown: About, Team, Nominees & Winners by year) / Life Patrons /
+  Charity / Contact, plus external "Vote Now" and "Online Tickets" links.
 
-## Content status — please read
+**Admin dashboard** (`/admin`, single-admin login) — CRUD for: News
+Articles (image upload), Latest Updates (ticker), Award Categories,
+Nominees, Team & Board, Life Patrons, Videos, Gallery (grouped photo
+uploads), Media Library, plus read/status views for Contact Messages,
+Nomination Submissions, Accreditation Submissions (contains sensitive
+PII — see Security notes), and Newsletter Subscribers, and a Site
+Settings page (hero copy, about text, contact/social links, entry
+procedures text, charity text, nominations open/closed toggle, admin
+password change).
 
-This project's network sandbox could not directly fetch gmausa.org's live
-pages (blocked by the sandbox's network policy), so only the following facts
-— gathered via web search — are seeded as **real** content:
-
-- Org name (Ghana Music Awards USA / GMA-USA), CEO name (Dennis Boafo /
-  "Don D"), the general mission statement, and 4 confirmed award category
-  names out of the reported 35 total (24 US-based + 11 Ghana-based).
-- One real news item (2026 nominees unveiled in Kumasi) with a short,
-  paraphrased body — **not verbatim official copy**.
-
-Everything else (the second sample news article, contact phone, remaining 31
-category names, nominee/winner records, and photos/logo) is placeholder or
-empty, clearly marked in the UI with "replace via admin dashboard" notes.
-**Log into the dashboard and replace these with the real text, categories,
-nominees, and images from gmausa.org** — that's what the admin panel is for.
+**MySQL schema** (`database/schema.sql`) — 15 tables with idempotent seed
+data (re-running the script updates rather than duplicates rows).
 
 ## Requirements
 
@@ -55,8 +68,8 @@ nominees, and images from gmausa.org** — that's what the admin panel is for.
    mysql -u root -p < database/schema.sql
    ```
 
-   This creates the `gmausa_awards` database, all tables, and seed data,
-   including a default admin account.
+   Creates the `gmausa_awards` database, all tables, and seed data
+   (categories, team/board, patrons, videos, a default admin account).
 
 2. **Configure the connection** — edit `config/db.php` (or set environment
    variables `GMAUSA_DB_HOST`, `GMAUSA_DB_PORT`, `GMAUSA_DB_NAME`,
@@ -83,45 +96,46 @@ nominees, and images from gmausa.org** — that's what the admin panel is for.
    - Username: `admin`
    - Password: `GmaUsa#2026Change!`
 
-   **Change this password immediately** via Site Settings → Change Password
-   after your first login.
+   **Change this password immediately** via Site Settings → Change Password.
 
-5. **Replace placeholder content** — About text, remaining category names,
-   nominees/winners, news articles, logo/photos, and social links, all from
-   the admin dashboard.
+5. **Fill in what's missing** — historical nominees/winners (2021–2025),
+   gallery/charity photos, video URLs, team/patron photos, and the "Vote
+   Now" / "Online Tickets" links in Site Settings once you have current
+   values (they're hidden from the nav until set).
 
 ## Project structure
 
 ```
 gmausa-awards/
 ├── config/db.php           # DB connection + app constants (edit this)
-├── database/schema.sql     # Full schema + seed data
+├── database/schema.sql     # Full schema + seed data (15 tables)
 ├── includes/               # Shared PHP: header, footer, helper functions
 ├── assets/
 │   ├── vendor/bootstrap/           # Bootstrap 5.3.8 (vendored, no CDN dependency)
 │   ├── vendor/bootstrap-icons/     # Bootstrap Icons 1.11.3
 │   ├── css/style.css               # GMA-USA theme (Ghana-flag palette)
 │   └── js/main.js
-├── uploads/                # User-uploaded images (news/nominees/media)
+├── uploads/                # news/ nominees/ team/ patrons/ gallery/ media/ accreditation/
 ├── admin/                  # Dashboard (session-auth protected)
 │   ├── login.php / logout.php
-│   ├── index.php           # Stats overview
+│   ├── index.php                          # Stats overview
 │   ├── news.php + news-form.php + news-delete.php
-│   ├── updates.php         # Ticker bar CRUD
+│   ├── updates.php                        # Ticker bar CRUD
 │   ├── categories.php / nominees.php
-│   ├── media.php           # Media library
-│   ├── messages.php        # Contact form submissions
-│   ├── nominations.php     # Public nomination submissions
-│   └── settings.php        # Site copy, contact/social links, password
-├── index.php, about.php, categories.php, nominees.php,
-├── news.php, news-article.php, contact.php, nominate.php
+│   ├── team.php / patrons.php / videos.php / gallery.php
+│   ├── media.php                          # Media library
+│   ├── messages.php / nominations.php / accreditation.php / newsletter.php
+│   └── settings.php                       # Site copy, links, toggles, password
+├── index.php, about.php, team.php, patrons.php, categories.php, entry.php,
+├── nominees.php, gallery.php, videos.php, charity.php, accreditation.php,
+├── news.php, news-article.php, contact.php, nominate.php, newsletter-subscribe.php
 └── .htaccess (+ per-folder .htaccess for config/database/includes/uploads)
 ```
 
 ## Security notes
 
 - Passwords are hashed with `password_hash()` (bcrypt/argon2 default).
-- All admin forms are CSRF-protected (`csrf_field()` / `csrf_verify()`).
+- All admin and public forms are CSRF-protected (`csrf_field()` / `csrf_verify()`).
 - All database queries use PDO prepared statements.
 - Uploaded images are validated by MIME type + `getimagesize()`, renamed to
   random filenames, size-capped at 5MB, and PHP execution is disabled inside
@@ -130,13 +144,16 @@ gmausa-awards/
   8 hours of inactivity (`SESSION_LIFETIME` in `config/db.php`).
 - `config/`, `database/`, and `includes/` are blocked from direct web access
   via `.htaccess` — verified against a real Apache instance with
-  `AllowOverride All` during development.
+  `AllowOverride All`.
+- **The Accreditation form collects sensitive PII** (passport number/details,
+  date of birth, ID photos). Restrict dashboard access, serve the site over
+  HTTPS in production, and periodically delete records you no longer need.
 
 ## Local testing (for reference)
 
-This was verified locally with PHP's built-in server + MariaDB, and
-separately against a real Apache + `AllowOverride All` vhost to confirm the
-`.htaccess` protections actually block direct access to `config/db.php`,
-`database/schema.sql`, `includes/*.php`, and PHP execution under `uploads/`.
-Responsive layout was checked at 1440×900 (desktop), 768×1024 (tablet), and
-390×844 (mobile) viewports.
+Verified locally with PHP's built-in server + MariaDB (schema import,
+idempotent re-import, full CRUD flows for every content type including
+image uploads, CSRF rejection, login throttling), and separately against a
+real Apache + `AllowOverride All` vhost to confirm `.htaccess` protections.
+Responsive layout checked at 1440×900 (desktop), 768×1024 (tablet), and
+390×844 (mobile) viewports via Playwright screenshots.

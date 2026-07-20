@@ -13,6 +13,18 @@ $news = db()->query(
 $categories = db()->query(
     'SELECT name, category_group FROM award_categories ORDER BY display_order ASC LIMIT 8'
 )->fetchAll();
+
+$nominationsOpen = setting('nominations_open', '0') === '1';
+$voteUrl = setting('vote_url');
+
+$exploreLinks = [
+    ['icon' => 'bi-images', 'label' => 'Gallery', 'href' => 'gallery.php'],
+    ['icon' => 'bi-camera-reels', 'label' => 'Videos', 'href' => 'videos.php'],
+    ['icon' => 'bi-people-fill', 'label' => 'Team', 'href' => 'team.php'],
+    ['icon' => 'bi-award-fill', 'label' => 'Life Patrons', 'href' => 'patrons.php'],
+    ['icon' => 'bi-heart-fill', 'label' => 'Charity', 'href' => 'charity.php'],
+    ['icon' => 'bi-card-checklist', 'label' => 'Accreditation', 'href' => 'accreditation.php'],
+];
 ?>
 
 <header class="gma-hero text-center">
@@ -22,7 +34,11 @@ $categories = db()->query(
     <p class="lead mx-auto mb-4"><?= e(setting('hero_subheading')) ?></p>
     <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
       <a href="nominees.php" class="btn gma-btn-gold btn-lg px-4">View Nominees</a>
-      <a href="nominate.php" class="btn gma-btn-outline btn-lg px-4">Submit a Nomination</a>
+      <?php if ($nominationsOpen): ?>
+        <a href="nominate.php" class="btn gma-btn-outline btn-lg px-4">Submit a Nomination</a>
+      <?php elseif ($voteUrl): ?>
+        <a href="<?= e($voteUrl) ?>" target="_blank" rel="noopener" class="btn gma-btn-outline btn-lg px-4">Vote Now</a>
+      <?php endif; ?>
     </div>
   </div>
 </header>
@@ -80,6 +96,25 @@ $categories = db()->query(
         <span class="gma-category-pill <?= $cat['category_group'] === 'ghana_based' ? 'ghana-based' : 'us-based' ?>">
           <i class="bi bi-trophy-fill"></i> <?= e($cat['name']) ?>
         </span>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+
+<section class="gma-section">
+  <div class="container">
+    <p class="gma-eyebrow mb-1">Explore</p>
+    <h2 class="gma-section-title mb-4">More From GMA-USA</h2>
+    <div class="row g-3">
+      <?php foreach ($exploreLinks as $link): ?>
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="<?= e($link['href']) ?>" class="text-decoration-none">
+            <div class="gma-card p-3 text-center h-100">
+              <i class="bi <?= e($link['icon']) ?> fs-2 text-warning mb-2 d-block"></i>
+              <span class="text-white small fw-semibold"><?= e($link['label']) ?></span>
+            </div>
+          </a>
+        </div>
       <?php endforeach; ?>
     </div>
   </div>

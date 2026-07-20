@@ -11,12 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($form === 'settings') {
         $fields = [
             'site_name', 'site_tagline', 'hero_heading', 'hero_subheading', 'about_text',
-            'ceo_name', 'contact_email', 'contact_phone', 'facebook_url', 'instagram_url',
-            'twitter_url', 'footer_note',
+            'ceo_name', 'contact_email', 'contact_phone', 'contact_address', 'facebook_url',
+            'instagram_url', 'twitter_url', 'vote_url', 'tickets_url', 'nominations_notice',
+            'entry_usa_text', 'entry_ghana_text', 'charity_text', 'newsletter_text', 'footer_note',
         ];
         foreach ($fields as $field) {
             set_setting($field, trim($_POST[$field] ?? ''));
         }
+        set_setting('nominations_open', !empty($_POST['nominations_open']) ? '1' : '0');
         flash_set('success', 'Settings saved.');
         header('Location: settings.php');
         exit;
@@ -95,6 +97,10 @@ require_once __DIR__ . '/includes/admin-header.php';
             <label class="form-label">Contact Phone</label>
             <input type="text" name="contact_phone" class="form-control" value="<?= e(setting('contact_phone')) ?>">
           </div>
+          <div class="col-12">
+            <label class="form-label">Contact Address</label>
+            <input type="text" name="contact_address" class="form-control" value="<?= e(setting('contact_address')) ?>">
+          </div>
           <div class="col-md-6">
             <label class="form-label">Facebook URL</label>
             <input type="text" name="facebook_url" class="form-control" value="<?= e(setting('facebook_url')) ?>">
@@ -106,6 +112,40 @@ require_once __DIR__ . '/includes/admin-header.php';
           <div class="col-md-6">
             <label class="form-label">Twitter / X URL</label>
             <input type="text" name="twitter_url" class="form-control" value="<?= e(setting('twitter_url')) ?>">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Vote Now URL (external)</label>
+            <input type="text" name="vote_url" class="form-control" value="<?= e(setting('vote_url')) ?>">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Online Tickets URL (external)</label>
+            <input type="text" name="tickets_url" class="form-control" value="<?= e(setting('tickets_url')) ?>" placeholder="Eventbrite or other ticket link">
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="nominations_open" value="1" id="nomOpen" <?= setting('nominations_open') === '1' ? 'checked' : '' ?>>
+              <label class="form-check-label" for="nomOpen">Nominations are currently open</label>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Nominations Closed Notice</label>
+            <input type="text" name="nominations_notice" class="form-control" value="<?= e(setting('nominations_notice')) ?>">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Entry Procedures &mdash; USA</label>
+            <textarea name="entry_usa_text" rows="3" class="form-control"><?= e(setting('entry_usa_text')) ?></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Entry Procedures &mdash; Ghana</label>
+            <textarea name="entry_ghana_text" rows="3" class="form-control"><?= e(setting('entry_ghana_text')) ?></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Charity Text</label>
+            <textarea name="charity_text" rows="3" class="form-control"><?= e(setting('charity_text')) ?></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Newsletter Prompt Text</label>
+            <input type="text" name="newsletter_text" class="form-control" value="<?= e(setting('newsletter_text')) ?>">
           </div>
           <div class="col-12">
             <label class="form-label">Footer Disclaimer Note</label>

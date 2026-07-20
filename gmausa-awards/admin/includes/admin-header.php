@@ -34,9 +34,15 @@ function nav_active(string $file, string $current): string
       <a href="updates.php" class="<?= nav_active('updates.php', $currentPage) ?>"><i class="bi bi-megaphone-fill"></i> Latest Updates</a>
       <a href="categories.php" class="<?= nav_active('categories.php', $currentPage) ?>"><i class="bi bi-trophy-fill"></i> Categories</a>
       <a href="nominees.php" class="<?= nav_active('nominees.php', $currentPage) ?>"><i class="bi bi-people-fill"></i> Nominees</a>
-      <a href="media.php" class="<?= nav_active('media.php', $currentPage) ?>"><i class="bi bi-images"></i> Media Library</a>
+      <a href="team.php" class="<?= nav_active('team.php', $currentPage) ?>"><i class="bi bi-person-badge-fill"></i> Team</a>
+      <a href="patrons.php" class="<?= nav_active('patrons.php', $currentPage) ?>"><i class="bi bi-award-fill"></i> Life Patrons</a>
+      <a href="videos.php" class="<?= nav_active('videos.php', $currentPage) ?>"><i class="bi bi-camera-reels"></i> Videos</a>
+      <a href="gallery.php" class="<?= nav_active('gallery.php', $currentPage) ?>"><i class="bi bi-images"></i> Gallery</a>
+      <a href="media.php" class="<?= nav_active('media.php', $currentPage) ?>"><i class="bi bi-image"></i> Media Library</a>
+      <a href="accreditation.php" class="<?= nav_active('accreditation.php', $currentPage) ?>"><i class="bi bi-card-checklist"></i> Accreditation</a>
       <a href="messages.php" class="<?= nav_active('messages.php', $currentPage) ?>"><i class="bi bi-envelope-fill"></i> Contact Messages</a>
       <a href="nominations.php" class="<?= nav_active('nominations.php', $currentPage) ?>"><i class="bi bi-send-fill"></i> Nomination Submissions</a>
+      <a href="newsletter.php" class="<?= nav_active('newsletter.php', $currentPage) ?>"><i class="bi bi-envelope-paper-fill"></i> Newsletter</a>
       <a href="settings.php" class="<?= nav_active('settings.php', $currentPage) ?>"><i class="bi bi-gear-fill"></i> Site Settings</a>
     </nav>
     <div class="mt-auto pt-3 border-top border-secondary">
@@ -58,9 +64,15 @@ function nav_active(string $file, string $current): string
       <a href="updates.php" class="<?= nav_active('updates.php', $currentPage) ?>"><i class="bi bi-megaphone-fill"></i> Latest Updates</a>
       <a href="categories.php" class="<?= nav_active('categories.php', $currentPage) ?>"><i class="bi bi-trophy-fill"></i> Categories</a>
       <a href="nominees.php" class="<?= nav_active('nominees.php', $currentPage) ?>"><i class="bi bi-people-fill"></i> Nominees</a>
-      <a href="media.php" class="<?= nav_active('media.php', $currentPage) ?>"><i class="bi bi-images"></i> Media Library</a>
+      <a href="team.php" class="<?= nav_active('team.php', $currentPage) ?>"><i class="bi bi-person-badge-fill"></i> Team</a>
+      <a href="patrons.php" class="<?= nav_active('patrons.php', $currentPage) ?>"><i class="bi bi-award-fill"></i> Life Patrons</a>
+      <a href="videos.php" class="<?= nav_active('videos.php', $currentPage) ?>"><i class="bi bi-camera-reels"></i> Videos</a>
+      <a href="gallery.php" class="<?= nav_active('gallery.php', $currentPage) ?>"><i class="bi bi-images"></i> Gallery</a>
+      <a href="media.php" class="<?= nav_active('media.php', $currentPage) ?>"><i class="bi bi-image"></i> Media Library</a>
+      <a href="accreditation.php" class="<?= nav_active('accreditation.php', $currentPage) ?>"><i class="bi bi-card-checklist"></i> Accreditation</a>
       <a href="messages.php" class="<?= nav_active('messages.php', $currentPage) ?>"><i class="bi bi-envelope-fill"></i> Contact Messages</a>
       <a href="nominations.php" class="<?= nav_active('nominations.php', $currentPage) ?>"><i class="bi bi-send-fill"></i> Nomination Submissions</a>
+      <a href="newsletter.php" class="<?= nav_active('newsletter.php', $currentPage) ?>"><i class="bi bi-envelope-paper-fill"></i> Newsletter</a>
       <a href="settings.php" class="<?= nav_active('settings.php', $currentPage) ?>"><i class="bi bi-gear-fill"></i> Site Settings</a>
     </nav>
     <div class="mt-auto pt-3 border-top border-secondary">

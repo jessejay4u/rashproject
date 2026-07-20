@@ -11,6 +11,12 @@ $stats = [
     'Unread Messages'     => (int) db()->query('SELECT COUNT(*) FROM contact_messages WHERE is_read = 0')->fetchColumn(),
     'New Nominations'     => (int) db()->query("SELECT COUNT(*) FROM nomination_submissions WHERE status = 'new'")->fetchColumn(),
     'Media Files'         => (int) db()->query('SELECT COUNT(*) FROM media_library')->fetchColumn(),
+    'Team & Board'        => (int) db()->query('SELECT COUNT(*) FROM team_members')->fetchColumn(),
+    'Life Patrons'        => (int) db()->query('SELECT COUNT(*) FROM patrons')->fetchColumn(),
+    'Videos'              => (int) db()->query('SELECT COUNT(*) FROM videos')->fetchColumn(),
+    'Gallery Photos'      => (int) db()->query('SELECT COUNT(*) FROM gallery_images')->fetchColumn(),
+    'New Accreditations'  => (int) db()->query("SELECT COUNT(*) FROM accreditation_submissions WHERE status = 'new'")->fetchColumn(),
+    'Newsletter Subscribers' => (int) db()->query('SELECT COUNT(*) FROM newsletter_subscribers')->fetchColumn(),
 ];
 
 $recentArticles = db()->query('SELECT title, status, updated_at FROM news_articles ORDER BY updated_at DESC LIMIT 5')->fetchAll();

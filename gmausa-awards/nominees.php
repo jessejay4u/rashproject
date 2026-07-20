@@ -2,17 +2,27 @@
 $pageTitle = 'Nominees';
 require_once __DIR__ . '/includes/header.php';
 
-$years = db()->query('SELECT DISTINCT year FROM nominees ORDER BY year DESC')->fetchAll(PDO::FETCH_COLUMN);
-$selectedYear = isset($_GET['year']) ? (int) $_GET['year'] : ($years[0] ?? (int) date('Y'));
+$allYears = db()->query('SELECT DISTINCT year FROM nominees ORDER BY year DESC')->fetchAll(PDO::FETCH_COLUMN);
 
+if (!empty($_GET['years'])) {
+    $selectedYears = array_values(array_filter(array_map('intval', explode(',', $_GET['years']))));
+} elseif (isset($_GET['year'])) {
+    $selectedYears = [(int) $_GET['year']];
+} else {
+    $selectedYears = $allYears ? [(int) $allYears[0]] : [(int) date('Y')];
+}
+$selectedYears = $selectedYears ?: [(int) date('Y')];
+$yearLabel = implode(' & ', $selectedYears);
+
+$placeholders = implode(',', array_fill(0, count($selectedYears), '?'));
 $stmt = db()->prepare(
-    'SELECT n.*, c.name AS category_name, c.category_group
+    "SELECT n.*, c.name AS category_name, c.category_group
      FROM nominees n
      JOIN award_categories c ON c.id = n.category_id
-     WHERE n.year = ?
-     ORDER BY c.display_order ASC, n.is_winner DESC, n.name ASC'
+     WHERE n.year IN ($placeholders)
+     ORDER BY c.display_order ASC, n.is_winner DESC, n.name ASC"
 );
-$stmt->execute([$selectedYear]);
+$stmt->execute($selectedYears);
 $nominees = $stmt->fetchAll();
 
 $grouped = [];
@@ -23,15 +33,15 @@ foreach ($nominees as $row) {
 
 <header class="gma-hero text-center py-5">
   <div class="container">
-    <p class="gma-eyebrow mb-2">2026 Nominees</p>
-    <h1 class="mb-3">Nominees &amp; Winners</h1>
-    <?php if ($years): ?>
-      <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <?php foreach ($years as $y): ?>
-          <a href="nominees.php?year=<?= (int) $y ?>" class="btn btn-sm <?= $y == $selectedYear ? 'gma-btn-gold' : 'gma-btn-outline' ?>"><?= (int) $y ?></a>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
+    <p class="gma-eyebrow mb-2">Nominees &amp; Winners</p>
+    <h1 class="mb-3"><?= e($yearLabel) ?></h1>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+      <a href="nominees.php?year=2021" class="btn btn-sm <?= $selectedYears === [2021] ? 'gma-btn-gold' : 'gma-btn-outline' ?>">2021</a>
+      <a href="nominees.php?years=2022,2023" class="btn btn-sm <?= $selectedYears === [2022, 2023] ? 'gma-btn-gold' : 'gma-btn-outline' ?>">2022 &amp; 2023</a>
+      <a href="nominees.php?year=2024" class="btn btn-sm <?= $selectedYears === [2024] ? 'gma-btn-gold' : 'gma-btn-outline' ?>">2024</a>
+      <a href="nominees.php?year=2025" class="btn btn-sm <?= $selectedYears === [2025] ? 'gma-btn-gold' : 'gma-btn-outline' ?>">2025</a>
+      <a href="nominees.php?year=2026" class="btn btn-sm <?= $selectedYears === [2026] ? 'gma-btn-gold' : 'gma-btn-outline' ?>">2026</a>
+    </div>
   </div>
 </header>
 
@@ -40,8 +50,8 @@ foreach ($nominees as $row) {
     <?php if (!$grouped): ?>
       <div class="gma-card p-5 text-center">
         <i class="bi bi-hourglass-split display-4 text-warning mb-3"></i>
-        <p class="text-secondary mb-1">Nominees haven't been added yet.</p>
-        <p class="text-secondary small mb-0">Add nominees per category and year from the admin dashboard once the official list is available.</p>
+        <p class="text-secondary mb-1">No nominees or winners on file for <?= e($yearLabel) ?> yet.</p>
+        <p class="text-secondary small mb-0">On the original site, historical nominee/winner names for this period are published as photo galleries rather than text. Add real names per category from the admin dashboard, or upload the photo galleries once available.</p>
       </div>
     <?php else: ?>
       <?php foreach ($grouped as $categoryName => $rows): ?>

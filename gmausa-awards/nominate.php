@@ -1,13 +1,14 @@
 <?php
-$pageTitle = 'Submit a Nomination';
+$pageTitle = 'GMA USA Nomination Form (Artistes Only)';
 require_once __DIR__ . '/includes/header.php';
 
 $categories = db()->query('SELECT id, name FROM award_categories ORDER BY display_order ASC, name ASC')->fetchAll();
+$nominationsOpen = setting('nominations_open', '0') === '1';
 
 $errors = [];
 $success = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($nominationsOpen && $_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
 
     $nomineeName = trim($_POST['nominee_name'] ?? '');
@@ -35,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <header class="gma-hero text-center py-5">
   <div class="container">
     <p class="gma-eyebrow mb-2">Get Involved</p>
-    <h1 class="mb-0">Submit a Nomination</h1>
+    <h1 class="mb-0">GMA USA Nomination Form <span class="text-secondary fs-5 d-block d-md-inline">(Artistes Only)</span></h1>
   </div>
 </header>
 
@@ -44,7 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="row justify-content-center">
       <div class="col-lg-7">
         <div class="gma-form-panel">
-          <?php if ($success): ?>
+          <?php if (!$nominationsOpen): ?>
+            <div class="alert alert-warning"><i class="bi bi-lock-fill me-2"></i><?= e(setting('nominations_notice', 'Nominations are currently closed.')) ?></div>
+          <?php elseif ($success): ?>
             <div class="alert alert-success"><i class="bi bi-check-circle-fill me-2"></i>Your nomination has been submitted. Thank you for taking part in GMA-USA!</div>
           <?php else: ?>
             <?php if ($errors): ?>

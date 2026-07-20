@@ -14,7 +14,7 @@ $ghanaBased = db()->query(
   <div class="container">
     <p class="gma-eyebrow mb-2">The Awards</p>
     <h1 class="mb-3">Award Categories</h1>
-    <p class="lead mx-auto">GMA-USA recognizes excellence across 35 categories &mdash; 24 for the US-based Ghanaian music community, and 11 honoring the Ghana-based industry.</p>
+    <p class="lead mx-auto">GMA-USA recognizes excellence across 17 US-based categories and 14 Ghana-based categories, as published on the official Categories &amp; Definitions page.</p>
   </div>
 </header>
 
@@ -49,7 +49,7 @@ $ghanaBased = db()->query(
     <p class="gma-eyebrow mb-1"><i class="bi bi-flag-fill"></i> Ghana-Based Categories</p>
     <h2 class="gma-section-title mb-4">Industry Awards</h2>
     <?php if (!$ghanaBased): ?>
-      <p class="text-secondary">No categories added yet. Add the remaining 11 Ghana-based categories via the admin dashboard.</p>
+      <p class="text-secondary">No categories added yet.</p>
     <?php else: ?>
       <div class="row g-3">
         <?php foreach ($ghanaBased as $cat): ?>
@@ -70,7 +70,7 @@ $ghanaBased = db()->query(
 
     <div class="gma-disclaimer mt-4">
       <i class="bi bi-info-circle me-1"></i>
-      Only category names confirmed via public reporting are seeded here. Add the full official 35-category list from the admin dashboard.
+      As published on the official Categories &amp; Definitions page, the USA section is headed "19 Categories" though only 17 are listed, and a "Song Writer of the Year" entry appears twice under Ghana categories. These are reproduced as published rather than corrected.
     </div>
   </div>
 </section>
