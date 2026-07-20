@@ -1,0 +1,5 @@
+Options -Indexes -MultiViews
+
+<FilesMatch "\.(sql|md|log)$">
+    Require all denied
+</FilesMatch>

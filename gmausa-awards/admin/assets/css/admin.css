@@ -1,0 +1,53 @@
+body {
+  background-color: #f4f5f7;
+}
+.admin-sidebar {
+  min-height: 100vh;
+  background-color: #0b0b0d;
+  color: #fff;
+}
+.admin-sidebar .brand {
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.admin-sidebar a {
+  color: #cfcfd4;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.92rem;
+}
+.admin-sidebar a:hover,
+.admin-sidebar a.active {
+  background-color: rgba(252, 209, 22, 0.12);
+  color: #fcd116;
+}
+.admin-topbar {
+  background: #fff;
+  border-bottom: 1px solid #e5e5ea;
+}
+.stat-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e5ea;
+  padding: 1.25rem;
+}
+.stat-card .stat-number {
+  font-size: 1.9rem;
+  font-weight: 800;
+}
+.table thead th {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: #6b6b70;
+  border-bottom-width: 1px;
+}
+.thumb-preview {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 0.4rem;
+}
