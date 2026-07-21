@@ -370,3 +370,155 @@ a:hover {
   .gma-hero { padding: 4rem 0 3rem; }
   .gma-section { padding: 3rem 0; }
 }
+
+/* ---------------------------------------------------------------------------
+   Media placeholder (used everywhere a real photo/video/logo is missing)
+   ------------------------------------------------------------------------- */
+.gma-placeholder {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.03) 0 12px, transparent 12px 24px),
+    linear-gradient(135deg, #1c1c22, #24241d);
+  color: var(--gma-gray);
+  text-align: center;
+  border: 1px dashed var(--gma-border);
+  width: 100%;
+  height: 100%;
+}
+.gma-placeholder i { font-size: 1.8rem; color: rgba(252, 209, 22, 0.55); }
+.gma-placeholder span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 0.75rem; }
+.gma-placeholder.gma-placeholder--sm i { font-size: 1.2rem; }
+.gma-placeholder.gma-placeholder--sm span { font-size: 0.62rem; }
+.gma-placeholder.gma-placeholder--play i { font-size: 2.6rem; color: rgba(255,255,255,0.85); }
+
+/* ---------------------------------------------------------------------------
+   Hero carousel
+   ------------------------------------------------------------------------- */
+.gma-hero-carousel { border-bottom: 1px solid var(--gma-border); }
+.gma-hero-carousel .carousel-item {
+  height: min(70vh, 620px);
+  min-height: 420px;
+  position: relative;
+}
+.gma-hero-carousel .gma-slide-media {
+  position: absolute;
+  inset: 0;
+}
+.gma-hero-carousel .gma-slide-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gma-hero-carousel .gma-slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(11,11,13,0.95) 0%, rgba(11,11,13,0.55) 45%, rgba(11,11,13,0.25) 100%);
+  display: flex;
+  align-items: flex-end;
+}
+.gma-hero-carousel .gma-slide-caption {
+  padding: 3rem 0 3.5rem;
+  max-width: 46rem;
+}
+.gma-hero-carousel .gma-slide-caption h2 {
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+.gma-hero-carousel .carousel-indicators [data-bs-target] {
+  background-color: var(--gma-gold);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+.gma-hero-carousel .carousel-indicators .active { opacity: 1; }
+.gma-hero-carousel .carousel-control-prev,
+.gma-hero-carousel .carousel-control-next { width: 5%; opacity: 0.7; }
+
+/* ---------------------------------------------------------------------------
+   Featured news grid (one large + stacked smaller items)
+   ------------------------------------------------------------------------- */
+.gma-feature-card { display: block; height: 100%; }
+.gma-feature-media {
+  position: relative;
+  aspect-ratio: 16/10;
+  border-radius: var(--gma-radius);
+  overflow: hidden;
+}
+.gma-feature-media img { width: 100%; height: 100%; object-fit: cover; }
+.gma-feature-list-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--gma-border);
+}
+.gma-feature-list-item:last-child { border-bottom: none; }
+.gma-feature-list-item .gma-feature-thumb {
+  width: 96px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.gma-feature-list-item .gma-feature-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------------------------------------------------------------------------
+   Video rail (horizontal scroll, like Grammy's "Watch" carousel)
+   ------------------------------------------------------------------------- */
+.gma-rail {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x proximity;
+}
+.gma-rail::-webkit-scrollbar { height: 6px; }
+.gma-rail::-webkit-scrollbar-thumb { background: var(--gma-border); border-radius: 999px; }
+.gma-rail-item {
+  flex: 0 0 auto;
+  width: 280px;
+  scroll-snap-align: start;
+}
+.gma-rail-item .gma-feature-media { aspect-ratio: 16/9; }
+
+/* ---------------------------------------------------------------------------
+   Genre / category tiles
+   ------------------------------------------------------------------------- */
+.gma-genre-tile {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: var(--gma-radius);
+  overflow: hidden;
+  display: block;
+}
+.gma-genre-tile .gma-placeholder { position: absolute; inset: 0; }
+.gma-genre-tile .gma-genre-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.85rem;
+  background: linear-gradient(0deg, rgba(0,0,0,0.75), transparent 60%);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--gma-white);
+}
+.gma-genre-tile.us-based .gma-genre-label { border-bottom: 3px solid var(--gma-gold); }
+.gma-genre-tile.ghana-based .gma-genre-label { border-bottom: 3px solid var(--gma-green); }
+
+/* ---------------------------------------------------------------------------
+   Newsletter band
+   ------------------------------------------------------------------------- */
+.gma-newsletter-band {
+  background-color: var(--gma-black-soft);
+  border-top: 1px solid var(--gma-border);
+  border-bottom: 1px solid var(--gma-border);
+  padding: 3rem 0;
+}
