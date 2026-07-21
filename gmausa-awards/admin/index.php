@@ -17,6 +17,7 @@ $stats = [
     'Gallery Photos'      => (int) db()->query('SELECT COUNT(*) FROM gallery_images')->fetchColumn(),
     'New Accreditations'  => (int) db()->query("SELECT COUNT(*) FROM accreditation_submissions WHERE status = 'new'")->fetchColumn(),
     'Newsletter Subscribers' => (int) db()->query('SELECT COUNT(*) FROM newsletter_subscribers')->fetchColumn(),
+    'Partners & Sponsors' => (int) db()->query('SELECT COUNT(*) FROM partners')->fetchColumn(),
 ];
 
 $recentArticles = db()->query('SELECT title, status, updated_at FROM news_articles ORDER BY updated_at DESC LIMIT 5')->fetchAll();

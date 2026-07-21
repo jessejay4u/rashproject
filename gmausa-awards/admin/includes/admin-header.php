@@ -36,6 +36,7 @@ function nav_active(string $file, string $current): string
       <a href="nominees.php" class="<?= nav_active('nominees.php', $currentPage) ?>"><i class="bi bi-people-fill"></i> Nominees</a>
       <a href="team.php" class="<?= nav_active('team.php', $currentPage) ?>"><i class="bi bi-person-badge-fill"></i> Team</a>
       <a href="patrons.php" class="<?= nav_active('patrons.php', $currentPage) ?>"><i class="bi bi-award-fill"></i> Life Patrons</a>
+      <a href="partners-sponsors.php" class="<?= nav_active('partners-sponsors.php', $currentPage) ?>"><i class="bi bi-handshake"></i> Partners &amp; Sponsors</a>
       <a href="videos.php" class="<?= nav_active('videos.php', $currentPage) ?>"><i class="bi bi-camera-reels"></i> Videos</a>
       <a href="gallery.php" class="<?= nav_active('gallery.php', $currentPage) ?>"><i class="bi bi-images"></i> Gallery</a>
       <a href="media.php" class="<?= nav_active('media.php', $currentPage) ?>"><i class="bi bi-image"></i> Media Library</a>
@@ -66,6 +67,7 @@ function nav_active(string $file, string $current): string
       <a href="nominees.php" class="<?= nav_active('nominees.php', $currentPage) ?>"><i class="bi bi-people-fill"></i> Nominees</a>
       <a href="team.php" class="<?= nav_active('team.php', $currentPage) ?>"><i class="bi bi-person-badge-fill"></i> Team</a>
       <a href="patrons.php" class="<?= nav_active('patrons.php', $currentPage) ?>"><i class="bi bi-award-fill"></i> Life Patrons</a>
+      <a href="partners-sponsors.php" class="<?= nav_active('partners-sponsors.php', $currentPage) ?>"><i class="bi bi-handshake"></i> Partners &amp; Sponsors</a>
       <a href="videos.php" class="<?= nav_active('videos.php', $currentPage) ?>"><i class="bi bi-camera-reels"></i> Videos</a>
       <a href="gallery.php" class="<?= nav_active('gallery.php', $currentPage) ?>"><i class="bi bi-images"></i> Gallery</a>
       <a href="media.php" class="<?= nav_active('media.php', $currentPage) ?>"><i class="bi bi-image"></i> Media Library</a>

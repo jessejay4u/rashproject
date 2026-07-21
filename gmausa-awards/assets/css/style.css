@@ -397,6 +397,29 @@ a:hover {
 .gma-placeholder.gma-placeholder--play i { font-size: 2.6rem; color: rgba(255,255,255,0.85); }
 
 /* ---------------------------------------------------------------------------
+   Video banner (slim strip rendered above the main menu bar on the homepage)
+   ------------------------------------------------------------------------- */
+.gma-video-banner {
+  background-color: var(--gma-black-soft);
+  border-bottom: 1px solid var(--gma-border);
+  border-left: 3px solid var(--gma-gold);
+  padding: 0.65rem 0;
+}
+.gma-video-banner__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(252, 209, 22, 0.12);
+  color: var(--gma-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.gma-video-banner__text { line-height: 1.25; }
+
+/* ---------------------------------------------------------------------------
    Hero carousel
    ------------------------------------------------------------------------- */
 .gma-hero-carousel { border-bottom: 1px solid var(--gma-border); }

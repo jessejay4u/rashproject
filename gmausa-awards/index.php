@@ -1,5 +1,6 @@
 <?php
 $pageTitle = 'Home';
+$showVideoBeforeNav = true;
 require_once __DIR__ . '/includes/header.php';
 
 $news = db()->query(
@@ -19,6 +20,8 @@ $videos = db()->query('SELECT * FROM videos ORDER BY display_order ASC, id ASC L
 $categories = db()->query(
     'SELECT name, category_group FROM award_categories ORDER BY display_order ASC LIMIT 8'
 )->fetchAll();
+
+$partners = db()->query('SELECT * FROM partners ORDER BY partner_type ASC, display_order ASC')->fetchAll();
 
 $nominationsOpen = setting('nominations_open', '0') === '1';
 $voteUrl = setting('vote_url');
@@ -250,6 +253,44 @@ function gma_media(?string $path, string $alt, string $icon = 'bi-image', string
         </div>
       <?php endforeach; ?>
     </div>
+  </div>
+</section>
+
+<!-- Partners & Sponsors -->
+<section class="gma-section border-bottom-0">
+  <div class="container text-center">
+    <p class="gma-eyebrow mb-1">Powered &amp; Brought To You By</p>
+    <h2 class="gma-section-title mb-4">Partners &amp; Sponsors</h2>
+    <?php if (!$partners): ?>
+      <div class="row g-3 justify-content-center">
+        <?php for ($i = 0; $i < 6; $i++): ?>
+          <div class="col-6 col-md-2">
+            <div class="gma-placeholder gma-placeholder--sm" style="aspect-ratio: 16/9; border-radius: var(--gma-radius);">
+              <i class="bi bi-building"></i>
+              <span>Logo placeholder</span>
+            </div>
+          </div>
+        <?php endfor; ?>
+      </div>
+      <p class="text-secondary small mt-3 mb-0">Add real partner &amp; sponsor logos via the admin dashboard.</p>
+    <?php else: ?>
+      <div class="row g-3 justify-content-center align-items-center">
+        <?php foreach ($partners as $p): ?>
+          <div class="col-6 col-md-2">
+            <?php if ($p['website_url']): ?><a href="<?= e($p['website_url']) ?>" target="_blank" rel="noopener sponsored" title="<?= e($p['name']) ?>"><?php endif; ?>
+              <div class="gma-placeholder gma-placeholder--sm" style="aspect-ratio: 16/9; border-radius: var(--gma-radius); <?= $p['logo_path'] ? 'border:none; background:none;' : '' ?>">
+                <?php if ($p['logo_path']): ?>
+                  <img src="<?= e(uploads_url($p['logo_path'])) ?>" alt="<?= e($p['name']) ?>" style="max-width:100%; max-height:100%; object-fit:contain;">
+                <?php else: ?>
+                  <i class="bi bi-building"></i>
+                  <span><?= e($p['name']) ?></span>
+                <?php endif; ?>
+              </div>
+            <?php if ($p['website_url']): ?></a><?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 

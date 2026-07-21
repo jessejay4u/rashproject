@@ -42,6 +42,24 @@ $activeUpdates = db()->query(
 </div>
 <?php endif; ?>
 
+<?php if (!empty($showVideoBeforeNav)): ?>
+  <?php $bannerVideo = db()->query('SELECT * FROM videos ORDER BY display_order ASC, id ASC LIMIT 1')->fetch(); ?>
+  <?php if ($bannerVideo): ?>
+    <div class="gma-video-banner">
+      <div class="container">
+        <a href="videos.php" class="d-flex align-items-center gap-3 text-decoration-none">
+          <span class="gma-video-banner__icon"><i class="bi bi-play-circle-fill"></i></span>
+          <span class="gma-video-banner__text">
+            <span class="gma-eyebrow d-block">Watch Now</span>
+            <span class="text-white fw-semibold"><?= e($bannerVideo['title']) ?></span>
+          </span>
+          <span class="ms-auto text-warning small fw-bold text-uppercase d-none d-sm-flex align-items-center gap-1">Watch <i class="bi bi-arrow-right"></i></span>
+        </a>
+      </div>
+    </div>
+  <?php endif; ?>
+<?php endif; ?>
+
 <nav class="navbar navbar-expand-lg gma-navbar sticky-top py-3">
   <div class="container">
     <a class="navbar-brand" href="<?= APP_URL ?>/index.php">

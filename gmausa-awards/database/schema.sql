@@ -246,6 +246,21 @@ CREATE TABLE IF NOT EXISTS gallery_images (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------
+-- Partners & Sponsors (footer/homepage logo strip — documented as a common
+-- site-wide element: "Sponsors, Powered and Brought To You By, and Partners"
+-- sections represented through logos/images)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS partners (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  name          VARCHAR(150) NOT NULL UNIQUE,
+  partner_type  ENUM('sponsor','partner') NOT NULL DEFAULT 'sponsor',
+  logo_path     VARCHAR(255),
+  website_url   VARCHAR(255),
+  display_order INT NOT NULL DEFAULT 0,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------------
 -- Media library (uploaded images available for reuse across content)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS media_library (
